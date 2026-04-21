@@ -16,35 +16,50 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly TelemetryRepository _repository;
     private Process? _bridgeProcess;
 
-    [ObservableProperty] private string _connectionStatus = "Disconnected";
+    [ObservableProperty]
+    public partial string ConnectionStatus { get; set; } = "Disconnected";
 
-    [ObservableProperty] private string? _currentTrack = "N/A";
+    [ObservableProperty]
+    public partial string? CurrentTrack { get; set; } = "N/A";
 
-    [ObservableProperty] private string _currentSessionType = "N/A";
+    [ObservableProperty]
+    public partial string CurrentSessionType { get; set; } = "N/A";
 
-    [ObservableProperty] private int _currentLap;
+    [ObservableProperty]
+    public partial int CurrentLap { get; set; }
 
-    [ObservableProperty] private float _currentSpeed;
+    [ObservableProperty]
+    public partial float CurrentSpeed { get; set; }
 
-    [ObservableProperty] private float _engineRpm;
+    [ObservableProperty]
+    public partial float EngineRpm { get; set; }
 
-    [ObservableProperty] private float _fuelRemaining;
+    [ObservableProperty]
+    public partial float FuelRemaining { get; set; }
 
-    [ObservableProperty] private string _bestLapTime = "N/A";
+    [ObservableProperty]
+    public partial string BestLapTime { get; set; } = "N/A";
 
-    [ObservableProperty] private string _lastLapTime = "N/A";
+    [ObservableProperty]
+    public partial string LastLapTime { get; set; } = "N/A";
 
-    [ObservableProperty] private string _currentLapTime = "N/A";
+    [ObservableProperty]
+    public partial string CurrentLapTime { get; set; } = "N/A";
 
-    [ObservableProperty] private bool _isConnected;
+    [ObservableProperty]
+    public partial bool IsConnected { get; set; }
 
-    [ObservableProperty] private ObservableCollection<LapInfo> _recentLaps = new();
+    [ObservableProperty]
+    public partial ObservableCollection<LapInfo> RecentLaps { get; set; } = [];
 
-    [ObservableProperty] private float _throttleInput;
+    [ObservableProperty]
+    public partial float ThrottleInput { get; set; }
 
-    [ObservableProperty] private float _brakeInput;
+    [ObservableProperty]
+    public partial float BrakeInput { get; set; }
 
-    [ObservableProperty] private float _currentGear;
+    [ObservableProperty]
+    public partial float CurrentGear { get; set; }
 
     public MainWindowViewModel()
     {
