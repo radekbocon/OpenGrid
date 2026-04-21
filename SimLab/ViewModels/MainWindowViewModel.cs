@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,50 +16,35 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly TelemetryRepository _repository;
     private Process? _bridgeProcess;
 
-    [ObservableProperty]
-    private string _connectionStatus = "Disconnected";
+    [ObservableProperty] private string _connectionStatus = "Disconnected";
 
-    [ObservableProperty]
-    private string? _currentTrack = "N/A";
+    [ObservableProperty] private string? _currentTrack = "N/A";
 
-    [ObservableProperty]
-    private string _currentSessionType = "N/A";
+    [ObservableProperty] private string _currentSessionType = "N/A";
 
-    [ObservableProperty]
-    private int _currentLap;
+    [ObservableProperty] private int _currentLap;
 
-    [ObservableProperty]
-    private float _currentSpeed;
+    [ObservableProperty] private float _currentSpeed;
 
-    [ObservableProperty]
-    private float _engineRpm;
+    [ObservableProperty] private float _engineRpm;
 
-    [ObservableProperty]
-    private float _fuelRemaining;
+    [ObservableProperty] private float _fuelRemaining;
 
-    [ObservableProperty]
-    private string _bestLapTime = "N/A";
+    [ObservableProperty] private string _bestLapTime = "N/A";
 
-    [ObservableProperty]
-    private string _lastLapTime = "N/A";
+    [ObservableProperty] private string _lastLapTime = "N/A";
 
-    [ObservableProperty]
-    private string _currentLapTime = "N/A";
+    [ObservableProperty] private string _currentLapTime = "N/A";
 
-    [ObservableProperty]
-    private bool _isConnected;
+    [ObservableProperty] private bool _isConnected;
 
-    [ObservableProperty]
-    private ObservableCollection<LapInfo> _recentLaps = new();
+    [ObservableProperty] private ObservableCollection<LapInfo> _recentLaps = new();
 
-    [ObservableProperty]
-    private float _throttleInput;
+    [ObservableProperty] private float _throttleInput;
 
-    [ObservableProperty]
-    private float _brakeInput;
+    [ObservableProperty] private float _brakeInput;
 
-    [ObservableProperty]
-    private float _currentGear;
+    [ObservableProperty] private float _currentGear;
 
     public MainWindowViewModel()
     {
@@ -111,11 +95,9 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            // Use wine directly to run the bridge executable in the Proton prefix
-            // The bridge exe should be the self-contained published version
             var bridgeExePath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "Dokumenty/GitHub/SimLab/SimLabBridge/bin/Release/net8.0-windows/win-x64/publish/SimLabBridge.exe"
+                "Dokumenty/GitHub/SimLab/SimLabBridge/bin/Release/net8.0-windows/win-x64/SimLabBridge.exe"
             );
 
             if (!File.Exists(bridgeExePath))
@@ -124,45 +106,21 @@ public partial class MainWindowViewModel : ViewModelBase
                 return;
             }
 
-            // Use Proton's wine instead of system wine to avoid version conflicts
-            // Adjust the paths if your ACC installation uses a different appid
-            var winePrefix = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                ".steam/steam/steamapps/compatdata/805550/pfx"
-            );
-
-            var protonToolsPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                ".steam/steam/steamapps/Proton-Experimental/proton"
-            );
-
-            // Try to find Proton wine, fallback to system wine if not found
-            string wineExe = "wine";
-            if (File.Exists(protonToolsPath))
-            {
-                wineExe = Path.Combine(
-                    Path.GetDirectoryName(protonToolsPath) ?? "",
-                    "wine64"
-                );
-            }
-
+            // Use protontricks to run the bridge in the ACC Proton prefix
             var startInfo = new ProcessStartInfo
             {
-                FileName = wineExe,
-                Arguments = $"\"{bridgeExePath}\"",
+                FileName = "protontricks-launch",
+                Arguments = $"--appid 805550 {bridgeExePath}",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                CreateNoWindow = true
             };
-
-            // Set environment variables
-            startInfo.EnvironmentVariables["WINEPREFIX"] = winePrefix;
-            startInfo.EnvironmentVariables["WINEARCH"] = "win64";
 
             _bridgeProcess = Process.Start(startInfo);
             if (_bridgeProcess != null)
             {
-                // Wait a bit for the bridge to start
+                // Wait a bit for the bridge to establish connection
                 await Task.Delay(2000);
                 ConnectionStatus = "Bridge started";
             }
