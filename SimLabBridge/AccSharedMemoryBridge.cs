@@ -8,13 +8,15 @@ namespace SimLabBridge;
 /// </summary>
 public class AccSharedMemoryBridge : IDisposable
 {
-    private const string PHYSICS_BUFFER_NAME = "Local\\acpmf_physics";
-    private const string GRAPHICS_BUFFER_NAME = "Local\\acpmf_graphics";
-    private const string STATIC_BUFFER_NAME = "Local\\acpmf_static";
+    private const string PhysicsBufferName = "Local\\acpmf_physics";
+    private const string GraphicsBufferName = "Local\\acpmf_graphics";
+    private const string StaticBufferName = "Local\\acpmf_static";
 
-    private const string SHM_PHYSICS_PATH = "/dev/shm/simlab_physics";
-    private const string SHM_GRAPHICS_PATH = "/dev/shm/simlab_graphics";
-    private const string SHM_STATIC_PATH = "/dev/shm/simlab_static";
+    private const string ShmPhysicsPath = "/dev/shm/simlab_physics";
+    private const string ShmGraphicsPath = "/dev/shm/simlab_graphics";
+    private const string ShmStaticPath = "/dev/shm/simlab_static";
+    
+    private const int UpdateInterval = 1000 / 60;
 
     private MemoryMappedFile? _physicsFile;
     private MemoryMappedFile? _graphicsFile;
@@ -43,7 +45,7 @@ public class AccSharedMemoryBridge : IDisposable
             {
                 ReadAndWriteTelemetry();
 
-                await Task.Delay(16, cancellationToken); // ~60 Hz update rate
+                await Task.Delay(UpdateInterval, cancellationToken);
             }
         }
         catch (OperationCanceledException)
@@ -74,9 +76,9 @@ public class AccSharedMemoryBridge : IDisposable
         try
         {
             // Try to open existing memory mapped files from ACC
-            _physicsFile = MemoryMappedFile.OpenExisting(PHYSICS_BUFFER_NAME, MemoryMappedFileRights.Read);
-            _graphicsFile = MemoryMappedFile.OpenExisting(GRAPHICS_BUFFER_NAME, MemoryMappedFileRights.Read);
-            _staticFile = MemoryMappedFile.OpenExisting(STATIC_BUFFER_NAME, MemoryMappedFileRights.Read);
+            _physicsFile = MemoryMappedFile.OpenExisting(PhysicsBufferName, MemoryMappedFileRights.Read);
+            _graphicsFile = MemoryMappedFile.OpenExisting(GraphicsBufferName, MemoryMappedFileRights.Read);
+            _staticFile = MemoryMappedFile.OpenExisting(StaticBufferName, MemoryMappedFileRights.Read);
 
             _physicsAccessor = _physicsFile.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
             _graphicsAccessor = _graphicsFile.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
@@ -117,13 +119,13 @@ public class AccSharedMemoryBridge : IDisposable
         }
     }
     
-    private void WriteToSharedFiles(byte[] physics, byte[] graphics, byte[] staticData)
+    private static void WriteToSharedFiles(byte[] physics, byte[] graphics, byte[] staticData)
     {
         try
         {
-            File.WriteAllBytes(SHM_PHYSICS_PATH, physics);
-            File.WriteAllBytes(SHM_GRAPHICS_PATH, graphics);
-            File.WriteAllBytes(SHM_STATIC_PATH, staticData);
+            File.WriteAllBytes(ShmPhysicsPath, physics);
+            File.WriteAllBytes(ShmGraphicsPath, graphics);
+            File.WriteAllBytes(ShmStaticPath, staticData);
         }
         catch (Exception ex)
         {
@@ -137,7 +139,7 @@ public class AccSharedMemoryBridge : IDisposable
         Console.WriteLine("Disconnected");
     }
     
-    private byte[] ReadBytes(MemoryMappedViewAccessor accessor)
+    private static byte[] ReadBytes(MemoryMappedViewAccessor accessor)
     {
         var buffer = new byte[accessor.Capacity];
         accessor.ReadArray(0, buffer, 0, buffer.Length);
