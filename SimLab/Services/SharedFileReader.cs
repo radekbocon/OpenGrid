@@ -8,13 +8,18 @@ namespace SimLab.Services;
 
 /// <summary>
 /// Service for reading telemetry data from shared files written by the bridge
+/// Polls the shared memory files continuously for new data
 /// </summary>
 public class SharedFileReader : IDisposable
 {
-    private const string SHM_PHYSICS_PATH = "/dev/shm/simlab_physics";
+    private const string ShmPhysicsPath = "/dev/shm/simlab_physics";
+    private const int PollIntervalMs = 16; // ~60 Hz
 
-    private FileSystemWatcher? _watcher;
+    private readonly SharedMemoryReader _memoryReader = new();
+    private CancellationTokenSource? _cancellationTokenSource;
+    private Task? _readingTask;
     private bool _disposed = false;
+    private TelemetrySnapshot? _lastSnapshot;
 
     public event EventHandler<TelemetryDataEventArgs>? TelemetryDataReceived;
     public event EventHandler<string>? ConnectionStatusChanged;
@@ -26,20 +31,14 @@ public class SharedFileReader : IDisposable
         try
         {
             // Ensure the directory exists
-            var dir = Path.GetDirectoryName(SHM_PHYSICS_PATH);
+            var dir = Path.GetDirectoryName(ShmPhysicsPath);
             if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir!);
             }
 
-            _watcher = new FileSystemWatcher(dir!)
-            {
-                Filter = Path.GetFileName(SHM_PHYSICS_PATH),
-                NotifyFilter = NotifyFilters.LastWrite
-            };
-
-            _watcher.Changed += OnFileChanged;
-            _watcher.EnableRaisingEvents = true;
+            _cancellationTokenSource = new CancellationTokenSource();
+            _readingTask = ReadPollingLoopAsync(_cancellationTokenSource.Token);
 
             IsConnected = true;
             OnConnectionStatusChanged("Connected to shared files");
@@ -50,30 +49,58 @@ public class SharedFileReader : IDisposable
         }
     }
 
-    private void OnFileChanged(object sender, FileSystemEventArgs e)
+    private async Task ReadPollingLoopAsync(CancellationToken cancellationToken)
     {
-        try
+        while (!cancellationToken.IsCancellationRequested)
         {
-            if (File.Exists(SHM_PHYSICS_PATH))
+            try
             {
-                var json = File.ReadAllText(SHM_PHYSICS_PATH);
-                var snapshot = System.Text.Json.JsonSerializer.Deserialize<TelemetrySnapshot>(json);
+                var snapshot = _memoryReader.ReadTelemetryData();
                 if (snapshot != null)
                 {
+                    _lastSnapshot = snapshot;
                     TelemetryDataReceived?.Invoke(this, new TelemetryDataEventArgs { Snapshot = snapshot });
                 }
+
+                await Task.Delay(PollIntervalMs, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                OnConnectionStatusChanged($"Error reading shared files: {ex.Message}");
+                await Task.Delay(1000, cancellationToken); // Wait longer on error
             }
         }
-        catch (Exception ex)
-        {
-            OnConnectionStatusChanged($"Error reading shared file: {ex.Message}");
-        }
+    }
+
+    private bool SnapshotEqual(TelemetrySnapshot? current, TelemetrySnapshot? last)
+    {
+        if (current == null || last == null)
+            return false;
+
+        // Compare key telemetry values to detect actual updates
+        return current.CurrentLap == last.CurrentLap &&
+               Math.Abs(current.SpeedKmh - last.SpeedKmh) < 0.1f &&
+               Math.Abs(current.EngineRpm - last.EngineRpm) < 1f &&
+               Math.Abs(current.Gas - last.Gas) < 0.001f &&
+               Math.Abs(current.Brake - last.Brake) < 0.001f;
     }
 
     public void StopReading()
     {
-        _watcher?.Dispose();
-        _watcher = null;
+        if (_cancellationTokenSource != null)
+        {
+            _cancellationTokenSource.Cancel();
+            _readingTask?.Wait(5000); // Wait max 5 seconds
+            _cancellationTokenSource.Dispose();
+            _cancellationTokenSource = null;
+        }
+
+        _readingTask = null;
+        _lastSnapshot = null;
         IsConnected = false;
         OnConnectionStatusChanged("Disconnected");
     }

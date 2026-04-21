@@ -74,7 +74,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task ConnectAsync()
+    private async Task ConnectAsync()
     {
         if (IsConnected)
         {
@@ -90,7 +90,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task DisconnectAsync()
+    private async Task DisconnectAsync()
     {
         _reader.StopReading();
 
@@ -164,16 +164,23 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         var session = _repository.CurrentSession;
         if (session == null)
+        {
             return;
+        }
 
         CurrentTrack = session.Track ?? "Unknown";
         CurrentSessionType = session.SessionType.ToString();
 
         var stats = _repository.GetCurrentSessionStatistics();
         if (stats.BestLapTime.HasValue)
+        {
             BestLapTime = FormatTimeSpan(stats.BestLapTime.Value);
+        }
+
         if (stats.AverageLapTime.HasValue)
+        {
             LastLapTime = FormatTimeSpan(stats.AverageLapTime.Value);
+        }
 
         // Update recent laps
         RecentLaps.Clear();
@@ -184,16 +191,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Update live telemetry
         var snapshot = _repository.CurrentSnapshot;
-        if (snapshot != null)
+        if (snapshot == null)
         {
-            CurrentLap = snapshot.CurrentLap;
-            CurrentSpeed = snapshot.SpeedKmh;
-            EngineRpm = snapshot.EngineRpm;
-            FuelRemaining = snapshot.FuelRemaining;
-            CurrentGear = snapshot.CurrentGear;
-            ThrottleInput = snapshot.Gas;
-            BrakeInput = snapshot.Brake;
+            return;
         }
+
+        CurrentLap = snapshot.CurrentLap;
+        CurrentSpeed = snapshot.SpeedKmh;
+        EngineRpm = snapshot.EngineRpm;
+        FuelRemaining = snapshot.FuelRemaining;
+        CurrentGear = snapshot.CurrentGear;
+        ThrottleInput = snapshot.Gas;
+        BrakeInput = snapshot.Brake;
     }
 
     private void OnLapCompleted(LapInfo lap)
