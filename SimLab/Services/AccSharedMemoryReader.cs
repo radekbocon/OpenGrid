@@ -9,16 +9,12 @@ namespace SimLab.Services;
 /// Service for reading binary telemetry data from shared memory files
 /// Deserializes ACC struct data from /dev/shm/ files
 /// </summary>
-public class SharedMemoryReader
+public class AccSharedMemoryReader : ISharedMemoryReader
 {
     private const string ShmPhysicsPath = "/dev/shm/simlab_physics";
     private const string ShmGraphicsPath = "/dev/shm/simlab_graphics";
     private const string ShmStaticPath = "/dev/shm/simlab_static";
-
-    /// <summary>
-    /// Read and deserialize telemetry data from shared memory files
-    /// Returns null if files don't exist or deserialization fails
-    /// </summary>
+    
     public TelemetrySnapshot? ReadTelemetryData()
     {
         try
@@ -39,15 +35,12 @@ public class SharedMemoryReader
                 return null;
             }
 
-            // Determine session type from graphics
-            var sessionType = (SessionType)graphicsData.Value.session;
-
             // Create telemetry snapshot
             var snapshot = new TelemetrySnapshot
             {
                 RecordedAt = DateTime.UtcNow,
                 Track = staticData.Value.track,
-                SessionType = sessionType,
+                SessionType = (SessionType)graphicsData.Value.session,
                 CurrentLap = graphicsData.Value.completedLaps,
                 SpeedKmh = physicsData.Value.speedKmh,
                 Gas = physicsData.Value.gas,
@@ -69,11 +62,8 @@ public class SharedMemoryReader
             return null;
         }
     }
-
-    /// <summary>
-    /// Read a struct from a binary file
-    /// </summary>
-    private T? ReadStructFromFile<T>(string filePath) where T : struct
+    
+    private static T? ReadStructFromFile<T>(string filePath) where T : struct
     {
         try
         {
@@ -94,11 +84,8 @@ public class SharedMemoryReader
             return null;
         }
     }
-
-    /// <summary>
-    /// Convert byte array to struct
-    /// </summary>
-    private T? BytesToStruct<T>(byte[] data) where T : struct
+    
+    private static T? BytesToStruct<T>(byte[] data) where T : struct
     {
         try
         {

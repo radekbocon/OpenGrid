@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SimLab.Models;
@@ -12,14 +11,12 @@ namespace SimLab.Services;
 /// </summary>
 public class SharedFileReader : IDisposable
 {
-    private const string ShmPhysicsPath = "/dev/shm/simlab_physics";
     private const int PollIntervalMs = 16; // ~60 Hz
 
-    private readonly SharedMemoryReader _memoryReader = new();
+    private readonly ISharedMemoryReader _memoryReader = new AccSharedMemoryReader();
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _readingTask;
-    private bool _disposed = false;
-    private TelemetrySnapshot? _lastSnapshot;
+    private bool _disposed;
 
     public event EventHandler<TelemetryDataEventArgs>? TelemetryDataReceived;
     public event EventHandler<string>? ConnectionStatusChanged;
@@ -30,13 +27,6 @@ public class SharedFileReader : IDisposable
     {
         try
         {
-            // Ensure the directory exists
-            var dir = Path.GetDirectoryName(ShmPhysicsPath);
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir!);
-            }
-
             _cancellationTokenSource = new CancellationTokenSource();
             _readingTask = ReadPollingLoopAsync(_cancellationTokenSource.Token);
 
@@ -58,7 +48,6 @@ public class SharedFileReader : IDisposable
                 var snapshot = _memoryReader.ReadTelemetryData();
                 if (snapshot != null)
                 {
-                    _lastSnapshot = snapshot;
                     TelemetryDataReceived?.Invoke(this, new TelemetryDataEventArgs { Snapshot = snapshot });
                 }
 
@@ -76,19 +65,6 @@ public class SharedFileReader : IDisposable
         }
     }
 
-    private bool SnapshotEqual(TelemetrySnapshot? current, TelemetrySnapshot? last)
-    {
-        if (current == null || last == null)
-            return false;
-
-        // Compare key telemetry values to detect actual updates
-        return current.CurrentLap == last.CurrentLap &&
-               Math.Abs(current.SpeedKmh - last.SpeedKmh) < 0.1f &&
-               Math.Abs(current.EngineRpm - last.EngineRpm) < 1f &&
-               Math.Abs(current.Gas - last.Gas) < 0.001f &&
-               Math.Abs(current.Brake - last.Brake) < 0.001f;
-    }
-
     public void StopReading()
     {
         if (_cancellationTokenSource != null)
@@ -100,7 +76,6 @@ public class SharedFileReader : IDisposable
         }
 
         _readingTask = null;
-        _lastSnapshot = null;
         IsConnected = false;
         OnConnectionStatusChanged("Disconnected");
     }
@@ -112,15 +87,16 @@ public class SharedFileReader : IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         StopReading();
         _disposed = true;
     }
 }
 
-/// <summary>
-/// Event args for telemetry data received
-/// </summary>
 public class TelemetryDataEventArgs : EventArgs
 {
     public TelemetrySnapshot? Snapshot { get; set; }

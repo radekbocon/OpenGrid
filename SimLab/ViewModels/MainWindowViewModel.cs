@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -14,7 +12,7 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly SharedFileReader _reader;
     private readonly TelemetryRepository _repository;
-    private Process? _bridgeProcess;
+    private readonly SharedMemoryBridgeLauncher _bridgeLauncher = new();
 
     [ObservableProperty]
     public partial string ConnectionStatus { get; set; } = "Disconnected";
@@ -70,7 +68,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _reader.ConnectionStatusChanged += OnConnectionStatusChanged;
 
         _repository.TelemetryUpdatedObservable.Subscribe(_ => UpdateTelemetryDisplay());
-        _repository.LapCompletedObservable.Subscribe(lap => OnLapCompleted(lap));
+        _repository.LapCompletedObservable.Subscribe(OnLapCompleted);
     }
 
     [RelayCommand]
@@ -83,7 +81,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         // Launch the bridge
-        await LaunchBridgeAsync();
+        await _bridgeLauncher.LaunchBridgeAsync(SteamGame.Acc);
 
         // Start reading from shared files
         _reader.StartReading();
@@ -95,57 +93,11 @@ public partial class MainWindowViewModel : ViewModelBase
         _reader.StopReading();
 
         // Stop the bridge
-        if (_bridgeProcess != null && !_bridgeProcess.HasExited)
-        {
-            _bridgeProcess.Kill();
-            await _bridgeProcess.WaitForExitAsync();
-            _bridgeProcess.Dispose();
-            _bridgeProcess = null;
-        }
+        _bridgeLauncher.StopBridge();
 
         IsConnected = false;
     }
-
-    private async Task LaunchBridgeAsync()
-    {
-        try
-        {
-            var bridgeExePath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "Dokumenty/GitHub/SimLab/SimLabBridge/bin/Release/net8.0-windows/win-x64/SimLabBridge.exe"
-            );
-
-            if (!File.Exists(bridgeExePath))
-            {
-                ConnectionStatus = $"Bridge executable not found at {bridgeExePath}";
-                return;
-            }
-
-            // Use protontricks to run the bridge in the ACC Proton prefix
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "protontricks-launch",
-                Arguments = $"--appid 805550 {bridgeExePath}",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            };
-
-            _bridgeProcess = Process.Start(startInfo);
-            if (_bridgeProcess != null)
-            {
-                // Wait a bit for the bridge to establish connection
-                await Task.Delay(2000);
-                ConnectionStatus = "Bridge started";
-            }
-        }
-        catch (Exception ex)
-        {
-            ConnectionStatus = $"Failed to launch bridge: {ex.Message}";
-        }
-    }
-
+    
     private void OnTelemetryDataReceived(object? sender, TelemetryDataEventArgs e)
     {
         if (e.Snapshot != null)
