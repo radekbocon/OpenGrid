@@ -24,19 +24,43 @@ public class AccSharedMemoryBridge : IDisposable
     private MemoryMappedViewAccessor? _graphicsAccessor;
     private MemoryMappedViewAccessor? _staticAccessor;
 
-    private bool _disposed = false;
-    private bool _isConnected = false;
-
-    public bool IsConnected => _isConnected;
-
+    private bool _disposed;
+    private bool _isConnected;
+    
     /// <summary>
-    /// Initialize the bridge and attempt connection to ACC shared memory
+    /// Start a continuous telemetry reading loop
     /// </summary>
-    public async Task<bool> InitializeAsync()
+    public async Task StartReadingAsync(CancellationToken cancellationToken = default)
+    {
+        while (!await InitializeAsync())
+        {
+            await Task.Delay(1000, cancellationToken);
+        }
+
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                ReadAndWriteTelemetry();
+
+                await Task.Delay(16, cancellationToken); // ~60 Hz update rate
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when cancellation is requested
+        }
+        finally
+        {
+            Disconnect();
+        }
+    }
+    
+    private async Task<bool> InitializeAsync()
     {
         try
         {
-            return await Task.Run(() => Initialize());
+            return await Task.Run(Initialize);
         }
         catch (Exception ex)
         {
@@ -73,11 +97,8 @@ public class AccSharedMemoryBridge : IDisposable
             return false;
         }
     }
-
-    /// <summary>
-    /// Read raw telemetry data from shared memory and write to shared files
-    /// </summary>
-    public void ReadAndWriteTelemetry()
+    
+    private void ReadAndWriteTelemetry()
     {
         if (!_isConnected || _physicsAccessor == null || _graphicsAccessor == null || _staticAccessor == null)
             return;
@@ -95,11 +116,8 @@ public class AccSharedMemoryBridge : IDisposable
             Console.WriteLine($"Error reading/writing telemetry: {ex.Message}");
         }
     }
-
-    /// <summary>
-    /// Write raw telemetry data to shared files
-    /// </summary>
-    public void WriteToSharedFiles(byte[] physics, byte[] graphics, byte[] staticData)
+    
+    private void WriteToSharedFiles(byte[] physics, byte[] graphics, byte[] staticData)
     {
         try
         {
@@ -112,51 +130,16 @@ public class AccSharedMemoryBridge : IDisposable
             Console.WriteLine($"Error writing to shared files: {ex.Message}");
         }
     }
-
-    /// <summary>
-    /// Start continuous telemetry reading loop
-    /// </summary>
-    public async Task StartReadingAsync(CancellationToken cancellationToken = default)
-    {
-        while (!await InitializeAsync())
-        {
-            await Task.Delay(1000, cancellationToken);
-        }
-
-        try
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                ReadAndWriteTelemetry();
-
-                await Task.Delay(16, cancellationToken); // ~60 Hz update rate
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected when cancellation is requested
-        }
-        finally
-        {
-            Disconnect();
-        }
-    }
-
-    /// <summary>
-    /// Disconnect from ACC shared memory
-    /// </summary>
-    public void Disconnect()
+    
+    private void Disconnect()
     {
         _isConnected = false;
         Console.WriteLine("Disconnected");
     }
-
-    /// <summary>
-    /// Read bytes from a memory mapped file accessor
-    /// </summary>
+    
     private byte[] ReadBytes(MemoryMappedViewAccessor accessor)
     {
-        byte[] buffer = new byte[accessor.Capacity];
+        var buffer = new byte[accessor.Capacity];
         accessor.ReadArray(0, buffer, 0, buffer.Length);
         return buffer;
     }
