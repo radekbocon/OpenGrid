@@ -12,9 +12,13 @@ public static class ServiceRegistrator
         services.AddSingleton<ISharedMemoryReader, AccSharedMemoryReader>();
         services.AddSingleton<SharedFileReader>();
         services.AddSingleton<SharedMemoryBridgeLauncher>();
+        services.AddSingleton<INavigationService, NavigationService>();
 
         // Register ViewModels
         services.AddTransient<MainWindowViewModel>();
+        services.AddTransient<HomeViewModel>();
+        services.AddTransient<SessionsViewModel>();
+        services.AddTransient<SettingsViewModel>();
 
         return services;
     }
