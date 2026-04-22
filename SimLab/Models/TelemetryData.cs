@@ -20,17 +20,16 @@ public enum SessionType
     FormationLap = 7
 }
 
-/// <summary>
-/// Information about a single lap
-/// </summary>
-public class LapInfo
+public enum Gear
 {
-    public int LapNumber { get; set; }
-    public TimeSpan? LapTime { get; set; }
-    public float FuelUsed { get; set; }
-    public float AverageTireTemp { get; set; }
-    public bool IsValid { get; set; }
-    public DateTime RecordedAt { get; set; }
+    R = 0,
+    N = 1,
+    N1 = 2,
+    N2 = 3,
+    N3 = 4,
+    N4 = 5,
+    N5 = 6,
+    N6 = 7
 }
 
 /// <summary>
@@ -46,29 +45,12 @@ public class TelemetrySnapshot
     public float Gas { get; set; }
     public float Brake { get; set; }
     public float Clutch { get; set; }
-    public int CurrentGear { get; set; }
+    public Gear CurrentGear { get; set; }
     public float EngineRpm { get; set; }
     public float FuelRemaining { get; set; }
     public float[] TireTemperatures { get; set; } = new float[4]; // FL, FR, RL, RR
-    public bool IsOnTrack { get; set; }
     public bool IsInPit { get; set; }
-}
-
-/// <summary>
-/// Session data aggregating multiple snapshots and laps
-/// </summary>
-public class SessionData
-{
-    public DateTime SessionStartTime { get; set; }
-    public string? Track { get; set; }
-    public SessionType SessionType { get; set; }
-    public string? CarModel { get; set; }
-    public List<LapInfo> Laps { get; set; } = new();
-    public List<TelemetrySnapshot> Snapshots { get; set; } = new();
-
-    public LapInfo? BestLap => Laps.Where(l => l.IsValid && l.LapTime.HasValue).MinBy(l => l.LapTime);
-    public double AverageLapTime => Laps.Where(l => l.IsValid && l.LapTime.HasValue).Average(l => l.LapTime.Value.TotalMilliseconds);
-    public int ValidLaps => Laps.Count(l => l.IsValid);
-    public TimeSpan? TotalSessionTime => Snapshots.Count > 0 ? Snapshots.Last().RecordedAt - Snapshots.First().RecordedAt : null;
+    public bool IsValidLap { get; set; }
+    public TimeSpan LapTime { get; set; }
 }
 

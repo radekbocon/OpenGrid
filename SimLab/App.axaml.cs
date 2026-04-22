@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using SimLab.ViewModels;
 using SimLab.Views;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SimLab;
 
@@ -22,7 +23,7 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = Program.ServiceProvider.GetRequiredService<MainWindowViewModel>(),
             };
         }
 

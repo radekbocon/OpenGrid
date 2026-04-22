@@ -14,6 +14,9 @@ public class AccSharedMemoryReader : ISharedMemoryReader
     private const string ShmPhysicsPath = "/dev/shm/simlab_physics";
     private const string ShmGraphicsPath = "/dev/shm/simlab_graphics";
     private const string ShmStaticPath = "/dev/shm/simlab_static";
+    private const int AcPhysicsSize = 2048;
+    private const int AcGraphicSize = 2048;
+    private const int AcStaticSize = 2048;
     
     public TelemetrySnapshot? ReadTelemetryData()
     {
@@ -26,9 +29,9 @@ public class AccSharedMemoryReader : ISharedMemoryReader
                 return null;
             }
 
-            var physicsData = ReadStructFromFile<SPageFilePhysics>(ShmPhysicsPath);
-            var graphicsData = ReadStructFromFile<SPageFileGraphic>(ShmGraphicsPath);
-            var staticData = ReadStructFromFile<SPageFileStatic>(ShmStaticPath);
+            var physicsData = ReadStructFromFile<SPageFilePhysics>(ShmPhysicsPath, AcPhysicsSize);
+            var graphicsData = ReadStructFromFile<SPageFileGraphic>(ShmGraphicsPath, AcGraphicSize);
+            var staticData = ReadStructFromFile<SPageFileStatic>(ShmStaticPath, AcStaticSize);
 
             if (physicsData == null || graphicsData == null || staticData == null)
             {
@@ -46,12 +49,13 @@ public class AccSharedMemoryReader : ISharedMemoryReader
                 Gas = physicsData.Value.gas,
                 Brake = physicsData.Value.brake,
                 Clutch = physicsData.Value.clutch,
-                CurrentGear = physicsData.Value.gear,
+                CurrentGear = (Gear)physicsData.Value.gear,
                 EngineRpm = physicsData.Value.rpms,
                 FuelRemaining = physicsData.Value.fuel,
                 TireTemperatures = physicsData.Value.tyreTempM,
-                IsOnTrack = graphicsData.Value.isInPit == 0,
-                IsInPit = graphicsData.Value.isInPit == 1
+                IsInPit = graphicsData.Value.isInPit == 1,
+                IsValidLap = graphicsData.Value.IsValidLap == 1,
+                LapTime = ParseTime(graphicsData.Value.currentTime)
             };
 
             return snapshot;
@@ -63,7 +67,7 @@ public class AccSharedMemoryReader : ISharedMemoryReader
         }
     }
     
-    private static T? ReadStructFromFile<T>(string filePath) where T : struct
+    private static T? ReadStructFromFile<T>(string filePath, int size) where T : struct
     {
         try
         {
@@ -72,11 +76,10 @@ public class AccSharedMemoryReader : ISharedMemoryReader
                 return null;
             }
 
-            var size = Marshal.SizeOf(typeof(T));
             using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var bytes = new byte[size];
             var read = fs.Read(bytes, 0, size);
-            return read < size ? null : BytesToStruct<T>(bytes);
+            return read < size ? null : BytesToStruct<T>(bytes, size);
         }
         catch (Exception ex)
         {
@@ -85,11 +88,10 @@ public class AccSharedMemoryReader : ISharedMemoryReader
         }
     }
     
-    private static T? BytesToStruct<T>(byte[] data) where T : struct
+    private static T? BytesToStruct<T>(byte[] data, int size) where T : struct
     {
         try
         {
-            var size = Marshal.SizeOf(typeof(T));
             if (data.Length < size)
             {
                 return null;
@@ -112,6 +114,15 @@ public class AccSharedMemoryReader : ISharedMemoryReader
             System.Diagnostics.Debug.WriteLine($"Error converting bytes to struct: {ex.Message}");
             return null;
         }
+    }
+    
+    private static TimeSpan ParseTime(string timeString)
+    {
+        var parts = timeString.Split(':');
+        var minutes = int.Parse(parts[0]);
+        var seconds = int.Parse(parts[1]);
+        var milliseconds = int.Parse(parts[2]);
+        return new TimeSpan(0, minutes, seconds, milliseconds);
     }
 }
 

@@ -13,7 +13,7 @@ public class SharedFileReader : IDisposable
 {
     private const int PollIntervalMs = 16; // ~60 Hz
 
-    private readonly ISharedMemoryReader _memoryReader = new AccSharedMemoryReader();
+    private readonly ISharedMemoryReader _memoryReader;
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _readingTask;
     private bool _disposed;
@@ -22,6 +22,11 @@ public class SharedFileReader : IDisposable
     public event EventHandler<string>? ConnectionStatusChanged;
 
     public bool IsConnected { get; private set; }
+
+    public SharedFileReader(ISharedMemoryReader memoryReader)
+    {
+        _memoryReader = memoryReader;
+    }
 
     public void StartReading()
     {
