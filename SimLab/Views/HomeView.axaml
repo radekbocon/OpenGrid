@@ -10,10 +10,6 @@
     x:DataType="vm:HomeViewModel"
     mc:Ignorable="d">
 
-    <Design.DataContext>
-        <vm:HomeViewModel />
-    </Design.DataContext>
-
     <TextBlock
         HorizontalAlignment="Center"
         VerticalAlignment="Center"

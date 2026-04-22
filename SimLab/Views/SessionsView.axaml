@@ -10,10 +10,6 @@
     x:DataType="vm:SessionsViewModel"
     mc:Ignorable="d">
 
-    <Design.DataContext>
-        <vm:SessionsViewModel />
-    </Design.DataContext>
-
     <TextBlock
         HorizontalAlignment="Center"
         VerticalAlignment="Center"
