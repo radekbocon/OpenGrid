@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using SimLab.Models;
 
 namespace SimLab.Services;
 
@@ -9,7 +10,9 @@ public class SharedMemoryBridgeLauncher
 {
     private Process? _bridgeProcess;
 
-    public string ConnectionStatus { get; private set; } = "Not started";
+    public event EventHandler<BridgeLauncherEventArgs>? ConnectionStatusChanged; 
+
+    public string? ConnectionStatus { get; private set; }
     
     public async Task LaunchBridgeAsync(SteamGame steamGame)
     {
@@ -22,11 +25,10 @@ public class SharedMemoryBridgeLauncher
 
             if (!File.Exists(bridgeExePath))
             {
-                ConnectionStatus = $"Bridge executable not found at {bridgeExePath}";
+                UpdateConnectionStatus($"Bridge executable not found at {bridgeExePath}");
                 return;
             }
 
-            // Use protontricks to run the bridge in the ACC Proton prefix
             var startInfo = new ProcessStartInfo
             {
                 FileName = "protontricks-launch",
@@ -42,15 +44,15 @@ public class SharedMemoryBridgeLauncher
             {
                 // Wait a bit for the bridge to establish connection
                 await Task.Delay(2000);
-                ConnectionStatus = "Bridge started";
+                UpdateConnectionStatus("Bridge started");
             }
         }
         catch (Exception ex)
         {
-            ConnectionStatus = $"Failed to launch bridge: {ex.Message}";
+            UpdateConnectionStatus($"Failed to launch bridge: {ex.Message}");
         }
     }
-    
+
     public void StopBridge()
     {
         if (_bridgeProcess is { HasExited: false })
@@ -58,14 +60,23 @@ public class SharedMemoryBridgeLauncher
             _bridgeProcess.Kill();
             _bridgeProcess.Dispose();
             _bridgeProcess = null;
-            ConnectionStatus = "Bridge stopped";
+            UpdateConnectionStatus("Bridge stopped");
         }
+    }
+
+    private void UpdateConnectionStatus(string connectionStatus)
+    {
+        if (ConnectionStatus == connectionStatus)
+        {
+            return;
+        }
+        
+        ConnectionStatus = connectionStatus;
+        ConnectionStatusChanged?.Invoke(this, new BridgeLauncherEventArgs { ConnectionStatus = ConnectionStatus});
     }
 }
 
-public record SteamGame(string Name, int AppId)
+public class BridgeLauncherEventArgs : EventArgs
 {
-    public static SteamGame Acc => new("ACC", 805550);
-    public static SteamGame AcRally => new("AC Rally", 3917090);
-    public static SteamGame AcEvo => new("AC Evo", 3058630);
+    public required string ConnectionStatus { get; init; }
 }

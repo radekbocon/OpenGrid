@@ -17,6 +17,7 @@ public class SharedFileReader : IDisposable
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _readingTask;
     private bool _disposed;
+    private string _connectionStatus = "";
 
     public event EventHandler<TelemetryDataEventArgs>? TelemetryDataReceived;
     public event EventHandler<string>? ConnectionStatusChanged;
@@ -55,7 +56,11 @@ public class SharedFileReader : IDisposable
                 {
                     TelemetryDataReceived?.Invoke(this, new TelemetryDataEventArgs { Snapshot = snapshot });
                 }
-
+                else
+                {
+                    OnConnectionStatusChanged("Waiting for game to start.");
+                }
+                
                 await Task.Delay(PollIntervalMs, cancellationToken);
             }
             catch (OperationCanceledException)
@@ -87,6 +92,12 @@ public class SharedFileReader : IDisposable
 
     protected virtual void OnConnectionStatusChanged(string message)
     {
+        if (_connectionStatus == message)
+        {
+            return;
+        }
+
+        _connectionStatus = message;
         ConnectionStatusChanged?.Invoke(this, message);
     }
 
