@@ -1,15 +1,18 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using SimLab.Models;
 
-namespace SimLab.Services;
+namespace SimLab.Services.SharedMemory;
 
 /// <summary>
 /// Service for reading binary telemetry data from shared memory files
 /// Deserializes ACC struct data from /dev/shm/ files
 /// </summary>
-public class AccSharedMemoryReader : ISharedMemoryReader
+public class AcTelemetryClient : ITelemetryClient
 {
     private const string ShmPhysicsPath = "/dev/shm/simlab_physics";
     private const string ShmGraphicsPath = "/dev/shm/simlab_graphics";
@@ -17,14 +20,50 @@ public class AccSharedMemoryReader : ISharedMemoryReader
     private const int AcPhysicsSize = 2048;
     private const int AcGraphicSize = 2048;
     private const int AcStaticSize = 2048;
-    
-    public TelemetrySnapshot? ReadTelemetryData()
+
+    private bool IsConnected => File.Exists(ShmPhysicsPath) &&
+                                File.Exists(ShmGraphicsPath) &&
+                                File.Exists(ShmStaticPath);
+
+    public async Task<bool> ConnectAsync(CancellationToken cancellationToken)
     {
         try
         {
-            if (!File.Exists(ShmPhysicsPath) || 
-                !File.Exists(ShmGraphicsPath) || 
-                !File.Exists(ShmStaticPath))
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (IsConnected)
+                {
+                    return true;
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine($"{nameof(AcTelemetryClient)}.{nameof(ConnectAsync)}: {e.Message}");
+        }
+
+        return false;
+    }
+
+    public void Stop()
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+
+        File.Delete(ShmPhysicsPath);
+        File.Delete(ShmGraphicsPath);
+        File.Delete(ShmStaticPath);
+    }
+
+    public TelemetryRecord? ReadTelemetry()
+    {
+        try
+        {
+            if (!IsConnected)
             {
                 return null;
             }
@@ -39,7 +78,7 @@ public class AccSharedMemoryReader : ISharedMemoryReader
             }
 
             // Create telemetry snapshot
-            var snapshot = new TelemetrySnapshot
+            var snapshot = new TelemetryRecord
             {
                 RecordedAt = DateTime.UtcNow,
                 Track = staticData.Value.track,
@@ -51,10 +90,7 @@ public class AccSharedMemoryReader : ISharedMemoryReader
                 Clutch = physicsData.Value.clutch,
                 CurrentGear = (Gear)physicsData.Value.gear,
                 EngineRpm = physicsData.Value.rpms,
-                FuelRemaining = physicsData.Value.fuel,
-                TireTemperatures = physicsData.Value.tyreTempM,
-                IsInPit = graphicsData.Value.isInPit == 1,
-                IsValidLap = graphicsData.Value.IsValidLap == 1,
+                TireTemperatures = TireTemperatures.FromArray(physicsData.Value.tyreTempM),
                 LapTime = ParseTime(graphicsData.Value.currentTime)
             };
 
@@ -62,7 +98,7 @@ public class AccSharedMemoryReader : ISharedMemoryReader
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error reading telemetry data: {ex.Message}");
+            Debug.WriteLine($"Error reading telemetry data: {ex.Message}");
             return null;
         }
     }
@@ -83,7 +119,7 @@ public class AccSharedMemoryReader : ISharedMemoryReader
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error reading struct from {filePath}: {ex.Message}");
+            Debug.WriteLine($"Error reading struct from {filePath}: {ex.Message}");
             return null;
         }
     }
@@ -111,7 +147,7 @@ public class AccSharedMemoryReader : ISharedMemoryReader
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error converting bytes to struct: {ex.Message}");
+            Debug.WriteLine($"Error converting bytes to struct: {ex.Message}");
             return null;
         }
     }

@@ -23,8 +23,14 @@
                     DisplayMemberBinding="{Binding Name}"
                     ItemsSource="{Binding SupportedGames}"
                     SelectedItem="{Binding SelectedGame, Mode=TwoWay}" />
-                <Button Command="{Binding ConnectCommand}" Content="Connect" />
-                <TextBlock VerticalAlignment="Center" Text="{Binding BridgeConnectionStatus}" />
+                <Button
+                    Command="{Binding ConnectCommand}"
+                    Content="{Binding ConnectLabel}"
+                    IsVisible="{Binding !IsConnected}" />
+                <Button
+                    Command="{Binding DisconnectCommand}"
+                    Content="Disconnect"
+                    IsVisible="{Binding IsConnected}" />
                 <TextBlock VerticalAlignment="Center" Text="{Binding TelemetryStatus}" />
             </StackPanel>
         </Border>
@@ -36,7 +42,7 @@
             ItemsSource="{Binding MenuItems}"
             SelectedItem="{Binding SelectedItem}">
             <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="vm:ManuItem">
+                <DataTemplate x:DataType="vm:MenuItem">
                     <Grid ColumnDefinitions="24,*">
                         <TextBlock
                             Grid.Column="0"

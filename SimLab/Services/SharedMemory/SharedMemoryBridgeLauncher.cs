@@ -1,20 +1,17 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using SimLab.Models;
 
-namespace SimLab.Services;
+namespace SimLab.Services.SharedMemory;
 
 public class SharedMemoryBridgeLauncher
 {
     private Process? _bridgeProcess;
-
-    public event EventHandler<BridgeLauncherEventArgs>? ConnectionStatusChanged; 
-
-    public string? ConnectionStatus { get; private set; }
     
-    public async Task LaunchBridgeAsync(SteamGame steamGame)
+    public async Task LaunchBridgeAsync(SteamGame steamGame, CancellationToken cancellationToken)
     {
         try
         {
@@ -25,7 +22,6 @@ public class SharedMemoryBridgeLauncher
 
             if (!File.Exists(bridgeExePath))
             {
-                UpdateConnectionStatus($"Bridge executable not found at {bridgeExePath}");
                 return;
             }
 
@@ -39,17 +35,21 @@ public class SharedMemoryBridgeLauncher
                 CreateNoWindow = true
             };
 
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+            
             _bridgeProcess = Process.Start(startInfo);
             if (_bridgeProcess != null)
             {
                 // Wait a bit for the bridge to establish connection
                 await Task.Delay(2000);
-                UpdateConnectionStatus("Bridge started");
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            UpdateConnectionStatus($"Failed to launch bridge: {ex.Message}");
+            // ignored
         }
     }
 
@@ -60,23 +60,6 @@ public class SharedMemoryBridgeLauncher
             _bridgeProcess.Kill();
             _bridgeProcess.Dispose();
             _bridgeProcess = null;
-            UpdateConnectionStatus("Bridge stopped");
         }
     }
-
-    private void UpdateConnectionStatus(string connectionStatus)
-    {
-        if (ConnectionStatus == connectionStatus)
-        {
-            return;
-        }
-        
-        ConnectionStatus = connectionStatus;
-        ConnectionStatusChanged?.Invoke(this, new BridgeLauncherEventArgs { ConnectionStatus = ConnectionStatus});
-    }
-}
-
-public class BridgeLauncherEventArgs : EventArgs
-{
-    public required string ConnectionStatus { get; init; }
 }

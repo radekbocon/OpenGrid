@@ -1,0 +1,134 @@
+using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+using SimLab.Models;
+using SimLab.Services.SharedMemory;
+
+namespace SimLab.Services;
+
+public interface ITelemetryService: IDisposable
+{
+    Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken);
+    void StartReading();
+    void StopReading();
+    event EventHandler<TelemetryRecord>? TelemetryReceived;
+    event EventHandler<TelemetryConnectionStatus>? TelemetryStatusChanged;
+}
+
+public enum TelemetryConnectionStatus
+{
+    None,
+    Connecting,
+    Connected,
+    Disconnected
+}
+
+/// <summary>
+/// Service for reading telemetry data from shared files written by the bridge
+/// Polls the shared memory files continuously for new data
+/// </summary>
+public class TelemetryService : ITelemetryService
+{
+    private const int PollIntervalMs = 16; // ~60 Hz
+
+    private readonly ITelemetryClient _telemetryClient;
+    private readonly SharedMemoryBridgeLauncher _sharedMemoryBridgeLauncher;
+    private readonly Lock _observersLock = new();
+    
+    private CancellationTokenSource? _cancellationTokenSource;
+    private Task? _readingTask;
+    private bool _disposed;
+
+    public event EventHandler<TelemetryRecord>? TelemetryReceived;
+    public event EventHandler<TelemetryConnectionStatus>? TelemetryStatusChanged; 
+
+    public TelemetryConnectionStatus ConnectionStatus { get; private set; }
+
+    public TelemetryService(ITelemetryClient telemetryClient, SharedMemoryBridgeLauncher sharedMemoryBridgeLauncher)
+    {
+        _telemetryClient = telemetryClient;
+        _sharedMemoryBridgeLauncher = sharedMemoryBridgeLauncher;
+    }
+
+    public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
+    {
+        if (game.RequiresSharedMemoryBridge)
+        {
+            await _sharedMemoryBridgeLauncher.LaunchBridgeAsync(game, cancellationToken);
+        }
+
+        var result = await _telemetryClient.ConnectAsync(cancellationToken);
+        if (result)
+        {
+            TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Connected);
+        }
+
+        return result;
+    }
+
+    public void StartReading()
+    {
+        try
+        {
+            _cancellationTokenSource = new CancellationTokenSource();
+            _readingTask = ReadPollingLoopAsync(_cancellationTokenSource.Token);
+        }
+        catch (Exception ex)
+        {
+            TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
+        }
+    }
+    
+    public void StopReading()
+    {
+        if (_cancellationTokenSource != null)
+        {
+            _cancellationTokenSource.Cancel();
+            _sharedMemoryBridgeLauncher.StopBridge();
+            _readingTask?.Wait(5000); // Wait max 5 seconds
+            _cancellationTokenSource.Dispose();
+            _cancellationTokenSource = null;
+        }
+
+        _readingTask = null;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        StopReading();
+        _disposed = true;
+    }
+
+    private async Task ReadPollingLoopAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                var snapshot = _telemetryClient.ReadTelemetry();
+                if (snapshot != null)
+                {
+                    TelemetryReceived?.Invoke(this, snapshot);
+                }
+                
+                await Task.Delay(PollIntervalMs, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
+                break;
+            }
+            catch (Exception ex)
+            {
+                TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
+                await Task.Delay(1000, cancellationToken); // Wait longer on error
+            }
+        }
+    }
+}
