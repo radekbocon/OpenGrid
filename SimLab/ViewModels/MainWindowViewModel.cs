@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Serilog;
 using SimLab.Models;
 using SimLab.Services;
 
@@ -57,7 +58,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryRecord e)
     {
-        
     }
 
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
@@ -80,6 +80,7 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        Log.Information("Connecting to {0}", SelectedGame);
         await _telemetryService.ConnectAsync(SelectedGame, CancellationToken.None);
         _telemetryService.StartReading();
     }

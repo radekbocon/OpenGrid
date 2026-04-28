@@ -2,7 +2,7 @@ using System;
 
 namespace SimLab.Models;
 
-public class TelemetryRecord
+public record TelemetryRecord
 {
     public DateTime RecordedAt { get; set; }
     public string? Track { get; set; }

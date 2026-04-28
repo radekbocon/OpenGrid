@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace SimLab;
 
@@ -17,6 +18,12 @@ sealed class Program
         var services = new ServiceCollection();
         services.AddSimLabServices();
         ServiceProvider = services.BuildServiceProvider();
+        
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Debug()
+            .WriteTo.File("logs/simlab.log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
