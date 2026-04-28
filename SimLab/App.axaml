@@ -73,7 +73,5 @@
                     RegionColor="#ff282a36" />
             </FluentTheme.Palettes>
         </FluentTheme>
-
-
     </Application.Styles>
 </Application>
