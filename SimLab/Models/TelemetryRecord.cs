@@ -12,9 +12,11 @@ public record TelemetryRecord
     public float Gas { get; set; }
     public float Brake { get; set; }
     public float Clutch { get; set; }
+    public float SteerAngle { get; set; }
+    public float Fuel { get; set; }
     public Gear CurrentGear { get; set; }
     public float EngineRpm { get; set; }
-    public TireTemperatures TireTemperatures { get; set; } // FL, FR, RL, RR
+    public TireTemperatures TireTemperatures { get; set; }
     public TimeSpan LapTime { get; set; }
 }
 
@@ -43,7 +45,7 @@ public enum Gear
     N6 = 7
 }
 
-public record struct TireTemperatures(float Fl, float Fr, float Rl, float Rr)
+public record struct TireTemperatures(float FrontLeft, float FrontRight, float RearLeft, float RearRight)
 {
     public static TireTemperatures FromArray(float[] array)
     {

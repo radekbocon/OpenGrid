@@ -10,7 +10,7 @@ namespace SimLab.Services.SharedMemory;
 
 /// <summary>
 /// Service for reading binary telemetry data from shared memory files
-/// Deserializes ACC struct data from /dev/shm/ files
+/// Deserializes AC struct data from /dev/shm/ files
 /// </summary>
 public class AcTelemetryClient : ITelemetryClient
 {
@@ -81,17 +81,19 @@ public class AcTelemetryClient : ITelemetryClient
             var snapshot = new TelemetryRecord
             {
                 RecordedAt = DateTime.UtcNow,
-                Track = staticData.Value.track,
-                SessionType = (SessionType)graphicsData.Value.session,
-                CurrentLap = graphicsData.Value.completedLaps,
-                SpeedKmh = physicsData.Value.speedKmh,
-                Gas = physicsData.Value.gas,
-                Brake = physicsData.Value.brake,
-                Clutch = physicsData.Value.clutch,
-                CurrentGear = (Gear)physicsData.Value.gear,
-                EngineRpm = physicsData.Value.rpms,
-                TireTemperatures = TireTemperatures.FromArray(physicsData.Value.tyreTempM),
-                LapTime = ParseTime(graphicsData.Value.currentTime)
+                Track = staticData.Value.Track,
+                SessionType = (SessionType)graphicsData.Value.Session,
+                CurrentLap = graphicsData.Value.CompletedLaps,
+                SpeedKmh = physicsData.Value.SpeedKmh,
+                SteerAngle = physicsData.Value.SteerAngle,
+                Fuel = physicsData.Value.Fuel,
+                Gas = physicsData.Value.Gas,
+                Brake = physicsData.Value.Brake,
+                Clutch = physicsData.Value.Clutch,
+                CurrentGear = (Gear)physicsData.Value.Gear,
+                EngineRpm = physicsData.Value.Rpms,
+                TireTemperatures = TireTemperatures.FromArray(physicsData.Value.TyreCoreTemperature),
+                LapTime = ParseTime(graphicsData.Value.CurrentTime)
             };
 
             return snapshot;
