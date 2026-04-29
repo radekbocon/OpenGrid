@@ -1,9 +1,9 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 using SimLab.Models;
 
 namespace SimLab.Services.SharedMemory;
@@ -41,7 +41,7 @@ public class AcTelemetryClient : ITelemetryClient
         }
         catch (Exception e)
         {
-            Debug.WriteLine($"{nameof(AcTelemetryClient)}.{nameof(ConnectAsync)}: {e.Message}");
+            Log.Error(e, "Error connecting to telemetry: {0}", e.Message);
         }
 
         return false;
@@ -82,6 +82,7 @@ public class AcTelemetryClient : ITelemetryClient
             {
                 RecordedAt = DateTime.UtcNow,
                 Track = staticData.Value.Track,
+                Car = staticData.Value.CarModel,
                 SessionType = (SessionType)graphicsData.Value.Session,
                 CurrentLap = graphicsData.Value.CompletedLaps,
                 SpeedKmh = physicsData.Value.SpeedKmh,
@@ -93,14 +94,14 @@ public class AcTelemetryClient : ITelemetryClient
                 CurrentGear = (Gear)physicsData.Value.Gear,
                 EngineRpm = physicsData.Value.Rpms,
                 TireTemperatures = TireTemperatures.FromArray(physicsData.Value.TyreCoreTemperature),
-                LapTime = ParseTime(graphicsData.Value.CurrentTime)
+                LapTime = TimeSpan.FromMilliseconds(graphicsData.Value.iCurrentTime)
             };
-
+            
             return snapshot;
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error reading telemetry data: {ex.Message}");
+            Log.Error(ex, "Error reading telemetry: {0}", ex.Message);
             return null;
         }
     }
@@ -121,7 +122,7 @@ public class AcTelemetryClient : ITelemetryClient
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error reading struct from {filePath}: {ex.Message}");
+            Log.Error(ex, "Error reading struct from file: {0}", ex.Message);
             return null;
         }
     }
@@ -149,18 +150,9 @@ public class AcTelemetryClient : ITelemetryClient
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error converting bytes to struct: {ex.Message}");
+            Log.Error(ex, "Error converting bytes to struct: {0}", ex.Message);
             return null;
         }
-    }
-    
-    private static TimeSpan ParseTime(string timeString)
-    {
-        var parts = timeString.Split(':');
-        var minutes = int.Parse(parts[0]);
-        var seconds = int.Parse(parts[1]);
-        var milliseconds = int.Parse(parts[2]);
-        return new TimeSpan(0, minutes, seconds, milliseconds);
     }
 }
 

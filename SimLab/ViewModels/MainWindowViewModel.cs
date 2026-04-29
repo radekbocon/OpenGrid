@@ -56,7 +56,7 @@ public partial class MainWindowViewModel : ViewModelBase
         SelectedGame = SupportedGames.First();
     }
 
-    private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryRecord e)
+    private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryEventArgs e)
     {
     }
 
