@@ -16,6 +16,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly ITelemetryService _telemetryService;
 
+    private CancellationTokenSource? _cancellationTokenSource;
+
     public IReadOnlyList<SteamGame> SupportedGames { get; }
     
     [ObservableProperty]
@@ -31,10 +33,16 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     public partial string? TelemetryStatus { get; set; }
 
-    [ObservableProperty] public partial string? ConnectLabel { get; set; } = "Connect";
+    [ObservableProperty] 
+    public partial string? ConnectLabel { get; set; } = "Connect";
     
     [ObservableProperty]
     public partial bool IsConnected { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsConnecting { get; private set; }
+    
+    public bool ShowConnectButton => !IsConnected && !IsConnecting;
 
     public MainWindowViewModel(INavigationService navigationService,
         ITelemetryService telemetryService)
@@ -63,6 +71,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
     {
         IsConnected = e == TelemetryConnectionStatus.Connected;
+        IsConnecting = e == TelemetryConnectionStatus.Connecting;
+        OnPropertyChanged(nameof(ShowConnectButton));
         TelemetryStatus = e.ToString();
     }
 
@@ -80,8 +90,11 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = new CancellationTokenSource();
         Log.Information("Connecting to {0}", SelectedGame);
-        await _telemetryService.ConnectAsync(SelectedGame, CancellationToken.None);
+        await _telemetryService.ConnectAsync(SelectedGame, _cancellationTokenSource.Token);
         _telemetryService.StartReading();
     }
     
@@ -89,5 +102,13 @@ public partial class MainWindowViewModel : ViewModelBase
     private void Disconnect()
     {
         _telemetryService.StopReading();
+    }
+    
+    [RelayCommand]
+    private void Cancel()
+    {
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = null;
     }
 }

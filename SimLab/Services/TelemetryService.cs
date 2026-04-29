@@ -68,6 +68,8 @@ public class TelemetryService : ITelemetryService
 
     public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
     {
+        SetConnectionStatus(TelemetryConnectionStatus.Connecting);
+        
         CurrentGame = game;
         if (game.RequiresSharedMemoryBridge)
         {
@@ -75,11 +77,7 @@ public class TelemetryService : ITelemetryService
         }
 
         var result = await _telemetryClient.ConnectAsync(cancellationToken);
-        if (result)
-        {
-            ConnectionStatus = TelemetryConnectionStatus.Connected;
-            TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Connected);
-        }
+        SetConnectionStatus(result ? TelemetryConnectionStatus.Connected : TelemetryConnectionStatus.Disconnected);
 
         return result;
     }
@@ -154,5 +152,11 @@ public class TelemetryService : ITelemetryService
                 await Task.Delay(1000, cancellationToken); // Wait longer on error
             }
         }
+    }
+    
+    private void SetConnectionStatus(TelemetryConnectionStatus status)
+    {
+        ConnectionStatus = status;
+        TelemetryStatusChanged?.Invoke(this, status);
     }
 }

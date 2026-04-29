@@ -40,11 +40,15 @@
                 <Button
                     Command="{Binding ConnectCommand}"
                     Content="{Binding ConnectLabel}"
-                    IsVisible="{Binding !IsConnected}" />
+                    IsVisible="{Binding ShowConnectButton}" />
                 <Button
                     Command="{Binding DisconnectCommand}"
                     Content="Disconnect"
                     IsVisible="{Binding IsConnected}" />
+                <Button
+                    Command="{Binding CancelCommand}"
+                    Content="Cancel"
+                    IsVisible="{Binding IsConnecting}" />
                 <TextBlock VerticalAlignment="Center" Text="{Binding TelemetryStatus}" />
             </StackPanel>
         </Grid>

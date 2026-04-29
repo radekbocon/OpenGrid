@@ -9,12 +9,11 @@ public class SessionRepository
 {
     private readonly ITelemetryService _telemetryService;
     
-    private Session? _currentSession;
-    private bool _isRecording;
+    public Session? CurrentSession { get; private set; }
 
     public ObservableCollection<Session> Sessions { get; private set; } = [];
     
-    public bool CanStartRecording => _telemetryService.ConnectionStatus == TelemetryConnectionStatus.Connected;
+    public bool IsRecording { get; private set; }
 
     public SessionRepository(ITelemetryService telemetryService)
     {
@@ -24,7 +23,7 @@ public class SessionRepository
 
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
     {
-        if (_isRecording)
+        if (IsRecording)
         {
             _ = StopRecordingAsync();
         }
@@ -32,46 +31,41 @@ public class SessionRepository
 
     public async Task StartRecordingAsync()
     {
-        if (!CanStartRecording)
-        {
-            //return;
-        }
-        
-        _isRecording = true;
+        IsRecording = true;
         _telemetryService.TelemetryReceived += TelemetryServiceOnTelemetryReceived;
     }
     
     public async Task StopRecordingAsync()
     {
         _telemetryService.TelemetryReceived -= TelemetryServiceOnTelemetryReceived;
-        _isRecording = false;
+        IsRecording = false;
 
-        if (_currentSession is not null)
+        if (CurrentSession is not null)
         {
-            Sessions.Add(_currentSession);
-            _currentSession = null;
+            Sessions.Add(CurrentSession);
+            CurrentSession = null;
         }
         
     }
 
     private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryEventArgs e)
     {
-        if (_currentSession is null)
+        if (CurrentSession is null)
         {
-            _currentSession = new Session(e.Game, e.Telemetry);
+            CurrentSession = new Session(e.Game, e.Telemetry);
         }
 
-        if (_currentSession.IsNewSession(e.Telemetry))
+        if (CurrentSession.IsNewSession(e.Telemetry))
         {
-            Sessions.Add(_currentSession);
-            _currentSession = new Session(e.Game, e.Telemetry);
+            Sessions.Add(CurrentSession);
+            CurrentSession = new Session(e.Game, e.Telemetry);
         }
         
-        if (_currentSession.IsNewLap(e.Telemetry))
+        if (CurrentSession.IsNewLap(e.Telemetry))
         {
-            _currentSession.Laps.Add(new Lap(e.Telemetry.CurrentLap, e.Telemetry));
+            CurrentSession.Laps.Add(new Lap(e.Telemetry.CurrentLap, e.Telemetry));
         }
         
-        _currentSession.CurrentLap.Records.Add(e.Telemetry);
+        CurrentSession.CurrentLap.Records.Add(e.Telemetry);
     }
 }
