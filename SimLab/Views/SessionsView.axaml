@@ -4,12 +4,19 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:SimLab.Models"
     xmlns:vm="using:SimLab.ViewModels"
     Padding="16"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vm:SessionsViewModel"
     mc:Ignorable="d">
+
+    <Interaction.Behaviors>
+        <EventTriggerBehavior EventName="Loaded">
+            <InvokeCommandAction Command="{Binding LoadedCommand}" />
+        </EventTriggerBehavior>
+    </Interaction.Behaviors>
 
     <Grid RowDefinitions="Auto, Auto, Auto">
         <StackPanel
@@ -26,12 +33,50 @@
                 IsVisible="{Binding IsRecording}" />
         </StackPanel>
 
-        <TextBlock Grid.Row="1" Text="{Binding CurrentSession}" />
+        <TextBlock
+            Grid.Row="1"
+            Margin="0,8,0,8"
+            Text="Sessions:" />
 
-        <ListBox
-            Grid.Row="2"
-            DisplayMemberBinding="{Binding Laps.Count}"
-            ItemsSource="{Binding Sessions}" />
+        <ListBox Grid.Row="2" ItemsSource="{Binding Sessions}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:Session">
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" RowDefinitions="Auto, Auto">
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="4"
+                            Margin="4"
+                            FontSize="14"
+                            Text="{Binding Info.StartTime}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Margin="4"
+                            FontSize="16"
+                            Text="{Binding Info.Game.Name}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="4"
+                            FontSize="16"
+                            Text="{Binding Info.Car}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Margin="4"
+                            FontSize="16"
+                            Text="{Binding Info.Type}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="3"
+                            Margin="4"
+                            FontSize="16"
+                            Text="{Binding Laps.Count, StringFormat='Laps: {0}'}" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 
 </UserControl>

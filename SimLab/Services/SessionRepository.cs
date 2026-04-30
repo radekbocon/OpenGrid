@@ -1,12 +1,17 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading.Tasks;
+using ProtoBuf;
 using SimLab.Models;
 
 namespace SimLab.Services;
 
 public class SessionRepository
 {
+    private readonly string _telemetryFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SimLab", "Telemetry");
+
     private readonly ITelemetryService _telemetryService;
     
     public Session? CurrentSession { get; private set; }
@@ -17,8 +22,27 @@ public class SessionRepository
 
     public SessionRepository(ITelemetryService telemetryService)
     {
+        Directory.CreateDirectory(_telemetryFolder);
         _telemetryService = telemetryService;
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
+    }
+
+    public ObservableCollection<Session> GetSessions()
+    {
+        var sessions = new List<Session>();
+        
+        var files = Directory.GetFiles(_telemetryFolder, "*.bin");
+
+        foreach (var file in files)
+        {
+            using var stream = File.OpenRead(file);
+            var session = Serializer.Deserialize<Session>(stream);
+            sessions.Add(session);
+        }
+
+        Sessions = new ObservableCollection<Session>(sessions);
+        
+        return Sessions;
     }
 
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
@@ -43,6 +67,7 @@ public class SessionRepository
         if (CurrentSession is not null)
         {
             Sessions.Add(CurrentSession);
+            WriteSession(CurrentSession);
             CurrentSession = null;
         }
         
@@ -53,12 +78,14 @@ public class SessionRepository
         if (CurrentSession is null)
         {
             CurrentSession = new Session(e.Game, e.Telemetry);
+            WriteSession(CurrentSession);
         }
 
         if (CurrentSession.IsNewSession(e.Telemetry))
         {
             Sessions.Add(CurrentSession);
             CurrentSession = new Session(e.Game, e.Telemetry);
+            WriteSession(CurrentSession);
         }
         
         if (CurrentSession.IsNewLap(e.Telemetry))
@@ -67,5 +94,13 @@ public class SessionRepository
         }
         
         CurrentSession.CurrentLap.Records.Add(e.Telemetry);
+    }
+    
+    private void WriteSession(Session session)
+    {
+        using var file = File.Create(Path.Combine(_telemetryFolder,
+            $"{session.Info.Car}-{session.Info.Track}-{session.Info.Type}-{session.Info.Id}.bin"));
+
+        Serializer.Serialize(file, session);
     }
 }

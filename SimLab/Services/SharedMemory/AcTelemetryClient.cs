@@ -68,9 +68,9 @@ public class AcTelemetryClient : ITelemetryClient
                 return null;
             }
 
-            var physicsData = ReadStructFromFile<SPageFilePhysics>(ShmPhysicsPath, AcPhysicsSize);
-            var graphicsData = ReadStructFromFile<SPageFileGraphic>(ShmGraphicsPath, AcGraphicSize);
-            var staticData = ReadStructFromFile<SPageFileStatic>(ShmStaticPath, AcStaticSize);
+            var physicsData = ReadStructFromFile<SPageFilePhysics>(ShmPhysicsPath, Marshal.SizeOf<SPageFilePhysics>());
+            var graphicsData = ReadStructFromFile<SPageFileGraphic>(ShmGraphicsPath, Marshal.SizeOf<SPageFileGraphic>());
+            var staticData = ReadStructFromFile<SPageFileStatic>(ShmStaticPath, Marshal.SizeOf<SPageFileStatic>());
 
             if (physicsData == null || graphicsData == null || staticData == null)
             {

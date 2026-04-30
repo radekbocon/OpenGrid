@@ -28,11 +28,20 @@ public partial class SessionsViewModel : ViewModelBase
         _sessionRepository = sessionRepository;
         _telemetryService = telemetryService;
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
+        
+        CanStartRecording = _telemetryService.ConnectionStatus == TelemetryConnectionStatus.Connected;
     }
 
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
     {
         CanStartRecording = e == TelemetryConnectionStatus.Connected;
+    }
+    
+    [RelayCommand]
+    private void Loaded()
+    {
+        _sessionRepository.GetSessions();
+        OnPropertyChanged(nameof(Sessions));
     }
 
     [RelayCommand(CanExecute = nameof(CanStartRecording))]
