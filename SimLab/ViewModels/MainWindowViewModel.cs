@@ -25,10 +25,17 @@ public partial class MainWindowViewModel : ViewModelBase
     
     public ObservableCollection<MenuItem> MenuItems { get; }
 
-    public ViewModelBase CurrentViewModel => _navigationService.CurrentViewModel;
-
-    [ObservableProperty]
-    public partial MenuItem SelectedItem { get; set; }
+    public ViewModelBase? CurrentViewModel
+    {
+        get;
+        set
+        {
+            if (SetProperty(ref field, value))
+            {
+                SelectedMenuItem = MenuItems.FirstOrDefault(m => m.ViewModelType == value?.GetType()) ?? SelectedMenuItem;
+            }
+        }
+    }
     
     [ObservableProperty]
     public partial string? TelemetryStatus { get; set; }
@@ -42,6 +49,13 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool IsConnecting { get; private set; }
     
+    [ObservableProperty]
+    public partial MenuItem? SelectedMenuItem { get; set; }
+    
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GoBackCommand))]
+    public partial bool CanGoBack { get; set; }
+    
     public bool ShowConnectButton => !IsConnected && !IsConnecting;
 
     public MainWindowViewModel(INavigationService navigationService,
@@ -54,11 +68,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         MenuItems =
         [
-            new MenuItem { Icon = "🏠", Label = "Home", ViewModelType = typeof(HomeViewModel) },
-            new MenuItem { Icon = "📋", Label = "Sessions", ViewModelType = typeof(SessionsViewModel) },
-            new MenuItem { Icon = "⚙️", Label = "Settings", ViewModelType = typeof(SettingsViewModel) },
+            new MenuItem { Icon = "", Label = "Home", ViewModelType = typeof(HomeViewModel) },
+            new MenuItem { Icon = "", Label = "Sessions", ViewModelType = typeof(SessionsViewModel) },
+            new MenuItem { Icon = "", Label = "Settings", ViewModelType = typeof(SettingsViewModel) }
         ];
-        SelectedItem = MenuItems.First();
         
         SupportedGames = SteamGame.GetAll();
         SelectedGame = SupportedGames.First();
@@ -75,11 +88,17 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowConnectButton));
         TelemetryStatus = e.ToString();
     }
-
-    partial void OnSelectedItemChanged(MenuItem value)
+    
+    [RelayCommand]
+    private void SelectMenuItem(MenuItem menuItem)
     {
-        _navigationService.NavigateTo(value.ViewModelType);
-        OnPropertyChanged(nameof(CurrentViewModel));
+        _navigationService.NavigateTo(menuItem.ViewModelType);
+    }
+    
+    [RelayCommand(CanExecute = nameof(CanGoBack))]
+    private void GoBack()
+    {
+        _navigationService.GoBack();
     }
 
     [RelayCommand]

@@ -17,10 +17,11 @@ public static class ServiceRegistrator
         services.AddSingleton<SessionRepository>();
 
         // Register ViewModels
-        services.AddTransient<MainWindowViewModel>();
+        services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<SessionsViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<SessionDetailsViewModel>();
 
         return services;
     }

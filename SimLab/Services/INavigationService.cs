@@ -5,7 +5,9 @@ namespace SimLab.Services;
 
 public interface INavigationService
 {
-    ViewModelBase CurrentViewModel { get; }
-    void NavigateTo<TViewModel>() where TViewModel : ViewModelBase;
+    bool CanGoBack { get; }
+    void Initialize(MainWindowViewModel mainWindowViewModel);
+    void NavigateTo<TViewModel>(params object[]  parameters) where TViewModel : ViewModelBase;
     void NavigateTo(Type type);
+    void GoBack();
 }

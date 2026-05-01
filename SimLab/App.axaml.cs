@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using SimLab.ViewModels;
 using SimLab.Views;
 using Microsoft.Extensions.DependencyInjection;
+using SimLab.Services;
 
 namespace SimLab;
 
@@ -21,9 +22,13 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var mainVewModel = Program.ServiceProvider.GetRequiredService<MainWindowViewModel>();
+            var navigationService = Program.ServiceProvider.GetRequiredService<INavigationService>();
+            navigationService.Initialize(mainVewModel);
+            navigationService.NavigateTo<HomeViewModel>();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = Program.ServiceProvider.GetRequiredService<MainWindowViewModel>(),
+                DataContext = mainVewModel,
             };
         }
 

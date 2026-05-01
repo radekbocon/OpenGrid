@@ -38,7 +38,15 @@
             Margin="0,8,0,8"
             Text="Sessions:" />
 
-        <ListBox Grid.Row="2" ItemsSource="{Binding Sessions}">
+        <ListBox
+            Name="SessionsList"
+            Grid.Row="2"
+            ItemsSource="{Binding Sessions}">
+            <Interaction.Behaviors>
+                <EventTriggerBehavior EventName="SelectionChanged">
+                    <InvokeCommandAction Command="{Binding SessionSelectedCommand}" CommandParameter="{Binding #SessionsList.SelectedItem}" />
+                </EventTriggerBehavior>
+            </Interaction.Behaviors>
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:Session">
                     <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" RowDefinitions="Auto, Auto">

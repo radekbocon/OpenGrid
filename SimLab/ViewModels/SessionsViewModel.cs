@@ -11,6 +11,7 @@ public partial class SessionsViewModel : ViewModelBase
 {
     private readonly SessionRepository _sessionRepository;
     private readonly ITelemetryService _telemetryService;
+    private readonly INavigationService _navigationService;
     
     [ObservableProperty]
     public partial bool CanStartRecording { get; private set; } 
@@ -23,10 +24,11 @@ public partial class SessionsViewModel : ViewModelBase
     
     public bool IsRecording => _sessionRepository.IsRecording;
 
-    public SessionsViewModel(SessionRepository sessionRepository, ITelemetryService telemetryService)
+    public SessionsViewModel(SessionRepository sessionRepository, ITelemetryService telemetryService, INavigationService navigationService)
     {
         _sessionRepository = sessionRepository;
         _telemetryService = telemetryService;
+        _navigationService = navigationService;
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
         
         CanStartRecording = _telemetryService.ConnectionStatus == TelemetryConnectionStatus.Connected;
@@ -56,5 +58,11 @@ public partial class SessionsViewModel : ViewModelBase
     {
         await _sessionRepository.StopRecordingAsync();
         OnPropertyChanged(nameof(IsRecording));
+    }
+    
+    [RelayCommand]
+    private void SessionSelected(Session session)
+    {
+        _navigationService.NavigateTo<SessionDetailsViewModel>(session);
     }
 }

@@ -85,7 +85,7 @@ public record Session
     public List<Lap> Laps { get; } = [];
     public Lap CurrentLap => Laps.Last();
 
-    public Session()
+    private Session()
     {
         
     }
