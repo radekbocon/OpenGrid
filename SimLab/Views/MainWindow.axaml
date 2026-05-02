@@ -14,54 +14,57 @@
 
     <DockPanel>
         <!--  Top Dock  -->
-        <Grid
+        <Border
             Background="{DynamicResource SystemChromeMediumLowColor}"
-            ColumnDefinitions="220, *"
+            BorderThickness="0,0,0,2"
             DockPanel.Dock="Top">
-            <Grid Grid.Column="0" ColumnDefinitions="Auto, *">
-                <Button
-                    Margin="4"
-                    Click="ToggleSideBar"
-                    Content=""
-                    FontFamily="{StaticResource Awesome}"
-                    FontSize="20" />
-                <TextBlock
-                    Grid.Column="1"
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Center"
-                    FontSize="20"
-                    Text="SimLab" />
-            </Grid>
+            <Grid ColumnDefinitions="220, *">
+                <Grid Grid.Column="0" ColumnDefinitions="Auto, *">
+                    <Button
+                        Margin="4"
+                        Click="ToggleSideBar"
+                        Content=""
+                        FontFamily="{StaticResource Awesome}"
+                        FontSize="20" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        FontSize="20"
+                        Text="SimLab" />
+                </Grid>
 
-            <StackPanel
-                Grid.Column="1"
-                Margin="0,8,8,8"
-                Orientation="Horizontal"
-                Spacing="8">
-                <Button
-                    Command="{Binding GoBackCommand}"
-                    Content=""
-                    FontFamily="{StaticResource Awesome}"
-                    FontSize="20" />
-                <ComboBox
-                    DisplayMemberBinding="{Binding Name}"
-                    ItemsSource="{Binding SupportedGames}"
-                    SelectedItem="{Binding SelectedGame, Mode=TwoWay}" />
-                <Button
-                    Command="{Binding ConnectCommand}"
-                    Content="{Binding ConnectLabel}"
-                    IsVisible="{Binding ShowConnectButton}" />
-                <Button
-                    Command="{Binding DisconnectCommand}"
-                    Content="Disconnect"
-                    IsVisible="{Binding IsConnected}" />
-                <Button
-                    Command="{Binding CancelCommand}"
-                    Content="Cancel"
-                    IsVisible="{Binding IsConnecting}" />
-                <TextBlock VerticalAlignment="Center" Text="{Binding TelemetryStatus}" />
-            </StackPanel>
-        </Grid>
+                <StackPanel
+                    Grid.Column="1"
+                    Margin="0,8,8,8"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <Button
+                        Command="{Binding GoBackCommand}"
+                        Content=""
+                        FontFamily="{StaticResource Awesome}"
+                        FontSize="20" />
+                    <ComboBox
+                        DisplayMemberBinding="{Binding Name}"
+                        ItemsSource="{Binding SupportedGames}"
+                        SelectedItem="{Binding SelectedGame, Mode=TwoWay}" />
+                    <Button
+                        Command="{Binding ConnectCommand}"
+                        Content="{Binding ConnectLabel}"
+                        IsVisible="{Binding ShowConnectButton}" />
+                    <Button
+                        Command="{Binding DisconnectCommand}"
+                        Content="Disconnect"
+                        IsVisible="{Binding IsConnected}" />
+                    <Button
+                        Command="{Binding CancelCommand}"
+                        Content="Cancel"
+                        IsVisible="{Binding IsConnecting}" />
+                    <TextBlock VerticalAlignment="Center" Text="{Binding TelemetryStatus}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
 
         <!--  Side Bar  -->
         <StackPanel

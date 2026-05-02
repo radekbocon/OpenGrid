@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 using SimLab.Models;
 
 namespace SimLab.Services.SharedMemory;
@@ -22,6 +23,7 @@ public class SharedMemoryBridgeLauncher
 
             if (!File.Exists(bridgeExePath))
             {
+                Log.Error("Bridge executable not found: {0}", bridgeExePath);
                 return;
             }
 
@@ -47,9 +49,9 @@ public class SharedMemoryBridgeLauncher
                 await Task.Delay(2000);
             }
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            // ignored
+            Log.Error(exception, "Error launching bridge: {0}", exception.Message);
         }
     }
 

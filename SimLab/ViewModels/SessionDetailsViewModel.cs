@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using Avalonia.Input;
-using Avalonia.Xaml.Interactions.Events;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore.Defaults;
@@ -19,10 +17,10 @@ namespace SimLab.ViewModels;
 
 public partial class SessionDetailsViewModel : ViewModelBase
 {
-    private Session? Session { get; set; }
-
     [ObservableProperty]
     public partial Lap? SelectedLap { get; set; }
+    
+    public ObservableCollection<Lap>? Laps { get; set; } 
 
     public ObservableCollection<ChartData> Inputs { get; set; } = [];
     public ObservableCollection<ChartData> Speed { get; set; } = [];
@@ -34,13 +32,19 @@ public partial class SessionDetailsViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial double MaxX { get; set; }
+    
+    public Func<double, string> GearLabeler { get; set; } =
+        value => Enum.GetName(typeof(Gear), (int)value) ?? "";
+
+    [ObservableProperty]
+    public partial string? LapTime { get; set; }
 
     public override void SetParameters(params object[] parameters)
     {
-        if (parameters.Length > 0 && parameters[0] is Session session)
+        if (parameters.Length > 0 && parameters[0] is Session { Laps.Count: > 0 } session)
         {
-            Session = session;
-            SelectedLap = session.Laps[1];
+            Laps = new ObservableCollection<Lap>(session.Laps);
+            SelectedLap = Laps.FirstOrDefault();
         }
     }
 
@@ -52,31 +56,29 @@ public partial class SessionDetailsViewModel : ViewModelBase
         }
         
         var gasData = new ChartData("Gas", 
-            new ObservableCollection<ObservablePoint>(value.Records.Select(r => new ObservablePoint(r.Distance, r.Gas))), 
-            new SolidColorPaint(SKColors.Green, 3));
+            value.Records.Select(r => new ObservablePoint(r.Distance, r.Gas)), 
+            new SolidColorPaint(SKColors.Green, 2));
         var brakeData = new ChartData("Brake", 
-            new ObservableCollection<ObservablePoint>(value.Records.Select(r => new ObservablePoint(r.Distance, r.Brake))), 
-            new SolidColorPaint(SKColors.Red, 3));
-        var steeringData = new ChartData("Steering", 
-            new ObservableCollection<ObservablePoint>(value.Records.Select(r => new ObservablePoint(r.Distance, Math.Abs(Math.Round(r.SteerAngle, 2))))), 
-            new SolidColorPaint(SKColors.Gray, 3));
+            value.Records.Select(r => new ObservablePoint(r.Distance, r.Brake)), 
+            new SolidColorPaint(SKColors.Red, 2));
         var speedData = new ChartData("Speed", 
-            new ObservableCollection<ObservablePoint>(value.Records.Select(r => new ObservablePoint(r.Distance, Math.Round(r.SpeedKmh, 1)))), 
-            new SolidColorPaint(SKColors.DodgerBlue, 3));
+            value.Records.Select(r => new ObservablePoint(r.Distance, Math.Round(r.SpeedKmh, 1))), 
+            new SolidColorPaint(SKColors.DodgerBlue,2));
         var gearData = new ChartData("Gear", 
-            new ObservableCollection<ObservablePoint>(value.Records.Select(r => new ObservablePoint(r.Distance, (int)r.CurrentGear))), 
-            new SolidColorPaint(SKColors.DodgerBlue, 3));
+            value.Records.Select(r => new ObservablePoint(r.Distance, (int)r.CurrentGear)), 
+            new SolidColorPaint(SKColors.DodgerBlue, 2));
         var rpmData = new ChartData("RPM", 
-            new ObservableCollection<ObservablePoint>(value.Records.Select(r => new ObservablePoint(r.Distance, r.EngineRpm))), 
-            new SolidColorPaint(SKColors.DodgerBlue, 3));
+            value.Records.Select(r => new ObservablePoint(r.Distance, r.EngineRpm)), 
+            new SolidColorPaint(SKColors.DodgerBlue, 2));
         
         MinX = value.Records.Min(r => r.Distance);
         MaxX = value.Records.Max(r => r.Distance);
 
-        Inputs = [gasData, brakeData, steeringData];
+        Inputs = [gasData, brakeData];
         Speed = [speedData];
         Gear = [gearData];
         Rpm = [rpmData];
+        LapTime = $@"Time: {SelectedLap?.Time:mm\:ss\.fff}";
     }
 
     [RelayCommand]
@@ -91,11 +93,18 @@ public partial class SessionDetailsViewModel : ViewModelBase
     }
 }
 
-public class ChartData(string name, ObservableCollection<ObservablePoint> points, Paint stroke)
+public class ChartData
 {
-    public string Name { get; set; } = name;
-    
-    public ObservableCollection<ObservablePoint> Values { get; set; } = points;
+    public string Name { get; set; }
 
-    public Paint Stroke { get; set; } = stroke;
+    public ObservableCollection<ObservablePoint> Values { get; set; }
+
+    public Paint Stroke { get; set; }
+
+    public ChartData(string name, IEnumerable<ObservablePoint> values, Paint stroke)
+    {
+        Name = name;
+        Values = new ObservableCollection<ObservablePoint>(values);
+        Stroke = stroke;
+    }
 }
