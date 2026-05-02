@@ -38,6 +38,8 @@ public record TelemetryRecord
     public TireTemperatures TireTemperatures { get; set; }
     [ProtoMember(15)]
     public TimeSpan LapTime { get; set; }
+    [ProtoMember(16)]
+    public float Distance { get; set; }
 }
 
 public enum SessionType
@@ -103,7 +105,7 @@ public record Session
 
     public bool IsNewLap(TelemetryRecord record)
     {
-        return record.CurrentLap != CurrentLap.Number;
+        return record.CurrentLap != CurrentLap.Number || record.LapTime < CurrentLap.Time;
     }
 }
 
