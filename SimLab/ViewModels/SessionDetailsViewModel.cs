@@ -22,10 +22,14 @@ public partial class SessionDetailsViewModel : ViewModelBase
     
     public ObservableCollection<Lap>? Laps { get; set; } 
 
-    public ObservableCollection<ChartData> Inputs { get; set; } = [];
-    public ObservableCollection<ChartData> Speed { get; set; } = [];
-    public ObservableCollection<ChartData> Gear { get; set; } = [];
-    public ObservableCollection<ChartData> Rpm { get; set; } = [];
+    [ObservableProperty]
+    public partial ObservableCollection<ChartData> Inputs { get; set; } = [];
+    [ObservableProperty]
+    public partial ObservableCollection<ChartData> Speed { get; set; } = [];
+    [ObservableProperty]
+    public partial ObservableCollection<ChartData> Gear { get; set; } = [];
+    [ObservableProperty]
+    public partial ObservableCollection<ChartData> Rpm { get; set; } = [];
     
     [ObservableProperty]
     public partial double MinX { get; set; }
@@ -44,7 +48,7 @@ public partial class SessionDetailsViewModel : ViewModelBase
         if (parameters.Length > 0 && parameters[0] is Session { Laps.Count: > 0 } session)
         {
             Laps = new ObservableCollection<Lap>(session.Laps);
-            SelectedLap = Laps.FirstOrDefault();
+            SelectedLap = Laps.First();
         }
     }
 
@@ -78,6 +82,8 @@ public partial class SessionDetailsViewModel : ViewModelBase
         Speed = [speedData];
         Gear = [gearData];
         Rpm = [rpmData];
+        
+        ResampleAllCharts();
         LapTime = $@"Time: {SelectedLap?.Time:mm\:ss\.fff}";
     }
 
@@ -90,21 +96,93 @@ public partial class SessionDetailsViewModel : ViewModelBase
         }
         MaxX = axis.MaxLimit ?? MaxX;
         MinX = axis.MinLimit ?? MinX;
+        ResampleAllCharts();
+    }
+    
+    private void ResampleAllCharts()
+    {
+        // TODO: set actual width
+        const int widthPixels = 500;
+        
+        foreach (var chartData in Rpm)
+        {
+            chartData.Resample(widthPixels, MaxX, MinX);
+        }
+        foreach (var chartData in Speed)
+        {
+            chartData.Resample(widthPixels, MaxX, MinX);
+        }
+        foreach (var chartData in Gear)
+        {
+            chartData.Resample(widthPixels, MaxX, MinX);
+        }
+        foreach (var chartData in Inputs)
+        {
+            chartData.Resample(widthPixels, MaxX, MinX);
+        }
     }
 }
 
 public class ChartData
 {
+    private readonly List<ObservablePoint> _fullData;
+    
     public string Name { get; set; }
 
-    public ObservableCollection<ObservablePoint> Values { get; set; }
+    public ObservableCollection<ObservablePoint> Points { get; set; }
 
     public Paint Stroke { get; set; }
 
     public ChartData(string name, IEnumerable<ObservablePoint> values, Paint stroke)
     {
+        _fullData = values.ToList();
+        
         Name = name;
-        Values = new ObservableCollection<ObservablePoint>(values);
+        Points = new ObservableCollection<ObservablePoint>(_fullData);
         Stroke = stroke;
+    }
+
+    public void Resample(int widthPixels, double maxX, double minX)
+    {
+        const int pixelsPerPoint = 2;
+
+        var maxPoints = widthPixels / pixelsPerPoint;
+
+        // Get only visible points
+        var visible = _fullData
+            .Where(p => p.X >= minX && p.X <= maxX)
+            .ToList();
+
+        if (visible.Count <= maxPoints)
+        {
+            // No need to resample
+            Points.Clear();
+            foreach (var p in visible)
+                Points.Add(p);
+
+            return;
+        }
+
+        // Calculate step
+        var step = (double)visible.Count / maxPoints;
+
+        var resampled = new List<ObservablePoint>(maxPoints);
+
+        for (var i = 0; i < maxPoints; i++)
+        {
+            var index = (int)(i * step);
+            if (index >= visible.Count)
+            {
+                index = visible.Count - 1;
+            }
+
+            resampled.Add(visible[index]);
+        }
+
+        Points.Clear();
+        foreach (var p in resampled)
+        {
+            Points.Add(p);
+        }
     }
 }

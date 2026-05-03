@@ -18,7 +18,7 @@
                 LineSmoothness="0"
                 SeriesName="{Binding Name}"
                 Stroke="{Binding Stroke}"
-                Values="{Binding Values}" />
+                Values="{Binding Points}" />
         </DataTemplate>
 
     </UserControl.Resources>
