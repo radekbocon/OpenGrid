@@ -27,7 +27,7 @@ public class SessionRepository
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
     }
 
-    public ObservableCollection<Session> GetSessions()
+    public void LoadSessions()
     {
         var sessions = new List<Session>();
         
@@ -41,13 +41,11 @@ public class SessionRepository
         }
 
         Sessions = new ObservableCollection<Session>(sessions);
-        
-        return Sessions;
     }
 
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
     {
-        if (IsRecording)
+        if (IsRecording && e == TelemetryConnectionStatus.Disconnected)
         {
             _ = StopRecordingAsync();
         }

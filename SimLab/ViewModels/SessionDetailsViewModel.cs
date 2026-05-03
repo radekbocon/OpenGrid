@@ -65,6 +65,9 @@ public partial class SessionDetailsViewModel : ViewModelBase
         var brakeData = new ChartData("Brake", 
             value.Records.Select(r => new ObservablePoint(r.Distance, r.Brake)), 
             new SolidColorPaint(SKColors.Red, 2));
+        var steeringData = new ChartData("Steering", 
+            value.Records.Select(r => new ObservablePoint(r.Distance, Math.Abs(r.SteerAngle))), 
+            new SolidColorPaint(SKColors.Gray, 2));
         var speedData = new ChartData("Speed", 
             value.Records.Select(r => new ObservablePoint(r.Distance, Math.Round(r.SpeedKmh, 1))), 
             new SolidColorPaint(SKColors.DodgerBlue,2));
@@ -78,7 +81,7 @@ public partial class SessionDetailsViewModel : ViewModelBase
         MinX = value.Records.Min(r => r.Distance);
         MaxX = value.Records.Max(r => r.Distance);
 
-        Inputs = [gasData, brakeData];
+        Inputs = [gasData, brakeData, steeringData];
         Speed = [speedData];
         Gear = [gearData];
         Rpm = [rpmData];

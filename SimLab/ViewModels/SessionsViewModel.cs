@@ -42,7 +42,7 @@ public partial class SessionsViewModel : ViewModelBase
     [RelayCommand]
     private void Loaded()
     {
-        _sessionRepository.GetSessions();
+        _sessionRepository.LoadSessions();
         OnPropertyChanged(nameof(Sessions));
     }
 
