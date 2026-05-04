@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 using SimLab.Models;
+using SimLab.Services.Devices;
 using SimLab.Services.SharedMemory;
 
 namespace SimLab.Services;
@@ -48,6 +49,7 @@ public class TelemetryService : ITelemetryService
 
     private readonly ITelemetryClient _telemetryClient;
     private readonly SharedMemoryBridgeLauncher _sharedMemoryBridgeLauncher;
+    private readonly ITelemetryDispatcher _telemetryDispatcher;
     private readonly Lock _observersLock = new();
     
     private CancellationTokenSource? _cancellationTokenSource;
@@ -60,10 +62,11 @@ public class TelemetryService : ITelemetryService
     public TelemetryConnectionStatus ConnectionStatus { get; private set; }
     public SteamGame? CurrentGame { get; private set; }
 
-    public TelemetryService(ITelemetryClient telemetryClient, SharedMemoryBridgeLauncher sharedMemoryBridgeLauncher)
+    public TelemetryService(ITelemetryClient telemetryClient, SharedMemoryBridgeLauncher sharedMemoryBridgeLauncher, ITelemetryDispatcher telemetryDispatcher)
     {
         _telemetryClient = telemetryClient;
         _sharedMemoryBridgeLauncher = sharedMemoryBridgeLauncher;
+        _telemetryDispatcher = telemetryDispatcher;
     }
 
     public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
@@ -137,6 +140,7 @@ public class TelemetryService : ITelemetryService
                 if (snapshot != null && CurrentGame != null)
                 {
                     TelemetryReceived?.Invoke(this, new TelemetryEventArgs(CurrentGame, snapshot));
+                    _telemetryDispatcher.Dispatch(snapshot);
                 }
                 
                 await Task.Delay(PollIntervalMs, cancellationToken);

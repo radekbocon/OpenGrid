@@ -40,6 +40,8 @@ public record TelemetryRecord
     public TimeSpan LapTime { get; set; }
     [ProtoMember(16)]
     public float Distance { get; set; }
+    [ProtoMember(17)]
+    public float MaxRpm { get; set; }
 }
 
 public enum SessionType

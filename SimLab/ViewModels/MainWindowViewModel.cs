@@ -70,7 +70,8 @@ public partial class MainWindowViewModel : ViewModelBase
         [
             new MenuItem { Icon = "", Label = "Home", ViewModelType = typeof(HomeViewModel) },
             new MenuItem { Icon = "", Label = "Sessions", ViewModelType = typeof(SessionsViewModel) },
-            new MenuItem { Icon = "", Label = "Settings", ViewModelType = typeof(SettingsViewModel) }
+            new MenuItem { Icon = "", Label = "Devices", ViewModelType = typeof(DevicesViewModel) },
+            new MenuItem { Icon = "", Label = "Settings", ViewModelType = typeof(SettingsViewModel) },
         ];
         
         SupportedGames = SteamGame.GetAll();

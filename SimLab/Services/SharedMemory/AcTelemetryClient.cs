@@ -95,7 +95,8 @@ public class AcTelemetryClient : ITelemetryClient
                 EngineRpm = physicsData.Value.Rpms,
                 TireTemperatures = TireTemperatures.FromArray(physicsData.Value.TyreCoreTemperature),
                 LapTime = TimeSpan.FromMilliseconds(graphicsData.Value.iCurrentTime),
-                Distance = graphicsData.Value.DistanceTraveled
+                Distance = graphicsData.Value.DistanceTraveled,
+                MaxRpm = staticData.Value.MaxRpm,
             };
             
             return snapshot;
