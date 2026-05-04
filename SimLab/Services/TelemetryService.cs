@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
@@ -47,10 +49,13 @@ public class TelemetryService : ITelemetryService
 {
     private const int PollIntervalMs = 1000 / 30;
 
-    private readonly ITelemetryClient _telemetryClient;
+    private readonly AcTelemetryClient _acTelemetryClient;
+    private readonly DebugTelemetryClient _debugTelemetryClient;
     private readonly SharedMemoryBridgeLauncher _sharedMemoryBridgeLauncher;
     private readonly ITelemetryDispatcher _telemetryDispatcher;
     private readonly Lock _observersLock = new();
+
+    private ITelemetryClient? _telemetryClient;
     
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _readingTask;
@@ -62,9 +67,11 @@ public class TelemetryService : ITelemetryService
     public TelemetryConnectionStatus ConnectionStatus { get; private set; }
     public SteamGame? CurrentGame { get; private set; }
 
-    public TelemetryService(ITelemetryClient telemetryClient, SharedMemoryBridgeLauncher sharedMemoryBridgeLauncher, ITelemetryDispatcher telemetryDispatcher)
+    public TelemetryService(IEnumerable<ITelemetryClient> telemetryClients, SharedMemoryBridgeLauncher sharedMemoryBridgeLauncher, ITelemetryDispatcher telemetryDispatcher)
     {
-        _telemetryClient = telemetryClient;
+        var clients = telemetryClients.ToList();
+        _acTelemetryClient = (AcTelemetryClient)clients.First(x => x is AcTelemetryClient);
+        _debugTelemetryClient = (DebugTelemetryClient)clients.First(x => x is DebugTelemetryClient);
         _sharedMemoryBridgeLauncher = sharedMemoryBridgeLauncher;
         _telemetryDispatcher = telemetryDispatcher;
     }
@@ -72,6 +79,8 @@ public class TelemetryService : ITelemetryService
     public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
     {
         SetConnectionStatus(TelemetryConnectionStatus.Connecting);
+        
+        _telemetryClient = game == SteamGame.Debug ? _debugTelemetryClient : _acTelemetryClient;
         
         CurrentGame = game;
         if (game.RequiresSharedMemoryBridge)
@@ -100,6 +109,7 @@ public class TelemetryService : ITelemetryService
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "Error starting reading telemetry: {0}", ex.Message);
             TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
         }
     }
@@ -110,10 +120,11 @@ public class TelemetryService : ITelemetryService
         {
             _cancellationTokenSource.Cancel();
             _sharedMemoryBridgeLauncher.StopBridge();
-            _telemetryClient.Stop();
+            _telemetryClient?.Stop();
             _readingTask?.Wait(5000); // Wait max 5 seconds
             _cancellationTokenSource.Dispose();
             _cancellationTokenSource = null;
+            _telemetryClient = null;
         }
 
         _readingTask = null;
@@ -136,7 +147,7 @@ public class TelemetryService : ITelemetryService
         {
             try
             {
-                var snapshot = _telemetryClient.ReadTelemetry();
+                var snapshot = _telemetryClient?.ReadTelemetry();
                 if (snapshot != null && CurrentGame != null)
                 {
                     TelemetryReceived?.Invoke(this, new TelemetryEventArgs(CurrentGame, snapshot));
@@ -150,7 +161,7 @@ public class TelemetryService : ITelemetryService
                 TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
                 break;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
                 await Task.Delay(1000, cancellationToken); // Wait longer on error

@@ -12,6 +12,7 @@ public static class ServiceRegistrator
     {
         // Register services
         services.AddSingleton<ITelemetryClient, AcTelemetryClient>();
+        services.AddSingleton<ITelemetryClient, DebugTelemetryClient>();
         services.AddSingleton<ITelemetryDispatcher, TelemetryDispatcher>();
         services.AddSingleton<ITelemetryService, TelemetryService>();
         services.AddSingleton<SharedMemoryBridgeLauncher>();
