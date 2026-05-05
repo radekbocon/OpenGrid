@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SimLab.Services;
-using SimLab.Services.Devices;
+using SimLab.Services;
 using SimLab.Services.SharedMemory;
 using SimLab.ViewModels;
 
@@ -13,7 +13,6 @@ public static class ServiceRegistrator
         // Register services
         services.AddSingleton<ITelemetryClient, AcTelemetryClient>();
         services.AddSingleton<ITelemetryClient, DebugTelemetryClient>();
-        services.AddSingleton<ITelemetryDispatcher, TelemetryDispatcher>();
         services.AddSingleton<ITelemetryService, TelemetryService>();
         services.AddSingleton<SharedMemoryBridgeLauncher>();
         services.AddSingleton<INavigationService, NavigationService>();

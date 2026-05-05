@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 using SimLab.Models;
-using SimLab.Services.Devices;
 using SimLab.Services.SharedMemory;
 
 namespace SimLab.Services;
@@ -52,7 +51,6 @@ public class TelemetryService : ITelemetryService
     private readonly AcTelemetryClient _acTelemetryClient;
     private readonly DebugTelemetryClient _debugTelemetryClient;
     private readonly SharedMemoryBridgeLauncher _sharedMemoryBridgeLauncher;
-    private readonly ITelemetryDispatcher _telemetryDispatcher;
     private readonly Lock _observersLock = new();
 
     private ITelemetryClient? _telemetryClient;
@@ -67,13 +65,12 @@ public class TelemetryService : ITelemetryService
     public TelemetryConnectionStatus ConnectionStatus { get; private set; }
     public SteamGame? CurrentGame { get; private set; }
 
-    public TelemetryService(IEnumerable<ITelemetryClient> telemetryClients, SharedMemoryBridgeLauncher sharedMemoryBridgeLauncher, ITelemetryDispatcher telemetryDispatcher)
+    public TelemetryService(IEnumerable<ITelemetryClient> telemetryClients, SharedMemoryBridgeLauncher sharedMemoryBridgeLauncher)
     {
         var clients = telemetryClients.ToList();
         _acTelemetryClient = (AcTelemetryClient)clients.First(x => x is AcTelemetryClient);
         _debugTelemetryClient = (DebugTelemetryClient)clients.First(x => x is DebugTelemetryClient);
         _sharedMemoryBridgeLauncher = sharedMemoryBridgeLauncher;
-        _telemetryDispatcher = telemetryDispatcher;
     }
 
     public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
@@ -151,7 +148,6 @@ public class TelemetryService : ITelemetryService
                 if (snapshot != null && CurrentGame != null)
                 {
                     TelemetryReceived?.Invoke(this, new TelemetryEventArgs(CurrentGame, snapshot));
-                    _telemetryDispatcher.Dispatch(snapshot);
                 }
                 
                 await Task.Delay(PollIntervalMs, cancellationToken);
