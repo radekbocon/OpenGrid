@@ -15,12 +15,25 @@
             FontSize="20"
             FontWeight="SemiBold"
             Text="Appearance" />
+        <Border
+            Padding="16,4"
+            Background="{DynamicResource MaterialCardBackgroundBrush}"
+            CornerRadius="4">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Text="Theme" />
+                <ComboBox
+                    Grid.Column="1"
+                    Width="160"
+                    HorizontalAlignment="Right"
+                    ItemsSource="{Binding Themes}"
+                    SelectedItem="{Binding SelectedTheme}" />
+            </Grid>
+        </Border>
 
-        <TextBlock Margin="0,8,0,4" Text="Theme" />
-        <ComboBox
-            Width="160"
-            ItemsSource="{Binding Themes}"
-            SelectedItem="{Binding SelectedTheme}" />
+
     </StackPanel>
 
 </UserControl>

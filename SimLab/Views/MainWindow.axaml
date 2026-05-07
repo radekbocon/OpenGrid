@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:p1="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
     xmlns:vm="using:SimLab.ViewModels"
     Title="SimLab"
     d:DesignHeight="700"
@@ -15,13 +16,14 @@
     <DockPanel>
         <!--  Top Dock  -->
         <Border
-            Background="{DynamicResource SystemChromeMediumLowColor}"
+            Background="{DynamicResource MaterialToolBarBackgroundBrush}"
             BorderThickness="0,0,0,2"
             DockPanel.Dock="Top">
             <Grid ColumnDefinitions="220, *">
                 <Grid Grid.Column="0" ColumnDefinitions="Auto, *">
                     <Button
                         Margin="4"
+                        Classes="Flat"
                         Click="ToggleSideBar"
                         Content=""
                         FontFamily="{StaticResource Awesome}"
@@ -40,14 +42,19 @@
                     Orientation="Horizontal"
                     Spacing="8">
                     <Button
+                        Classes="Flat"
                         Command="{Binding GoBackCommand}"
                         Content=""
                         FontFamily="{StaticResource Awesome}"
                         FontSize="20" />
                     <ComboBox
+                        MinWidth="150"
+                        p1:ComboBoxAssist.Label="Select Game"
+                        Classes="dense"
                         DisplayMemberBinding="{Binding Name}"
                         ItemsSource="{Binding SupportedGames}"
-                        SelectedItem="{Binding SelectedGame, Mode=TwoWay}" />
+                        SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
+                        Theme="{StaticResource MaterialOutlineComboBox}" />
                     <Button
                         Command="{Binding ConnectCommand}"
                         Content="{Binding ConnectLabel}"
@@ -71,7 +78,7 @@
             Name="SideBar"
             Width="220"
             VerticalAlignment="Stretch"
-            Background="{DynamicResource SystemChromeMediumLowColor}"
+            Background="{DynamicResource MaterialToolBarBackgroundBrush}"
             DockPanel.Dock="Left">
             <ListBox
                 Name="MenuItems"
@@ -85,11 +92,11 @@
                 </Interaction.Behaviors>
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:MenuItem">
-                        <Grid ColumnDefinitions="24,*">
+                        <Grid Margin="4" ColumnDefinitions="Auto,*">
                             <TextBlock
                                 Grid.Column="0"
                                 FontFamily="{StaticResource Awesome}"
-                                FontSize="18"
+                                FontSize="22"
                                 Text="{Binding Icon}" />
                             <TextBlock
                                 Grid.Column="1"

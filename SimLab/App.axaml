@@ -3,7 +3,8 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:SimLab"
-    RequestedThemeVariant="Default">
+    xmlns:themes="clr-namespace:Material.Styles.Themes;assembly=Material.Styles"
+    RequestedThemeVariant="Dark">
     <!--  "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options.  -->
 
     <Application.Resources>
@@ -20,67 +21,80 @@
     </Application.DataTemplates>
 
     <Application.Styles>
-        <FluentTheme>
-            <FluentTheme.Palettes>
-                <ColorPaletteResources
-                    x:Key="Light"
-                    Accent="#ff7c60a3"
-                    AltHigh="White"
-                    AltLow="White"
-                    AltMedium="White"
-                    AltMediumHigh="White"
-                    AltMediumLow="White"
-                    BaseHigh="Black"
-                    BaseLow="#ffcccccc"
-                    BaseMedium="#ff898989"
-                    BaseMediumHigh="#ff5d5d5d"
-                    BaseMediumLow="#ff737373"
-                    ChromeAltLow="#ff5d5d5d"
-                    ChromeBlackHigh="Black"
-                    ChromeBlackLow="#ffcccccc"
-                    ChromeBlackMedium="#ff5d5d5d"
-                    ChromeBlackMediumLow="#ff898989"
-                    ChromeDisabledHigh="#ffcccccc"
-                    ChromeDisabledLow="#ff898989"
-                    ChromeGray="#ff737373"
-                    ChromeHigh="#ffcccccc"
-                    ChromeLow="#ffececec"
-                    ChromeMedium="#ffe6e6e6"
-                    ChromeMediumLow="#ffececec"
-                    ChromeWhite="White"
-                    ListLow="#ffe6e6e6"
-                    ListMedium="#ffcccccc"
-                    RegionColor="White" />
-                <ColorPaletteResources
-                    x:Key="Dark"
-                    Accent="#ff7c60a3"
-                    AltHigh="Black"
-                    AltLow="Black"
-                    AltMedium="Black"
-                    AltMediumHigh="Black"
-                    AltMediumLow="Black"
-                    BaseHigh="White"
-                    BaseLow="#ff44475a"
-                    BaseMedium="#ffa0a4b6"
-                    BaseMediumHigh="#ffb7bbcd"
-                    BaseMediumLow="#ff727588"
-                    ChromeAltLow="#ffb7bbcd"
-                    ChromeBlackHigh="Black"
-                    ChromeBlackLow="#ffb7bbcd"
-                    ChromeBlackMedium="Black"
-                    ChromeBlackMediumLow="Black"
-                    ChromeDisabledHigh="#ff44475a"
-                    ChromeDisabledLow="#ffa0a4b6"
-                    ChromeGray="#ff898d9f"
-                    ChromeHigh="#ff898d9f"
-                    ChromeLow="#ff0e1e3d"
-                    ChromeMedium="#ff1b2844"
-                    ChromeMediumLow="#ff363d53"
-                    ChromeWhite="White"
-                    ListLow="#ff1b2844"
-                    ListMedium="#ff44475a"
-                    RegionColor="#ff282a36" />
-            </FluentTheme.Palettes>
-        </FluentTheme>
+        <themes:CustomMaterialTheme>
+            <themes:CustomMaterialTheme.Palettes>
+                <themes:CustomMaterialThemeResources x:Key="Dark" PrimaryColor="#B553C2" />
+                <themes:CustomMaterialThemeResources x:Key="Light" PrimaryColor="#9E28B3" />
+            </themes:CustomMaterialTheme.Palettes>
+        </themes:CustomMaterialTheme>
+        <Style>
+            <Style.Resources>
+                <SolidColorBrush x:Key="MaterialPaperBrush" Color="#282a36" />
+                <SolidColorBrush x:Key="MaterialToolBarBackgroundBrush" Color="#414450" />
+                <SolidColorBrush x:Key="MaterialCardBackgroundBrush" Color="#3a3d4c" />
+            </Style.Resources>
+        </Style>
+        <!-- <FluentTheme> -->
+        <!--     <FluentTheme.Palettes> -->
+        <!--  <ColorPaletteResources  -->
+        <!--  x:Key="Light"  -->
+        <!--  Accent="#ff7c60a3"  -->
+        <!--  AltHigh="White"  -->
+        <!--  AltLow="White"  -->
+        <!--  AltMedium="White"  -->
+        <!--  AltMediumHigh="White"  -->
+        <!--  AltMediumLow="White"  -->
+        <!--  BaseHigh="Black"  -->
+        <!--  BaseLow="#ffcccccc"  -->
+        <!--  BaseMedium="#ff898989"  -->
+        <!--  BaseMediumHigh="#ff5d5d5d"  -->
+        <!--  BaseMediumLow="#ff737373"  -->
+        <!--  ChromeAltLow="#ff5d5d5d"  -->
+        <!--  ChromeBlackHigh="Black"  -->
+        <!--  ChromeBlackLow="#ffcccccc"  -->
+        <!--  ChromeBlackMedium="#ff5d5d5d"  -->
+        <!--  ChromeBlackMediumLow="#ff898989"  -->
+        <!--  ChromeDisabledHigh="#ffcccccc"  -->
+        <!--  ChromeDisabledLow="#ff898989"  -->
+        <!--  ChromeGray="#ff737373"  -->
+        <!--  ChromeHigh="#ffcccccc"  -->
+        <!--  ChromeLow="#ffececec"  -->
+        <!--  ChromeMedium="#ffe6e6e6"  -->
+        <!--  ChromeMediumLow="#ffececec"  -->
+        <!--  ChromeWhite="White"  -->
+        <!--  ListLow="#ffe6e6e6"  -->
+        <!--  ListMedium="#ffcccccc"  -->
+        <!--  RegionColor="White" />  -->
+        <!--  <ColorPaletteResources  -->
+        <!--  x:Key="Dark"  -->
+        <!--  Accent="#ff7c60a3"  -->
+        <!--  AltHigh="Black"  -->
+        <!--  AltLow="Black"  -->
+        <!--  AltMedium="Black"  -->
+        <!--  AltMediumHigh="Black"  -->
+        <!--  AltMediumLow="Black"  -->
+        <!--  BaseHigh="White"  -->
+        <!--  BaseLow="#ff44475a"  -->
+        <!--  BaseMedium="#ffa0a4b6"  -->
+        <!--  BaseMediumHigh="#ffb7bbcd"  -->
+        <!--  BaseMediumLow="#ff727588"  -->
+        <!--  ChromeAltLow="#ffb7bbcd"  -->
+        <!--  ChromeBlackHigh="Black"  -->
+        <!--  ChromeBlackLow="#ffb7bbcd"  -->
+        <!--  ChromeBlackMedium="Black"  -->
+        <!--  ChromeBlackMediumLow="Black"  -->
+        <!--  ChromeDisabledHigh="#ff44475a"  -->
+        <!--  ChromeDisabledLow="#ffa0a4b6"  -->
+        <!--  ChromeGray="#ff898d9f"  -->
+        <!--  ChromeHigh="#ff898d9f"  -->
+        <!--  ChromeLow="#ff0e1e3d"  -->
+        <!--  ChromeMedium="#ff1b2844"  -->
+        <!--  ChromeMediumLow="#ff363d53"  -->
+        <!--  ChromeWhite="White"  -->
+        <!--  ListLow="#ff1b2844"  -->
+        <!--  ListMedium="#ff44475a"  -->
+        <!--  RegionColor="#ff282a36" />  -->
+        <!--     </FluentTheme.Palettes> -->
+        <!-- </FluentTheme> -->
     </Application.Styles>
 </Application>
