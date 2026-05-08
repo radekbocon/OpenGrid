@@ -1,5 +1,8 @@
+using System;
+using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using SimLab.ViewModels;
 
 namespace SimLab.Views;
 

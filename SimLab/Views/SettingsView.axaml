@@ -16,7 +16,7 @@
             FontWeight="SemiBold"
             Text="Appearance" />
         <Border
-            Padding="16,4"
+            Padding="16,8"
             Background="{DynamicResource MaterialCardBackgroundBrush}"
             CornerRadius="4">
             <Grid ColumnDefinitions="*,Auto">
@@ -33,6 +33,23 @@
             </Grid>
         </Border>
 
+        <TextBlock
+            Margin="0,16,0,0"
+            FontSize="20"
+            FontWeight="SemiBold"
+            Text="General" />
+        <Border
+            Padding="16,16"
+            Background="{DynamicResource MaterialCardBackgroundBrush}"
+            CornerRadius="4">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Text="Close to tray" />
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTray}" />
+            </Grid>
+        </Border>
 
     </StackPanel>
 

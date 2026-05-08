@@ -17,8 +17,18 @@
     mc:Ignorable="d">
 
     <Grid>
+
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <views:DashboardContentView DataContext="{Binding}" />
         </ScrollViewer>
+        <Button
+            Name="CloseButton"
+            Padding="16"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Classes="Flat"
+            Click="CloseButton_OnClick"
+            Content=""
+            FontFamily="{StaticResource Awesome}" />
     </Grid>
 </Window>

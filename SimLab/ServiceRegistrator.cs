@@ -16,6 +16,7 @@ public static class ServiceRegistrator
         services.AddSingleton<ITelemetryService, TelemetryService>();
         services.AddSingleton<SharedMemoryBridgeLauncher>();
         services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<SessionRepository>();
 
         // Register ViewModels

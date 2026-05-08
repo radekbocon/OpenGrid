@@ -1,6 +1,7 @@
 using System.Security;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using SimLab.ViewModels;
 
 namespace SimLab.Views;
@@ -11,6 +12,8 @@ public partial class DashboardWindow : Window
     {
         InitializeComponent();
         KeyDown += OnKeyDown;
+        PointerEntered += (_, _) => CloseButton.IsVisible = true;
+        PointerExited += (_, _) => CloseButton.IsVisible = false;
         
         if (style == DashboardStyle.Overlay)
         {
@@ -26,6 +29,11 @@ public partial class DashboardWindow : Window
         {
             Close();
         }
+    }
+
+    private void CloseButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Close();
     }
 }
 

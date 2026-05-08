@@ -55,11 +55,12 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(GoBackCommand))]
     public partial bool CanGoBack { get; set; }
-    
+
     public bool ShowConnectButton => !IsConnected && !IsConnecting;
 
     public MainWindowViewModel(INavigationService navigationService,
-        ITelemetryService telemetryService)
+        ITelemetryService telemetryService,
+        ISettingsService settingsService)
     {
         _navigationService = navigationService;
         _telemetryService = telemetryService;

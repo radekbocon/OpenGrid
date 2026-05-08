@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
+using SimLab.Services;
 
 namespace SimLab.ViewModels;
 
@@ -9,10 +10,23 @@ public enum AppTheme { System, Light, Dark }
 
 public partial class SettingsViewModel : ViewModelBase
 {
+    private readonly ISettingsService _settingsService;
+
     public IReadOnlyList<AppTheme> Themes { get; } = [AppTheme.System, AppTheme.Light, AppTheme.Dark];
 
     [ObservableProperty]
-    private AppTheme _selectedTheme = AppTheme.System;
+    public partial AppTheme SelectedTheme { get; set; } = AppTheme.System;
+    
+    public bool MinimizeToTray
+    {
+        get => _settingsService.MinimizeToTray;
+        set => _settingsService.MinimizeToTray = value;
+    }
+
+    public SettingsViewModel(ISettingsService settingsService)
+    {
+        _settingsService = settingsService;
+    }
 
     partial void OnSelectedThemeChanged(AppTheme value)
     {
