@@ -1,0 +1,268 @@
+<UserControl
+    x:Class="SimLab.Views.DashboardContentView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:SimLab.ViewModels"
+    d:DesignHeight="700"
+    d:DesignWidth="1000"
+    x:DataType="vm:DashboardViewModel"
+    mc:Ignorable="d">
+
+    <Grid
+        Margin="16"
+        ColumnDefinitions="*, *"
+        ColumnSpacing="12"
+        RowDefinitions="Auto, Auto, 120, Auto, Auto"
+        RowSpacing="12">
+        <!--  Row 0: Speed + Gear  -->
+        <Border
+            Grid.Row="0"
+            Grid.Column="0"
+            Padding="16"
+            Background="{DynamicResource MaterialCardBackgroundBrush}"
+            CornerRadius="8">
+            <Grid RowDefinitions="Auto, Auto">
+                <TextBlock
+                    Grid.Row="0"
+                    FontSize="12"
+                    Opacity="0.6"
+                    Text="SPEED" />
+                <Grid Grid.Row="1" ColumnDefinitions="Auto, Auto">
+                    <TextBlock
+                        Grid.Column="0"
+                        FontSize="64"
+                        FontWeight="Bold"
+                        Text="{Binding SpeedDisplay}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="4,0,0,12"
+                        VerticalAlignment="Bottom"
+                        FontSize="18"
+                        Foreground="{DynamicResource MaterialBodyTextBrush}"
+                        Opacity="0.6"
+                        Text="km/h" />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border
+            Grid.Row="0"
+            Grid.Column="1"
+            Padding="16"
+            Background="{DynamicResource MaterialCardBackgroundBrush}"
+            CornerRadius="8">
+            <Grid RowDefinitions="Auto, Auto">
+                <TextBlock
+                    Grid.Row="0"
+                    FontSize="12"
+                    Opacity="0.6"
+                    Text="GEAR" />
+                <TextBlock
+                    Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    FontSize="64"
+                    FontWeight="Bold"
+                    Text="{Binding GearDisplay}" />
+            </Grid>
+        </Border>
+
+        <!--  Row 1: Session info  -->
+        <Border
+            Grid.Row="1"
+            Grid.ColumnSpan="2"
+            Padding="16"
+            Background="{DynamicResource MaterialCardBackgroundBrush}"
+            CornerRadius="8">
+            <Grid ColumnDefinitions="*, *, *, *, *">
+                <StackPanel Grid.Column="0" Orientation="Vertical">
+                    <TextBlock
+                        FontSize="11"
+                        Opacity="0.6"
+                        Text="CAR" />
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="{Binding Car}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Vertical">
+                    <TextBlock
+                        FontSize="11"
+                        Opacity="0.6"
+                        Text="TRACK" />
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="{Binding Track}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Vertical">
+                    <TextBlock
+                        FontSize="11"
+                        Opacity="0.6"
+                        Text="SESSION" />
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="{Binding SessionType}" />
+                </StackPanel>
+                <StackPanel Grid.Column="3" Orientation="Vertical">
+                    <TextBlock
+                        FontSize="11"
+                        Opacity="0.6"
+                        Text="LAP" />
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="{Binding CurrentLap, StringFormat='Lap {0}'}" />
+                </StackPanel>
+                <StackPanel Grid.Column="4" Orientation="Vertical">
+                    <TextBlock
+                        FontSize="11"
+                        Opacity="0.6"
+                        Text="LAP TIME" />
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="{Binding LapTime}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!--  Row 2: Inputs  -->
+        <Border
+            Grid.Row="2"
+            Grid.Column="0"
+            Padding="16"
+            Background="{DynamicResource MaterialCardBackgroundBrush}"
+            CornerRadius="8">
+            <Grid
+                ColumnDefinitions="Auto, *"
+                RowDefinitions="Auto, Auto, Auto, Auto"
+                RowSpacing="12">
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.ColumnSpan="2"
+                    Margin="0,0,0,4"
+                    FontSize="12"
+                    Opacity="0.6"
+                    Text="INPUTS" />
+
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Width="50"
+                    VerticalAlignment="Center"
+                    FontWeight="SemiBold"
+                    Text="Gas" />
+                <ProgressBar
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Height="20"
+                    Maximum="1"
+                    Value="{Binding Gas}" />
+
+                <TextBlock
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Width="50"
+                    VerticalAlignment="Center"
+                    FontWeight="SemiBold"
+                    Text="Brake" />
+                <ProgressBar
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Height="20"
+                    Maximum="1"
+                    Value="{Binding Brake}" />
+
+                <TextBlock
+                    Grid.Row="3"
+                    Grid.Column="0"
+                    Width="50"
+                    VerticalAlignment="Center"
+                    FontWeight="SemiBold"
+                    Text="Clutch" />
+                <ProgressBar
+                    Grid.Row="3"
+                    Grid.Column="1"
+                    Height="20"
+                    Maximum="1"
+                    Value="{Binding Clutch}" />
+            </Grid>
+        </Border>
+
+        <Border
+            Grid.Row="2"
+            Grid.Column="1"
+            Padding="16"
+            Background="{DynamicResource MaterialCardBackgroundBrush}"
+            CornerRadius="8">
+            <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto" RowSpacing="6">
+                <TextBlock
+                    Grid.Row="0"
+                    FontSize="12"
+                    Opacity="0.6"
+                    Text="RPM" />
+                <ProgressBar
+                    Grid.Row="1"
+                    Height="28"
+                    Maximum="{Binding MaxRpm}"
+                    Value="{Binding Rpm}" />
+                <TextBlock
+                    Grid.Row="2"
+                    Margin="0,6,0,0"
+                    FontWeight="SemiBold"
+                    Text="{Binding Rpm, StringFormat='RPM {0}'}" />
+
+                <Grid
+                    Grid.Row="3"
+                    Margin="0,8,0,0"
+                    ColumnDefinitions="*, *">
+                    <StackPanel Grid.Column="0" Orientation="Vertical">
+                        <TextBlock
+                            FontSize="11"
+                            Opacity="0.6"
+                            Text="STEERING" />
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Text="{Binding SteerDisplay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Vertical">
+                        <TextBlock
+                            FontSize="11"
+                            Opacity="0.6"
+                            Text="FUEL" />
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Text="{Binding FuelDisplay}" />
+                    </StackPanel>
+                </Grid>
+
+                <Grid
+                    Grid.Row="4"
+                    Margin="0,8,0,0"
+                    ColumnDefinitions="*, *">
+                    <StackPanel Grid.Column="0" Orientation="Vertical">
+                        <TextBlock
+                            FontSize="11"
+                            Opacity="0.6"
+                            Text="FRONT TIRES" />
+                        <TextBlock FontSize="14" Text="{Binding TireFlDisplay}" />
+                        <TextBlock FontSize="14" Text="{Binding TireFrDisplay}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Vertical">
+                        <TextBlock
+                            FontSize="11"
+                            Opacity="0.6"
+                            Text="REAR TIRES" />
+                        <TextBlock FontSize="14" Text="{Binding TireRlDisplay}" />
+                        <TextBlock FontSize="14" Text="{Binding TireRrDisplay}" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
