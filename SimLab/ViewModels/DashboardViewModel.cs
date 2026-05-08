@@ -1,5 +1,4 @@
 using System;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using SimLab.Models;
 using SimLab.Services;
@@ -10,41 +9,59 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
 {
     private readonly ITelemetryService _telemetryService;
 
-    [ObservableProperty] private string _speedDisplay = "0";
+    [ObservableProperty]
+    public partial string SpeedDisplay { get; set; } = "0";
 
-    [ObservableProperty] private double _rpm;
+    [ObservableProperty]
+    public partial double Rpm { get; set; }
 
-    [ObservableProperty] private double _maxRpm;
+    [ObservableProperty]
+    public partial double MaxRpm { get; set; }
 
-    [ObservableProperty] private double _gas;
+    [ObservableProperty]
+    public partial double Gas { get; set; }
 
-    [ObservableProperty] private double _brake;
+    [ObservableProperty]
+    public partial double Brake { get; set; }
 
-    [ObservableProperty] private double _clutch;
+    [ObservableProperty]
+    public partial double Clutch { get; set; }
 
-    [ObservableProperty] private string _steerDisplay = "0°";
+    [ObservableProperty]
+    public partial string SteerDisplay { get; set; } = "0°";
 
-    [ObservableProperty] private string _fuelDisplay = "0%";
+    [ObservableProperty]
+    public partial string FuelDisplay { get; set; } = "0";
 
-    [ObservableProperty] private string _gearDisplay = "N";
+    [ObservableProperty]
+    public partial string GearDisplay { get; set; } = "N";
 
-    [ObservableProperty] private string? _car;
+    [ObservableProperty]
+    public partial string? Car { get; set; }
 
-    [ObservableProperty] private string? _track;
+    [ObservableProperty]
+    public partial string? Track { get; set; }
 
-    [ObservableProperty] private int _currentLap;
+    [ObservableProperty]
+    public partial int CurrentLap { get; set; }
 
-    [ObservableProperty] private string _sessionType = "";
+    [ObservableProperty]
+    public partial string SessionType { get; set; } = "";
 
-    [ObservableProperty] private string _lapTime = "--:--";
+    [ObservableProperty]
+    public partial string LapTime { get; set; } = "--:--";
 
-    [ObservableProperty] private string _tireFlDisplay = "FL: 0°C";
+    [ObservableProperty]
+    public partial string TireFlDisplay { get; set; } = "FL: 0°C";
 
-    [ObservableProperty] private string _tireFrDisplay = "FR: 0°C";
+    [ObservableProperty]
+    public partial string TireFrDisplay { get; set; } = "FR: 0°C";
 
-    [ObservableProperty] private string _tireRlDisplay = "RL: 0°C";
+    [ObservableProperty]
+    public partial string TireRlDisplay { get; set; } = "RL: 0°C";
 
-    [ObservableProperty] private string _tireRrDisplay = "RR: 0°C";
+    [ObservableProperty]
+    public partial string TireRrDisplay { get; set; } = "RR: 0°C";
 
     public DashboardViewModel(ITelemetryService telemetryService)
     {
@@ -57,13 +74,16 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
         var t = e.Telemetry;
         SpeedDisplay = t.SpeedKmh.ToString("F0");
         Rpm = t.EngineRpm;
-        if (t.MaxRpm > 0)
-            MaxRpm = t.MaxRpm;
+        MaxRpm = t.MaxRpm switch
+        {
+            > 0 => t.MaxRpm,
+            _ => MaxRpm
+        };
         Gas = t.Gas;
         Brake = t.Brake;
         Clutch = t.Clutch;
         SteerDisplay = $"{t.SteerAngle:F1}°";
-        FuelDisplay = $"{t.Fuel:F1}%";
+        FuelDisplay = $"{t.Fuel:F1}";
         GearDisplay = t.CurrentGear switch
         {
             Gear.R => "R",

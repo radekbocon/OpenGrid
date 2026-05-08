@@ -14,7 +14,7 @@
         Margin="16"
         ColumnDefinitions="*, *"
         ColumnSpacing="12"
-        RowDefinitions="Auto, Auto, 120, Auto, Auto"
+        RowDefinitions="Auto, Auto, Auto"
         RowSpacing="12">
         <!--  Row 0: Speed + Gear  -->
         <Border
@@ -71,6 +71,7 @@
         <!--  Row 1: Session info  -->
         <Border
             Grid.Row="1"
+            Grid.Column="0"
             Grid.ColumnSpan="2"
             Padding="16"
             Background="{DynamicResource MaterialCardBackgroundBrush}"
@@ -213,7 +214,7 @@
                     Grid.Row="2"
                     Margin="0,6,0,0"
                     FontWeight="SemiBold"
-                    Text="{Binding Rpm, StringFormat='RPM {0}'}" />
+                    Text="{Binding Rpm, StringFormat='RPM {0:0}'}" />
 
                 <Grid
                     Grid.Row="3"

@@ -21,7 +21,8 @@ public partial class DashboardsViewModel : ViewModelBase
             {
                 Name = "Simple",
                 Description = "Speed, gear, inputs, RPM and tire temperatures",
-                Icon = ""
+                Icon = "",
+                Style = DashboardStyle.Default,
             },
         ];
     }
@@ -30,7 +31,7 @@ public partial class DashboardsViewModel : ViewModelBase
     private void OpenDashboard(DashboardInfo dashboard)
     {
         var vm = new DashboardViewModel(_telemetryService);
-        var window = new DashboardWindow
+        var window = new DashboardWindow(dashboard.Style)
         {
             DataContext = vm
         };

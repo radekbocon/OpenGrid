@@ -1,14 +1,23 @@
+using System.Security;
 using Avalonia.Controls;
 using Avalonia.Input;
+using SimLab.ViewModels;
 
 namespace SimLab.Views;
 
 public partial class DashboardWindow : Window
 {
-    public DashboardWindow()
+    public DashboardWindow(DashboardStyle style)
     {
         InitializeComponent();
         KeyDown += OnKeyDown;
+        
+        if (style == DashboardStyle.Overlay)
+        {
+            Background = null;
+            TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
+        }
+        
     }
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
@@ -18,9 +27,10 @@ public partial class DashboardWindow : Window
             Close();
         }
     }
+}
 
-    private void OnCloseClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-    {
-        Close();
-    }
+public enum DashboardStyle
+{
+    Default,
+    Overlay
 }
