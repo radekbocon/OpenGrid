@@ -1,11 +1,12 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using SimLab.Models;
 using SimLab.Services;
 
 namespace SimLab.ViewModels;
 
-public partial class DashboardViewModel : ViewModelBase, IDisposable
+public partial class DashboardViewModel : ViewModelBase
 {
     private readonly ITelemetryService _telemetryService;
 
@@ -69,6 +70,12 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
         _telemetryService.TelemetryReceived += OnTelemetryReceived;
     }
 
+    [RelayCommand]
+    private void Unloaded()
+    {
+        _telemetryService.TelemetryReceived -= OnTelemetryReceived;
+    }
+
     private void OnTelemetryReceived(object? sender, TelemetryEventArgs e)
     {
         var t = e.Telemetry;
@@ -99,10 +106,5 @@ public partial class DashboardViewModel : ViewModelBase, IDisposable
         TireFrDisplay = $"FR: {t.TireTemperatures.FrontRight:F1}°C";
         TireRlDisplay = $"RL: {t.TireTemperatures.RearLeft:F1}°C";
         TireRrDisplay = $"RR: {t.TireTemperatures.RearRight:F1}°C";
-    }
-
-    public void Dispose()
-    {
-        _telemetryService.TelemetryReceived -= OnTelemetryReceived;
     }
 }

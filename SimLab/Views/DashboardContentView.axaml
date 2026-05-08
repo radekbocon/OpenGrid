@@ -10,6 +10,12 @@
     x:DataType="vm:DashboardViewModel"
     mc:Ignorable="d">
 
+    <Interaction.Behaviors>
+        <EventTriggerBehavior EventName="Unloaded">
+            <InvokeCommandAction Command="{Binding UnloadedCommand}" />
+        </EventTriggerBehavior>
+    </Interaction.Behaviors>
+
     <Grid
         Margin="16"
         ColumnDefinitions="*, *"
