@@ -32,6 +32,7 @@ public partial class SessionsViewModel : ViewModelBase
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
         
         CanStartRecording = _telemetryService.ConnectionStatus == TelemetryConnectionStatus.Connected;
+        IsMenuItem = true;
     }
 
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)

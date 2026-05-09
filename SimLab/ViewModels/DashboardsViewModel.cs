@@ -15,6 +15,7 @@ public partial class DashboardsViewModel : ViewModelBase
     public DashboardsViewModel(ITelemetryService telemetryService)
     {
         _telemetryService = telemetryService;
+        IsMenuItem = true;
         Dashboards =
         [
             new DashboardInfo

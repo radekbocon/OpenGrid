@@ -26,6 +26,8 @@ public partial class SettingsViewModel : ViewModelBase
     public SettingsViewModel(ISettingsService settingsService)
     {
         _settingsService = settingsService;
+        
+        IsMenuItem = true;
     }
 
     partial void OnSelectedThemeChanged(AppTheme value)

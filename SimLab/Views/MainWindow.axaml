@@ -32,7 +32,7 @@
                         Grid.Column="1"
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
-                        FontSize="20"
+                        Classes="Headline6"
                         Text="SimLab" />
                 </Grid>
 
@@ -49,12 +49,10 @@
                                                            IconSize=24}" />
                     <ComboBox
                         MinWidth="150"
-                        p1:ComboBoxAssist.Label="Select Game"
-                        Classes="dense"
                         DisplayMemberBinding="{Binding Name}"
                         ItemsSource="{Binding SupportedGames}"
                         SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
-                        Theme="{StaticResource MaterialOutlineComboBox}" />
+                        Theme="{StaticResource MaterialFilledComboBox}" />
                     <Button
                         Command="{Binding ConnectCommand}"
                         Content="{Binding ConnectLabel}"
@@ -101,6 +99,7 @@
                                 Grid.Column="1"
                                 Margin="8,0,0,0"
                                 VerticalAlignment="Center"
+                                Classes="Subtitle1"
                                 Text="{Binding Label}" />
                         </Grid>
                     </DataTemplate>

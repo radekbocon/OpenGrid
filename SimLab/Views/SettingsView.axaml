@@ -29,7 +29,8 @@
                     Width="160"
                     HorizontalAlignment="Right"
                     ItemsSource="{Binding Themes}"
-                    SelectedItem="{Binding SelectedTheme}" />
+                    SelectedItem="{Binding SelectedTheme}"
+                    Theme="{StaticResource MaterialFilledComboBox}" />
             </Grid>
         </Border>
 
@@ -46,7 +47,7 @@
                 <TextBlock
                     Grid.Column="0"
                     VerticalAlignment="Center"
-                    Text="Close to tray" />
+                    Text="Minimize to tray" />
                 <ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTray}" />
             </Grid>
         </Border>

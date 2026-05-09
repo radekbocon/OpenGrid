@@ -32,6 +32,11 @@ public class NavigationService : INavigationService
             viewModel.SetParameters(parameters);
         }
         
+        if (viewModel is { IsMenuItem: true })
+        {
+            _viewModels.Clear();
+        }
+        
         _viewModels.Push(viewModel);
         
         _mainWindowViewModel?.CurrentViewModel = viewModel;
@@ -41,6 +46,11 @@ public class NavigationService : INavigationService
     public void NavigateTo(Type type)
     {
         var viewModel = _serviceProvider.GetService(type) as ViewModelBase ?? throw new InvalidOperationException($"No view model of type {type} found");
+
+        if (viewModel is { IsMenuItem: true })
+        {
+            _viewModels.Clear();
+        }
         
         _viewModels.Push(viewModel);
         

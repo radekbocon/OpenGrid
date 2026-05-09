@@ -4,6 +4,8 @@ namespace SimLab.ViewModels;
 
 public abstract class ViewModelBase : ObservableObject
 {
+    public bool IsMenuItem { get; protected init; }
+    
     public virtual void SetParameters(params object[] parameters)
     {
     }

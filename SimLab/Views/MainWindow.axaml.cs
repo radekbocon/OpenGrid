@@ -1,8 +1,5 @@
-using System;
-using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using SimLab.ViewModels;
 
 namespace SimLab.Views;
 
@@ -16,7 +13,7 @@ public partial class MainWindow : Window
     private void ToggleSideBar(object? sender, RoutedEventArgs e)
     {
         const double open = 220;
-        const double closed = 45;
+        const double closed = 48;
 
         SideBar.Width = SideBar.Width < open ? open : closed;
     }
