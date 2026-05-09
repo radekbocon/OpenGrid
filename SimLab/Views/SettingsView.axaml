@@ -12,7 +12,7 @@
 
     <StackPanel Margin="24" Spacing="8">
         <TextBlock
-            FontSize="20"
+            Classes="Subtitle1"
             FontWeight="SemiBold"
             Text="Appearance" />
         <Border
@@ -23,6 +23,7 @@
                 <TextBlock
                     Grid.Column="0"
                     VerticalAlignment="Center"
+                    Classes="Body2"
                     Text="Theme" />
                 <ComboBox
                     Grid.Column="1"
@@ -36,7 +37,7 @@
 
         <TextBlock
             Margin="0,16,0,0"
-            FontSize="20"
+            Classes="Subtitle1"
             FontWeight="SemiBold"
             Text="General" />
         <Border
@@ -47,6 +48,7 @@
                 <TextBlock
                     Grid.Column="0"
                     VerticalAlignment="Center"
+                    Classes="Body2"
                     Text="Minimize to tray" />
                 <ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTray}" />
             </Grid>

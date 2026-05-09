@@ -21,9 +21,20 @@
         </themes:CustomMaterialTheme>
         <Style>
             <Style.Resources>
-                <SolidColorBrush x:Key="MaterialPaperBrush" Color="#282a36" />
-                <SolidColorBrush x:Key="MaterialToolBarBackgroundBrush" Color="#414450" />
-                <SolidColorBrush x:Key="MaterialCardBackgroundBrush" Color="#3a3d4c" />
+                <ResourceDictionary>
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Dark">
+                            <SolidColorBrush x:Key="MaterialPaperBrush" Color="#282a36" />
+                            <SolidColorBrush x:Key="MaterialToolBarBackgroundBrush" Color="#414450" />
+                            <SolidColorBrush x:Key="MaterialCardBackgroundBrush" Color="#3a3d4c" />
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="Light">
+                            <SolidColorBrush x:Key="MaterialPaperBrush" Color="#FFFFFF" />
+                            <SolidColorBrush x:Key="MaterialToolBarBackgroundBrush" Color="#F0F0F0" />
+                            <SolidColorBrush x:Key="MaterialCardBackgroundBrush" Color="#FFFFFF" />
+                        </ResourceDictionary>
+                    </ResourceDictionary.ThemeDictionaries>
+                </ResourceDictionary>
             </Style.Resources>
         </Style>
     </Application.Styles>
