@@ -8,19 +8,19 @@ namespace SimLab.Views;
 
 public partial class DashboardWindow : Window
 {
-    public DashboardWindow(DashboardStyle style)
+    public DashboardWindow()
     {
         InitializeComponent();
         KeyDown += OnKeyDown;
-        PointerEntered += (_, _) => CloseButton.IsVisible = true;
-        PointerExited += (_, _) => CloseButton.IsVisible = false;
-        
+    }
+
+    public void Initialize(DashboardStyle style)
+    {
         if (style == DashboardStyle.Overlay)
         {
             Background = null;
             TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
         }
-        
     }
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
@@ -31,7 +31,12 @@ public partial class DashboardWindow : Window
         }
     }
 
-    private void CloseButton_OnClick(object? sender, RoutedEventArgs e)
+    private void Fullscreen(object? sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState.FullScreen;
+    }
+
+    private void Close(object? sender, RoutedEventArgs e)
     {
         Close();
     }

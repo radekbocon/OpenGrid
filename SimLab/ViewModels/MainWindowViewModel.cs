@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Material.Icons;
 using Serilog;
 using SimLab.Models;
 using SimLab.Services;
@@ -69,11 +70,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
         MenuItems =
         [
-            new MenuItem { Icon = "", Label = "Home", ViewModelType = typeof(HomeViewModel) },
-            new MenuItem { Icon = "", Label = "Sessions", ViewModelType = typeof(SessionsViewModel) },
-            new MenuItem { Icon = "", Label = "Dashboards", ViewModelType = typeof(DashboardsViewModel) },
-            new MenuItem { Icon = "", Label = "Devices", ViewModelType = typeof(DevicesViewModel) },
-            new MenuItem { Icon = "", Label = "Settings", ViewModelType = typeof(SettingsViewModel) },
+            new MenuItem { Icon = MaterialIconKind.Home, Label = "Home", ViewModelType = typeof(HomeViewModel) },
+            new MenuItem { Icon = MaterialIconKind.ChartLine, Label = "Sessions", ViewModelType = typeof(SessionsViewModel) },
+            new MenuItem { Icon = MaterialIconKind.Gauge, Label = "Dashboards", ViewModelType = typeof(DashboardsViewModel) },
+            new MenuItem { Icon = MaterialIconKind.Devices, Label = "Devices", ViewModelType = typeof(DevicesViewModel) },
+            new MenuItem { Icon = MaterialIconKind.Cog, Label = "Settings", ViewModelType = typeof(SettingsViewModel) },
         ];
         
         SupportedGames = SteamGame.GetAll();
