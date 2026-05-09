@@ -12,9 +12,9 @@ public class AccSharedMemoryBridge : IDisposable
     private const string GraphicsBufferName = "Local\\acpmf_graphics";
     private const string StaticBufferName = "Local\\acpmf_static";
 
-    private const string ShmPhysicsPath = "/dev/shm/simlab_physics";
-    private const string ShmGraphicsPath = "/dev/shm/simlab_graphics";
-    private const string ShmStaticPath = "/dev/shm/simlab_static";
+    private const string ShmPhysicsPath = "/dev/shm/acpmf_physics";
+    private const string ShmGraphicsPath = "/dev/shm/acpmf_graphics";
+    private const string ShmStaticPath = "/dev/shm/acpmf_static";
     
     private const int UpdateInterval = 1000 / 60;
 

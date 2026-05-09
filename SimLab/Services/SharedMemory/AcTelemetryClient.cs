@@ -14,12 +14,9 @@ namespace SimLab.Services.SharedMemory;
 /// </summary>
 public class AcTelemetryClient : ITelemetryClient
 {
-    private const string ShmPhysicsPath = "/dev/shm/simlab_physics";
-    private const string ShmGraphicsPath = "/dev/shm/simlab_graphics";
-    private const string ShmStaticPath = "/dev/shm/simlab_static";
-    private const int AcPhysicsSize = 2048;
-    private const int AcGraphicSize = 2048;
-    private const int AcStaticSize = 2048;
+    private const string ShmPhysicsPath = "/dev/shm/acpmf_physics";
+    private const string ShmGraphicsPath = "/dev/shm/acpmf_graphics";
+    private const string ShmStaticPath = "/dev/shm/acpmf_static";
 
     private bool IsConnected => File.Exists(ShmPhysicsPath) &&
                                 File.Exists(ShmGraphicsPath) &&

@@ -41,4 +41,8 @@
         <DependentUpon>DashboardWindow.axaml</DependentUpon>
       </Compile>
     </ItemGroup>
+
+    <Target Name="PublishSimLabBridge" AfterTargets="Build">
+        <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\..\SimLabBridge\SimLabBridge.csproj&quot; -c $(Configuration) -r win-x64 --output &quot;$(TargetDir)&quot; --nologo" />
+    </Target>
 </Project>

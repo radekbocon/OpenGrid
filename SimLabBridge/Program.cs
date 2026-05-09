@@ -1,7 +1,5 @@
 ﻿using SimLabBridge;
 
-// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
 Console.WriteLine("Starting SimLab Bridge...");
 
 using var bridge = new AccSharedMemoryBridge();

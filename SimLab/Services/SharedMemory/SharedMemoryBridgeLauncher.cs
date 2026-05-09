@@ -16,10 +16,7 @@ public class SharedMemoryBridgeLauncher
     {
         try
         {
-            var bridgeExePath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "Dokumenty/GitHub/SimLab/SimLabBridge/bin/Release/net8.0-windows/win-x64/SimLabBridge.exe"
-            );
+            var bridgeExePath = Path.Combine(AppContext.BaseDirectory, "SimLabBridge.exe");
 
             if (!File.Exists(bridgeExePath))
             {
