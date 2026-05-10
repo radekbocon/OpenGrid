@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=SimLab
+Comment=Linux desktop telemetry app for sim racing games
+Exec=SimLab
+Icon=io.github.radekbocon.SimLab
+Type=Application
+Categories=Utility;
+Terminal=false
+StartupNotify=true
