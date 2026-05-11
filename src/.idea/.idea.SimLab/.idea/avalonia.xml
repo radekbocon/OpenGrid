@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AvaloniaProject">
+    <option name="projectPerEditor">
+      <map>
+        <entry key="SimLab/Views/DashboardWebWindow.axaml" value="SimLab/SimLab.csproj" />
+        <entry key="SimLab/Views/DashboardsView.axaml" value="SimLab/SimLab.csproj" />
+        <entry key="SimLab/Views/DeviceAccessDialog.axaml" value="SimLab/SimLab.csproj" />
+        <entry key="SimLab/Views/DevicesView.axaml" value="SimLab/SimLab.csproj" />
+        <entry key="SimLab/Views/SessionsView.axaml" value="SimLab/SimLab.csproj" />
+      </map>
+    </option>
+  </component>
+</project>

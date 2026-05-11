@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:SimLab.Models"
     xmlns:vm="using:SimLab.ViewModels"
@@ -11,7 +12,7 @@
     x:DataType="vm:DashboardsViewModel"
     mc:Ignorable="d">
 
-    <Grid Margin="24" RowDefinitions="Auto, *">
+    <Grid Margin="24" RowDefinitions="Auto, Auto, Auto, *">
         <TextBlock
             Grid.Row="0"
             Margin="0,0,0,16"
@@ -19,41 +20,110 @@
             FontWeight="SemiBold"
             Text="Dashboards" />
 
-        <ItemsControl Grid.Row="1" ItemsSource="{Binding Dashboards}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="models:DashboardInfo">
-                    <Border
-                        Width="240"
-                        Margin="8"
-                        Padding="16"
-                        Background="{DynamicResource MaterialCardBackgroundBrush}"
-                        CornerRadius="8"
-                        Cursor="Hand"
-                        PointerPressed="OnDashboardPointerPressed"
-                        Tag="{Binding}">
-                        <Grid RowDefinitions="Auto, Auto" RowSpacing="8">
-                            <TextBlock
-                                Grid.Row="0"
-                                HorizontalAlignment="Center"
-                                FontSize="18"
-                                FontWeight="SemiBold"
-                                Text="{Binding Name}" />
-                            <TextBlock
-                                Grid.Row="1"
-                                HorizontalAlignment="Center"
-                                FontSize="13"
-                                Opacity="0.7"
-                                Text="{Binding Description}"
-                                TextWrapping="Wrap" />
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <Border
+            Grid.Row="1"
+            Margin="0,0,0,8"
+            Padding="12,8"
+            Background="{DynamicResource MaterialCardBackgroundBrush}"
+            CornerRadius="8"
+            IsVisible="{Binding IsServerRunning}">
+            <Grid ColumnDefinitions="Auto, Auto, Auto" ColumnSpacing="10">
+                <icons:MaterialIconExt
+                    VerticalAlignment="Center"
+                    IconSize="18"
+                    Kind="Server" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    FontSize="13"
+                    Text="{Binding StatusText}" />
+                <Button
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    Classes="Flat"
+                    Command="{Binding StopServerCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <icons:MaterialIconExt IconSize="16" Kind="Stop" />
+                        <TextBlock FontSize="12" Text="Stop Server" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="3">
+            <ItemsControl ItemsSource="{Binding Dashboards}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:DashboardInfo">
+                        <Border
+                            Width="280"
+                            Margin="8"
+                            Padding="16"
+                            Background="{DynamicResource MaterialCardBackgroundBrush}"
+                            CornerRadius="10"
+                            Tag="{Binding}">
+                            <Grid RowDefinitions="Auto, Auto, Auto" RowSpacing="12">
+                                <TextBlock
+                                    Grid.Row="0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="18"
+                                    FontWeight="SemiBold"
+                                    Text="{Binding Name}" />
+
+                                <TextBlock
+                                    Grid.Row="1"
+                                    HorizontalAlignment="Center"
+                                    FontSize="13"
+                                    Opacity="0.7"
+                                    Text="{Binding Description}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+
+                                <StackPanel
+                                    Grid.Row="2"
+                                    HorizontalAlignment="Center"
+                                    Orientation="Horizontal"
+                                    Spacing="8">
+                                    <Button
+                                        Padding="8,4"
+                                        Classes="Flat"
+                                        Command="{Binding $parent[ItemsControl].DataContext?.OpenOnThisMachineCommand}"
+                                        CommandParameter="{Binding}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <icons:MaterialIconExt IconSize="16" Kind="Monitor" />
+                                            <TextBlock FontSize="12" Text="This PC" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button
+                                        Padding="8,4"
+                                        Classes="Flat"
+                                        Command="{Binding $parent[ItemsControl].DataContext?.OpenInBrowserCommand}"
+                                        CommandParameter="{Binding}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <icons:MaterialIconExt IconSize="16" Kind="Web" />
+                                            <TextBlock FontSize="12" Text="Browser" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button
+                                        Padding="8,4"
+                                        Classes="Flat"
+                                        Command="{Binding $parent[ItemsControl].DataContext?.OpenOnDeviceCommand}"
+                                        CommandParameter="{Binding}">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <icons:MaterialIconExt IconSize="16" Kind="Cellphone" />
+                                            <TextBlock FontSize="12" Text="Device" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>

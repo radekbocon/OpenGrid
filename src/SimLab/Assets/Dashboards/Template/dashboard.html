@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>My SimLab Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0a0a0f;
+    color: #fff;
+    min-height: 100vh;
+  }
+  .container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .card {
+    background: linear-gradient(145deg, #14141e, #1a1a28);
+    border-radius: 16px;
+    padding: 32px;
+    border: 1px solid rgba(255,255,255,0.06);
+    text-align: center;
+    max-width: 400px;
+  }
+  h1 { font-size: 24px; margin-bottom: 8px; }
+  p { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 24px; }
+  .data-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .data-label { color: rgba(255,255,255,0.4); font-size: 13px; }
+  .data-value { font-weight: 700; font-size: 18px; }
+  .data-value.highlight { color: #00d4ff; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>My Dashboard</h1>
+    <p>Telemetry data will appear here</p>
+    <div id="data">
+      <div class="data-row"><span class="data-label">Speed</span><span class="data-value highlight" id="speed">0 km/h</span></div>
+      <div class="data-row"><span class="data-label">Gear</span><span class="data-value" id="gear">N</span></div>
+      <div class="data-row"><span class="data-label">RPM</span><span class="data-value" id="rpm">0</span></div>
+      <div class="data-row"><span class="data-label">Lap Time</span><span class="data-value" id="lapTime">--:--</span></div>
+    </div>
+  </div>
+</div>
+<script>
+  // Connect to WebSocket for live telemetry
+  const scheme = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(`${scheme}//${location.host}/ws`);
+
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'navigate') { window.location.href = msg.url; return; }
+      if (msg.type !== 'telemetry') return;
+      const d = msg.data;
+      // Update your dashboard with telemetry data
+      document.getElementById('speed').textContent = Math.round(d.speed) + ' km/h';
+      const gearMap = { '-1': 'R', '0': 'N', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7' };
+      document.getElementById('gear').textContent = gearMap[d.gear] ?? d.gear;
+      document.getElementById('rpm').textContent = Math.round(d.rpm);
+      document.getElementById('lapTime').textContent = d.lapTime || '--:--';
+    } catch(_) {}
+  };
+
+  ws.onclose = () => {
+    document.querySelector('.card p').textContent = 'Disconnected - waiting for telemetry...';
+  };
+</script>
+</body>
+</html>

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using SimLab.Services;
-using SimLab.Services;
 using SimLab.Services.SharedMemory;
 using SimLab.ViewModels;
 
@@ -18,6 +17,8 @@ public static class ServiceRegistrator
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<SessionRepository>();
+        services.AddSingleton<IDashboardRepository, DashboardRepository>();
+        services.AddSingleton<IDashboardService, DashboardService>();
 
         // Register ViewModels
         services.AddSingleton<MainWindowViewModel>();
@@ -27,7 +28,6 @@ public static class ServiceRegistrator
         services.AddTransient<SessionDetailsViewModel>();
         services.AddTransient<DevicesViewModel>();
         services.AddTransient<DashboardsViewModel>();
-        services.AddTransient<DashboardViewModel>();
 
         return services;
     }
