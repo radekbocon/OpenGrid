@@ -35,13 +35,27 @@ public record TelemetryRecord
     [ProtoMember(13)]
     public float EngineRpm { get; set; }
     [ProtoMember(14)]
-    public TireTemperatures TireTemperatures { get; set; }
+    public TireValues TireTemperatures { get; set; }
     [ProtoMember(15)]
     public TimeSpan LapTime { get; set; }
     [ProtoMember(16)]
     public float Distance { get; set; }
     [ProtoMember(17)]
     public float MaxRpm { get; set; }
+    [ProtoMember(18)]
+    public TireValues TirePressures { get; set; }
+    [ProtoMember(19)]
+    public TimeSpan LastLapTime { get; set; }
+    [ProtoMember(20)]
+    public TimeSpan BestLapTime { get; set; }
+    [ProtoMember(21)]
+    public int Abs { get; set; }
+    [ProtoMember(22)]
+    public int Tc1 { get; set; }
+    [ProtoMember(23)]
+    public int Tc2 { get; set; }
+    [ProtoMember(24)]
+    public int Tc3 { get; set; }
 }
 
 public enum SessionType
@@ -70,13 +84,13 @@ public enum Gear
 }
 
 [ProtoContract]
-public record struct TireTemperatures(float FrontLeft, float FrontRight, float RearLeft, float RearRight)
+public record struct TireValues(float FrontLeft, float FrontRight, float RearLeft, float RearRight)
 {
-    public static TireTemperatures FromArray(float[] array)
+    public static TireValues FromArray(float[] array)
     {
         return array.Length != 4 
-            ? new TireTemperatures(0, 0, 0, 0) 
-            : new TireTemperatures(array[0], array[1], array[2], array[3]);
+            ? new TireValues(0, 0, 0, 0) 
+            : new TireValues(array[0], array[1], array[2], array[3]);
     }
 }
 

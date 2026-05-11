@@ -11,6 +11,7 @@
         <AvaloniaResource Include="Assets\**" />
     <EmbeddedResource Include="Assets\Dashboards\**\*.html" />
     <EmbeddedResource Include="Assets\Dashboards\**\*.json" />
+    <EmbeddedResource Include="Assets\Dashboards\**\*.png" />
     <Content Include="Assets\Dashboards\Template\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

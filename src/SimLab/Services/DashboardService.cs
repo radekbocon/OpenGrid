@@ -23,7 +23,6 @@ public class DashboardService : IDashboardService
     private readonly ITelemetryService _telemetryService;
     private TcpListener? _listener;
     private CancellationTokenSource? _cts;
-    private Task? _acceptLoop;
     private readonly ConcurrentDictionary<WebSocket, byte> _connectedSockets = [];
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _deviceSockets = new(StringComparer.OrdinalIgnoreCase);
 
@@ -95,7 +94,7 @@ public class DashboardService : IDashboardService
         _listener = new TcpListener(IPAddress.Any, Port);
         _listener.Start();
         _cts = new CancellationTokenSource();
-        _acceptLoop = AcceptConnectionsAsync(_cts.Token);
+        _ = AcceptConnectionsAsync(_cts.Token);
         _telemetryService.TelemetryReceived += OnTelemetryReceived;
         Log.Information("Dashboard HTTP server started on port {Port}", Port);
     }
@@ -112,7 +111,7 @@ public class DashboardService : IDashboardService
                 speed = e.Telemetry.SpeedKmh,
                 rpm = e.Telemetry.EngineRpm,
                 maxRpm = e.Telemetry.MaxRpm,
-                gear = (int)e.Telemetry.CurrentGear - 1,
+                gear = e.Telemetry.CurrentGear,
                 gas = e.Telemetry.Gas,
                 brake = e.Telemetry.Brake,
                 clutch = e.Telemetry.Clutch,
@@ -123,13 +122,24 @@ public class DashboardService : IDashboardService
                 sessionType = e.Telemetry.SessionType.ToString(),
                 currentLap = e.Telemetry.CurrentLap,
                 lapTime = e.Telemetry.LapTime > TimeSpan.Zero ? e.Telemetry.LapTime.ToString(@"mm\:ss\.fff") : "--:--",
+                lastLapTime = e.Telemetry.LapTime > TimeSpan.Zero ? e.Telemetry.LastLapTime.ToString(@"mm\:ss\.fff") : "--:--",
+                bestLapTime = e.Telemetry.LapTime > TimeSpan.Zero ? e.Telemetry.BestLapTime.ToString(@"mm\:ss\.fff") : "--:--",
                 tireTemps = new
                 {
                     fl = e.Telemetry.TireTemperatures.FrontLeft,
                     fr = e.Telemetry.TireTemperatures.FrontRight,
                     rl = e.Telemetry.TireTemperatures.RearLeft,
                     rr = e.Telemetry.TireTemperatures.RearRight
-                }
+                },
+                tirePressures = new
+                {
+                    fl = e.Telemetry.TirePressures.FrontLeft,
+                    fr = e.Telemetry.TirePressures.FrontRight,
+                    rl = e.Telemetry.TirePressures.RearLeft,
+                    rr = e.Telemetry.TirePressures.RearRight
+                },
+                abs = e.Telemetry.Abs,
+                tc1 = e.Telemetry.Tc1
             }
         });
 

@@ -90,10 +90,15 @@ public class AcTelemetryClient : ITelemetryClient
                 Clutch = physicsData.Value.Clutch,
                 CurrentGear = (Gear)physicsData.Value.Gear,
                 EngineRpm = physicsData.Value.Rpms,
-                TireTemperatures = TireTemperatures.FromArray(physicsData.Value.TyreCoreTemperature),
+                TireTemperatures = TireValues.FromArray(physicsData.Value.TyreCoreTemperature),
                 LapTime = TimeSpan.FromMilliseconds(graphicsData.Value.iCurrentTime),
                 Distance = graphicsData.Value.DistanceTraveled,
                 MaxRpm = staticData.Value.MaxRpm,
+                TirePressures = TireValues.FromArray(physicsData.Value.WheelsPressure),
+                LastLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.iLastTime),
+                BestLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.iBestTime),
+                Abs = (int)physicsData.Value.Abs,
+                Tc1 = (int)physicsData.Value.TC
             };
             
             return snapshot;

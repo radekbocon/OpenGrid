@@ -2,6 +2,7 @@
     x:Class="SimLab.Views.DashboardsView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -59,68 +60,68 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="models:DashboardInfo">
-                        <Border
+                        <controls:Card
                             Width="280"
-                            Margin="8"
-                            Padding="16"
-                            Background="{DynamicResource MaterialCardBackgroundBrush}"
-                            CornerRadius="10"
-                            Tag="{Binding}">
-                            <Grid RowDefinitions="Auto, Auto, Auto" RowSpacing="12">
-                                <TextBlock
-                                    Grid.Row="0"
-                                    HorizontalAlignment="Center"
-                                    FontSize="18"
-                                    FontWeight="SemiBold"
-                                    Text="{Binding Name}" />
+                            Padding="0"
+                            VerticalAlignment="Top">
+                            <StackPanel>
+                                <Border CornerRadius="8">
+                                    <Image Source="{Binding Image}" />
+                                </Border>
+                                <StackPanel Margin="16" Spacing="8">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        FontSize="18"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding Name}" />
 
-                                <TextBlock
-                                    Grid.Row="1"
-                                    HorizontalAlignment="Center"
-                                    FontSize="13"
-                                    Opacity="0.7"
-                                    Text="{Binding Description}"
-                                    TextAlignment="Center"
-                                    TextWrapping="Wrap" />
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        FontSize="13"
+                                        Opacity="0.7"
+                                        Text="{Binding Description}"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
 
-                                <StackPanel
-                                    Grid.Row="2"
-                                    HorizontalAlignment="Center"
-                                    Orientation="Horizontal"
-                                    Spacing="8">
-                                    <Button
-                                        Padding="8,4"
-                                        Classes="Flat"
-                                        Command="{Binding $parent[ItemsControl].DataContext?.OpenOnThisMachineCommand}"
-                                        CommandParameter="{Binding}">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <icons:MaterialIconExt IconSize="16" Kind="Monitor" />
-                                            <TextBlock FontSize="12" Text="This PC" />
-                                        </StackPanel>
-                                    </Button>
-                                    <Button
-                                        Padding="8,4"
-                                        Classes="Flat"
-                                        Command="{Binding $parent[ItemsControl].DataContext?.OpenInBrowserCommand}"
-                                        CommandParameter="{Binding}">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <icons:MaterialIconExt IconSize="16" Kind="Web" />
-                                            <TextBlock FontSize="12" Text="Browser" />
-                                        </StackPanel>
-                                    </Button>
-                                    <Button
-                                        Padding="8,4"
-                                        Classes="Flat"
-                                        Command="{Binding $parent[ItemsControl].DataContext?.OpenOnDeviceCommand}"
-                                        CommandParameter="{Binding}">
-                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <icons:MaterialIconExt IconSize="16" Kind="Cellphone" />
-                                            <TextBlock FontSize="12" Text="Device" />
-                                        </StackPanel>
-                                    </Button>
+                                    <StackPanel
+                                        HorizontalAlignment="Center"
+                                        Orientation="Horizontal"
+                                        Spacing="8">
+                                        <Button
+                                            Padding="8,4"
+                                            Classes="Flat"
+                                            Command="{Binding $parent[ItemsControl].DataContext?.OpenOnThisMachineCommand}"
+                                            CommandParameter="{Binding}">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <icons:MaterialIconExt IconSize="16" Kind="Monitor" />
+                                                <TextBlock FontSize="12" Text="This PC" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            Padding="8,4"
+                                            Classes="Flat"
+                                            Command="{Binding $parent[ItemsControl].DataContext?.OpenInBrowserCommand}"
+                                            CommandParameter="{Binding}">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <icons:MaterialIconExt IconSize="16" Kind="Web" />
+                                                <TextBlock FontSize="12" Text="Browser" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            Padding="8,4"
+                                            Classes="Flat"
+                                            Command="{Binding $parent[ItemsControl].DataContext?.OpenOnDeviceCommand}"
+                                            CommandParameter="{Binding}">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <icons:MaterialIconExt IconSize="16" Kind="Cellphone" />
+                                                <TextBlock FontSize="12" Text="Device" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
                                 </StackPanel>
-                            </Grid>
-                        </Border>
+                            </StackPanel>
+                        </controls:Card>
+
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

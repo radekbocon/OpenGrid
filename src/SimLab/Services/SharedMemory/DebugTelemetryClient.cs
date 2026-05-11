@@ -59,6 +59,12 @@ public class DebugTelemetryClient : ITelemetryClient
             82f + (float)_random.NextDouble() * 10f, 
             84f + (float)_random.NextDouble() * 10f
         ];
+        float[] pressures = [
+            85f + (float)_random.NextDouble() * 15f,
+            87f + (float)_random.NextDouble() * 15f, 
+            82f + (float)_random.NextDouble() * 10f, 
+            84f + (float)_random.NextDouble() * 10f
+        ];
 
         var snapshot = new TelemetryRecord
         {
@@ -75,10 +81,11 @@ public class DebugTelemetryClient : ITelemetryClient
             Fuel = fuel,
             CurrentGear = currentGear,
             EngineRpm = engineRpm,
-            TireTemperatures = TireTemperatures.FromArray(temps),
+            TireTemperatures = TireValues.FromArray(temps),
             LapTime = TimeSpan.FromSeconds(75 + (_tick % 30)),
             Distance = (float)(_tick * 1.5),
-            MaxRpm = 12000f
+            MaxRpm = 12000f,
+            TirePressures = TireValues.FromArray(pressures)
         };
 
         return snapshot;
