@@ -65,9 +65,9 @@ public class AcTelemetryClient : ITelemetryClient
                 return null;
             }
 
-            var physicsData = ReadStructFromFile<SPageFilePhysics>(ShmPhysicsPath, Marshal.SizeOf<SPageFilePhysics>());
-            var graphicsData = ReadStructFromFile<SPageFileGraphic>(ShmGraphicsPath, Marshal.SizeOf<SPageFileGraphic>());
-            var staticData = ReadStructFromFile<SPageFileStatic>(ShmStaticPath, Marshal.SizeOf<SPageFileStatic>());
+            var physicsData = ReadStructFromFile<SPageFilePhysics>(ShmPhysicsPath, 2048);
+            var graphicsData = ReadStructFromFile<SPageFileGraphic>(ShmGraphicsPath, 2048);
+            var staticData = ReadStructFromFile<SPageFileStatic>(ShmStaticPath, 2048);
 
             if (physicsData == null || graphicsData == null || staticData == null)
             {
@@ -90,15 +90,20 @@ public class AcTelemetryClient : ITelemetryClient
                 Clutch = physicsData.Value.Clutch,
                 CurrentGear = (Gear)physicsData.Value.Gear,
                 EngineRpm = physicsData.Value.Rpms,
-                TireTemperatures = TireValues.FromArray(physicsData.Value.TyreCoreTemperature),
-                LapTime = TimeSpan.FromMilliseconds(graphicsData.Value.iCurrentTime),
+                TireTemperatures = TireValues.FromArray(physicsData.Value.TyreTemp.ToArray()),
+                LapTime = TimeSpan.FromMilliseconds(graphicsData.Value.CurrentTime),
                 Distance = graphicsData.Value.DistanceTraveled,
                 MaxRpm = staticData.Value.MaxRpm,
-                TirePressures = TireValues.FromArray(physicsData.Value.WheelsPressure),
-                LastLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.iLastTime),
-                BestLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.iBestTime),
-                Abs = (int)physicsData.Value.Abs,
-                Tc1 = (int)physicsData.Value.TC
+                TirePressures = TireValues.FromArray(physicsData.Value.WheelsPressure.ToArray()),
+                LastLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.LastTime),
+                BestLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.BestTime),
+                AbsSetting = graphicsData.Value.ABS,
+                Tc1Setting = graphicsData.Value.TC,
+                Tc2Setting = graphicsData.Value.TCCUT,
+                DeltaLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.DeltaLapTime),
+                Position = graphicsData.Value.Position,
+                EngineMap = graphicsData.Value.EngineMap + 1,
+                BrakeBias = physicsData.Value.BrakeBias,
             };
             
             return snapshot;

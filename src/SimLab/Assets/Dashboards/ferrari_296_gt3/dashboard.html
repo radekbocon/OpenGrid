@@ -202,7 +202,7 @@
     .mid-grid {
       grid-column: 1 / span 5;
       display: grid;
-      grid-template-columns: repeat(9, 1fr);
+      grid-template-columns: repeat(8, 1fr);
       gap: 8px;
     }
 
@@ -286,47 +286,42 @@
       <div class="mid-grid">
         <div class="panel status">
           <div class="label">MIX</div>
-          <div class="value" id="mixValue">--</div>
+          <div class="small-value" id="mixValue">--</div>
         </div>
 
         <div class="panel status">
           <div class="label">POS</div>
-          <div class="value" id="posValue">--</div>
+          <div class="small-value" id="posValue">--</div>
         </div>
 
-        <div class="panel red status">
+        <div class="panel red status" id="absPanel">
           <div class="label">ABS</div>
-          <div class="off" id="absStatus">OFF</div>
+          <div class="small-value" id="absStatus">OFF</div>
         </div>
 
         <div class="panel yellow status">
           <div class="label">FUEL</div>
-          <div class="value" id="fuelValue">--</div>
+          <div class="small-value" id="fuelValue">--</div>
         </div>
 
         <div class="panel gray status">
-          <div class="label">LAP</div>
-          <div class="value" id="lapTimeValue">--:--</div>
+          <div class="label">DEL</div>
+          <div class="small-value" id="deltaValue">0.00</div>
         </div>
 
         <div class="panel green status">
           <div class="label">PRED</div>
-          <div class="value" id="predValue">--</div>
+          <div class="small-value" id="predValue">--</div>
         </div>
 
-        <div class="panel red status">
+        <div class="panel red status" id="tc1Panel">
           <div class="label">TC1</div>
-          <div class="off" id="tc1Status">OFF</div>
+          <div class="small-value" id="tc1Status">OFF</div>
         </div>
 
-        <div class="panel red status">
+        <div class="panel red status" id="tc2Panel">
           <div class="label">TC2</div>
-          <div class="off" id="tc2Status">OFF</div>
-        </div>
-
-        <div class="panel red status">
-          <div class="label">TC3</div>
-          <div class="off" id="tc3Status">OFF</div>
+          <div class="small-value" id="tc2Status">OFF</div>
         </div>
       </div>
 
@@ -457,8 +452,18 @@
         document.getElementById('pRl').textContent = rl != null ? rl.toFixed(1) : '--';
         document.getElementById('pRr').textContent = rr != null ? rr.toFixed(1) : '--';
       }
+
+      document.getElementById('mixValue').textContent = d.engineMap != null ? d.engineMap : '--';
+      document.getElementById('posValue').textContent = d.position != null ? d.position : '--';
+      document.getElementById('bbalValue').textContent = d.brakeBias != null ? (d.brakeBias * 100).toFixed(1) : '--';
       document.getElementById('absStatus').textContent = d.abs === 0 ? 'OFF' : d.abs;
       document.getElementById('tc1Status').textContent = d.tc1 === 0 ? 'OFF' : d.tc1;
+      document.getElementById('tc2Status').textContent = d.tc2 === 0 ? 'OFF' : d.tc2;
+      document.getElementById('absPanel').classList = d.abs === 0 ? 'panel red status' : "panel green status";
+      document.getElementById('tc1Panel').classList = d.tc1 === 0 ? 'panel red status' : "panel green status";
+      document.getElementById('tc2Panel').classList = d.tc2 === 0 ? 'panel red status' : "panel green status";
+      
+      
     }
 
     const scheme = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -473,7 +478,7 @@
         document.body.style.opacity = '1';
       };
       ws.onclose = function() {
-        document.body.style.opacity = '1';
+        document.body.style.opacity = '0.7';
         reconnectTimer = setTimeout(connect, 2000);
       };
       ws.onerror = function() { ws.close(); };

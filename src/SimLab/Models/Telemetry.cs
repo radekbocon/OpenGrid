@@ -49,13 +49,19 @@ public record TelemetryRecord
     [ProtoMember(20)]
     public TimeSpan BestLapTime { get; set; }
     [ProtoMember(21)]
-    public int Abs { get; set; }
+    public int AbsSetting { get; set; }
     [ProtoMember(22)]
-    public int Tc1 { get; set; }
+    public int Tc1Setting { get; set; }
     [ProtoMember(23)]
-    public int Tc2 { get; set; }
+    public int Tc2Setting { get; set; }
     [ProtoMember(24)]
-    public int Tc3 { get; set; }
+    public TimeSpan DeltaLapTime { get; set; }
+    [ProtoMember(25)]
+    public int Position { get; set; }
+    [ProtoMember(26)]
+    public int EngineMap { get; set; }
+    [ProtoMember(27)]
+    public float BrakeBias { get; set; }
 }
 
 public enum SessionType

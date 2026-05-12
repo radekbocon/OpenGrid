@@ -163,6 +163,7 @@ public class DashboardService : IDashboardService
                 lapTime = e.Telemetry.LapTime > TimeSpan.Zero ? e.Telemetry.LapTime.ToString(@"mm\:ss\.fff") : "--:--",
                 lastLapTime = e.Telemetry.LapTime > TimeSpan.Zero ? e.Telemetry.LastLapTime.ToString(@"mm\:ss\.fff") : "--:--",
                 bestLapTime = e.Telemetry.LapTime > TimeSpan.Zero ? e.Telemetry.BestLapTime.ToString(@"mm\:ss\.fff") : "--:--",
+                deltaLapTime = e.Telemetry.DeltaLapTime.ToString(@"ss\.ff"),
                 tireTemps = new
                 {
                     fl = e.Telemetry.TireTemperatures.FrontLeft,
@@ -177,8 +178,12 @@ public class DashboardService : IDashboardService
                     rl = e.Telemetry.TirePressures.RearLeft,
                     rr = e.Telemetry.TirePressures.RearRight
                 },
-                abs = e.Telemetry.Abs,
-                tc1 = e.Telemetry.Tc1
+                abs = e.Telemetry.AbsSetting,
+                tc1 = e.Telemetry.Tc1Setting,
+                tc2 = e.Telemetry.Tc2Setting,
+                position = e.Telemetry.Position,
+                engineMap = e.Telemetry.EngineMap,
+                brakeBias = e.Telemetry.BrakeBias,
             }
         });
 

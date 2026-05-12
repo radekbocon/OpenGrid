@@ -10,45 +10,91 @@ namespace SimLab.Models;
 /// Assetto Corsa shared memory structures
 /// These structs match the binary layout of Assetto Corsa's physics and graphics buffers
 /// </summary>
-public enum AC_STATUS
+public enum TrackGripStatus
 {
-    AC_OFF = 0,
-    AC_REPLAY = 1,
-    AC_LIVE = 2,
-    AC_PAUSE = 3
+    GREEN = 0,
+    FAST = 1,
+    OPTIMUM = 2,
+    GREASY = 3,
+    DAMP = 4,
+    WET = 5,
+    FLOODED = 6
 }
 
-public enum AC_SESSION_TYPE
+public enum RainIntensity
 {
-    AC_UNKNOWN = -1,
-    AC_PRACTICE = 0,
-    AC_QUALIFY = 1,
-    AC_RACE = 2,
-    AC_HOTLAP = 3,
-    AC_TIME_ATTACK = 4,
-    AC_DRIFT = 5,
-    AC_DRAG = 6
+    NO_RAIN = 0,
+    DRIZZLE = 1,
+    LIGHT_RAIN = 2,
+    MEDIUM_RAIN = 3,
+    HEAVY_RAIN = 4,
+    THUNDERSTORM = 5
 }
 
-public enum AC_FLAG_TYPE
+public enum PenaltyType
 {
-    ACC_NO_FLAG = 0,
-    ACC_BLUE_FLAG = 1,
-    ACC_YELLOW_FLAG = 2,
-    ACC_BLACK_FLAG = 3,
-    ACC_WHITE_FLAG = 4,
-    ACC_CHECKERED_FLAG = 5,
-    ACC_PENALTY_FLAG = 6,
-    ACC_GREEN_FLAG = 7,
-    ACC_ORANGE_FLAG = 8
+    None = 0,
+    DriveThrough_Cutting = 1,
+    StopAndGo_10_Cutting = 2,
+    StopAndGo_20_Cutting = 3,
+    StopAndGo_30_Cutting = 4,
+    Disqualified_Cutting = 5,
+    RemoveBestLaptime_Cutting = 6,
+    DriveThrough_PitSpeeding = 7,
+    StopAndGo_10_PitSpeeding = 8,
+    StopAndGo_20_PitSpeeding = 9,
+    StopAndGo_30_PitSpeeding = 10,
+    Disqualified_PitSpeeding = 11,
+    RemoveBestLaptime_PitSpeeding = 12,
+    Disqualified_IgnoredMandatoryPit = 13,
+    PostRaceTime = 14,
+    Disqualified_Trolling = 15,
+    Disqualified_PitEntry = 16,
+    Disqualified_PitExit = 17,
+    Disqualified_Wrongway = 18,
+    DriveThrough_IgnoredDriverStint = 19,
+    Disqualified_IgnoredDriverStint = 20,
+    Disqualified_ExceededDriverStintLimit = 21
+}
+
+public enum FlagType
+{
+    NO_FLAG = 0,
+    BLUE_FLAG = 1,
+    YELLOW_FLAG = 2,
+    BLACK_FLAG = 3,
+    WHITE_FLAG = 4,
+    CHECKERED_FLAG = 5,
+    PENALTY_FLAG = 6
+}
+
+public enum GameStatus
+{
+    OFF = 0,
+    REPLAY = 1,
+    LIVE = 2,
+    PAUSE = 3
 }
 
 [StructLayout(LayoutKind.Sequential)]
+[Serializable]
 public struct Coordinates
 {
     public float X;
     public float Y;
     public float Z;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+[Serializable]
+public struct TyreStat
+{
+    public float FrontLeft;
+    public float FrontRight;
+    public float RearLeft;
+    public float RearRight;
+    
+    public float[] ToArray() => new[] {FrontLeft, FrontRight, RearLeft, RearRight};
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -62,40 +108,17 @@ public struct SPageFilePhysics
     public int Rpms;
     public float SteerAngle;
     public float SpeedKmh;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-    public float[] Velocity;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-    public float[] AccG;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] WheelSlip;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] WheelLoad;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] WheelsPressure;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] WheelAngularSpeed;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] TyreWear;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] TyreDirtyLevel;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] TyreCoreTemperature;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] CamberRad;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] SuspensionTravel;
-
+    public Coordinates Velocity;
+    public Coordinates AccG;
+    public TyreStat WheelSlip;
+    public TyreStat WheelLoad;
+    public TyreStat WheelsPressure;
+    public TyreStat WheelAngularSpeed;
+    public TyreStat TyreWear;
+    public TyreStat TyreDirtyLevel;
+    public TyreStat TyreCoreTemperature;
+    public TyreStat CamberRad;
+    public TyreStat SuspensionTravel;
     public float Drs;
     public float TC;
     public float Heading;
@@ -109,7 +132,6 @@ public struct SPageFilePhysics
     public int NumberOfTyresOut;
     public int PitLimiterOn;
     public float Abs;
-
     public float KersCharge;
     public float KersInput;
     public int AutoShifterOn;
@@ -117,21 +139,13 @@ public struct SPageFilePhysics
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
     public float[] RideHeight;
 
-    // since 1.5
     public float TurboBoost;
     public float Ballast;
     public float AirDensity;
-
-    // since 1.6
     public float AirTemp;
     public float RoadTemp;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-    public float[] LocalAngularVelocity;
-
+    public Coordinates LocalAngularVelocity;
     public float FinalFF;
-
-    // since 1.7
     public float PerformanceMeter;
     public int EngineBrake;
     public int ErsRecoveryLevel;
@@ -141,26 +155,13 @@ public struct SPageFilePhysics
     public float KersCurrentKJ;
     public int DrsAvailable;
     public int DrsEnabled;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] BrakeTemp;
-
-    // since 1.10
+    public TyreStat BrakeTemp;
     public float Clutch;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] TyreTempI;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] TyreTempM;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] TyreTempO;
-
-    // since 1.10.2
+    public TyreStat TyreTempI;
+    public TyreStat TyreTempM;
+    public TyreStat TyreTempO;
     public int IsAIControlled;
 
-    // since 1.11
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
     public Coordinates[] TyreContactPoint;
 
@@ -171,36 +172,58 @@ public struct SPageFilePhysics
     public Coordinates[] TyreContactHeading;
 
     public float BrakeBias;
-
-    // since 1.12
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-    public float[] LocalVelocity;
+    public Coordinates LocalVelocity;
+    public int P2PActivation;
+    public int P2PStatus;
+    public float CurrentMaxRpm;
+    public TyreStat Mz;
+    public TyreStat Fx;
+    public TyreStat Fy;
+    public TyreStat SlipRatio;
+    public TyreStat SlipAngle;
+    public int TcinAction;
+    public int AbsInAction;
+    public TyreStat SuspensionDamage;
+    public TyreStat TyreTemp;
+    public float WaterTemp;
+    public TyreStat BrakePressure;
+    public int FrontBrakeCompound;
+    public int RearBrakeCompound;
+    public TyreStat PadLife;
+    public TyreStat DiscLife;
+    public int IgnitionOn;
+    public int StarterEngineOn;
+    public int IsEngineRunning;
+    public float KerbVibration;
+    public float SlipVibrations;
+    public float GVibrations;
+    public float AbsVibrations;
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 4, CharSet = CharSet.Unicode)]
 public struct SPageFileGraphic
 {
     public int PacketId;
-    public AC_STATUS Status;
-    public AC_SESSION_TYPE Session;
+    public GameStatus Status;
+    public SessionType Session;
 
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 15)]
-    public String CurrentTime;
+    public string CurrentTimeString;
 
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 15)]
-    public String LastTime;
+    public string LastTimeString;
 
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 15)]
-    public String BestTime;
+    public string BestTimeString;
 
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 15)]
-    public String Split;
+    public string SplitString;
 
     public int CompletedLaps;
     public int Position;
-    public int iCurrentTime;
-    public int iLastTime;
-    public int iBestTime;
+    public int CurrentTime;
+    public int LastTime;
+    public int BestTime;
     public float SessionTimeLeft;
     public float DistanceTraveled;
     public int IsInPit;
@@ -209,24 +232,90 @@ public struct SPageFileGraphic
     public int NumberOfLaps;
 
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 33)]
-    public String TyreCompound;
+    public string TyreCompound;
 
     public float ReplayTimeMultiplier;
     public float NormalizedCarPosition;
+    public int ActiveCars;
 
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-    public float[] CarCoordinates;
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 60)]
+    public Coordinates[] CarCoordinates;
 
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 60)]
+    public int[] CarIDs;
+
+    public int PlayerCarID;
     public float PenaltyTime;
-    public AC_FLAG_TYPE Flag;
+    public FlagType Flag;
+    public PenaltyType Penalty;
     public int IdealLineOn;
-
-    // since 1.5
     public int IsInPitLane;
     public float SurfaceGrip;
-
-    // since 1.13
     public int MandatoryPitDone;
+    public float WindSpeed;
+    public float WindDirection;
+    public int IsSetupMenuVisible;
+    public int MainDisplayIndex;
+    public int SecondaryDisplyIndex;
+    public int TC;
+    public int TCCUT;
+    public int EngineMap;
+    public int ABS;
+    public float FuelXLap;
+    public int RainLights;
+    public int FlashingLights;
+    public int LightsStage;
+    public float ExhaustTemperature;
+    public int WiperLV;
+    public int DriverStintTotalTimeLeft;
+    public int DriverStintTimeLeft;
+    public int RainTyres;
+    public int SessionIndex;
+    public float UsedFuel;
+
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 15)]
+    public string DeltaLapTimeString;
+
+    public int DeltaLapTime;
+
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 15)]
+    public string EstimatedLapTimeString;
+
+    public int EstimatedLapTime;
+    public int IsDeltaPositive;
+    public int Split;
+    public int IsValidLap;
+    public float FuelEstimatedLaps;
+
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 33)]
+    public string TrackStatus;
+
+    public int MissingMandatoryPits;
+    public float Clock;
+    public int DirectionLightsLeft;
+    public int DirectionLightsRight;
+    public int GlobalYellow;
+    public int GlobalYellow1;
+    public int GlobalYellow2;
+    public int GlobalYellow3;
+    public int GlobalWhite;
+    public int GlobalGreen;
+    public int GlobalChequered;
+    public int GlobalRed;
+    public int MfdTyreSet;
+    public float MfdFuelToAdd;
+    public float MfdTyrePressureLF;
+    public float MfdTyrePressureRF;
+    public float MfdTyrePressureLR;
+    public float MfdTyrePressureRR;
+    public TrackGripStatus TrackGripStatus;
+    public RainIntensity RainIntensity;
+    public RainIntensity RainIntensityIn10min;
+    public RainIntensity RainIntensityIn30min;
+    public int CurrentTyreSet;
+    public int StrategyTyreSet;
+    public int GapAhead;
+    public int GapBehind;
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 4, CharSet = CharSet.Unicode)]
@@ -235,47 +324,30 @@ public struct SPageFileStatic
 {
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 15)]
     public string SMVersion;
-
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 15)]
     public string ACVersion;
-
-    // session static info
     public int NumberOfSessions;
     public int NumCars;
-
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 33)]
     public string CarModel;
-
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 33)]
     public string Track;
-
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 33)]
     public string PlayerName;
-
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 33)]
     public string PlayerSurname;
-
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 33)]
     public string PlayerNick;
-
     public int SectorCount;
-
-    // car static info
     public float MaxTorque;
     public float MaxPower;
     public int MaxRpm;
     public float MaxFuel;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] SuspensionMaxTravel;
-
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public float[] TyreRadius;
-
-    // since 1.5
+    public TyreStat SuspensionMaxTravel;
+    public TyreStat TyreRadius;
     public float MaxTurboBoost;
-    public float Deprecated1; // AirTemp since 1.6 in physic
-    public float Deprecated2; // RoadTemp since 1.6 in physic
+    public float Deprecated1;
+    public float Deprecated2;
     public int PenaltiesEnabled;
     public float AidFuelRate;
     public float AidTireRate;
@@ -284,32 +356,26 @@ public struct SPageFileStatic
     public float AidStability;
     public int AidAutoClutch;
     public int AidAutoBlip;
-
-    // since 1.7.1
     public int HasDRS;
     public int HasERS;
     public int HasKERS;
     public float KersMaxJoules;
     public int EngineBrakeSettingsCount;
     public int ErsPowerControllerCount;
-
-    // since 1.7.2
     public float TrackSPlineLength;
-
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 15)]
     public string TrackConfiguration;
-
-    // since 1.10.2
     public float ErsMaxJ;
-
-    // since 1.13
     public int IsTimedRace;
     public int HasExtraLap;
-
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 33)]
     public string CarSkin;
-
     public int ReversedGridPositions;
     public int PitWindowStart;
     public int PitWindowEnd;
+    public int IsOnline;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 33)]
+    public string DryTyresName;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 33)]
+    public string WetTyresName;
 }
