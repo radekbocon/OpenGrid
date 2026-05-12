@@ -7,6 +7,7 @@ namespace SimLab.Services;
 internal record UserSettings
 {
     public bool MinimizeToTray { get; set; } = true;
+    public int? DashboardPort { get; set; }
 }
 
 public sealed class SettingsService : ISettingsService
@@ -27,6 +28,16 @@ public sealed class SettingsService : ISettingsService
         set
         {
             _userSettings.MinimizeToTray = value;
+            Save();
+        }
+    }
+
+    public int? DashboardPort
+    {
+        get => _userSettings.DashboardPort;
+        set
+        {
+            _userSettings.DashboardPort = value;
             Save();
         }
     }

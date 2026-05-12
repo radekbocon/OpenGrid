@@ -7,6 +7,7 @@
     xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:SimLab.Models"
+    xmlns:views="clr-namespace:SimLab.Views"
     xmlns:vm="using:SimLab.ViewModels"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -23,11 +24,10 @@
 
         <Border
             Grid.Row="1"
-            Margin="0,0,0,8"
+            Margin="0,0,0,16"
             Padding="12,8"
             Background="{DynamicResource MaterialCardBackgroundBrush}"
-            CornerRadius="8"
-            IsVisible="{Binding IsServerRunning}">
+            CornerRadius="4">
             <Grid ColumnDefinitions="Auto, Auto, Auto" ColumnSpacing="10">
                 <icons:MaterialIconExt
                     VerticalAlignment="Center"
@@ -42,10 +42,22 @@
                     Grid.Column="2"
                     HorizontalAlignment="Right"
                     Classes="Flat"
-                    Command="{Binding StopServerCommand}">
+                    Command="{Binding StopServerCommand}"
+                    IsVisible="{Binding IsServerRunning}">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <icons:MaterialIconExt IconSize="16" Kind="Stop" />
                         <TextBlock FontSize="12" Text="Stop Server" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    Classes="Flat"
+                    Command="{Binding StartServerCommand}"
+                    IsVisible="{Binding !IsServerRunning}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <icons:MaterialIconExt IconSize="16" Kind="Play" />
+                        <TextBlock FontSize="12" Text="Start Server" />
                     </StackPanel>
                 </Button>
             </Grid>
@@ -90,7 +102,7 @@
                                         <Button
                                             Padding="8,4"
                                             Classes="Flat"
-                                            Command="{Binding $parent[ItemsControl].DataContext?.OpenOnThisMachineCommand}"
+                                            Command="{Binding $parent[views:DashboardsView].((vm:DashboardsViewModel)DataContext)?.OpenOnThisMachineCommand}"
                                             CommandParameter="{Binding}">
                                             <StackPanel Orientation="Horizontal" Spacing="4">
                                                 <icons:MaterialIconExt IconSize="16" Kind="Monitor" />
@@ -100,7 +112,7 @@
                                         <Button
                                             Padding="8,4"
                                             Classes="Flat"
-                                            Command="{Binding $parent[ItemsControl].DataContext?.OpenInBrowserCommand}"
+                                            Command="{Binding $parent[views:DashboardsView].((vm:DashboardsViewModel)DataContext)?.OpenInBrowserCommand}"
                                             CommandParameter="{Binding}">
                                             <StackPanel Orientation="Horizontal" Spacing="4">
                                                 <icons:MaterialIconExt IconSize="16" Kind="Web" />
@@ -110,7 +122,7 @@
                                         <Button
                                             Padding="8,4"
                                             Classes="Flat"
-                                            Command="{Binding $parent[ItemsControl].DataContext?.OpenOnDeviceCommand}"
+                                            Command="{Binding $parent[views:DashboardsView].((vm:DashboardsViewModel)DataContext)?.OpenOnDeviceCommand}"
                                             CommandParameter="{Binding}">
                                             <StackPanel Orientation="Horizontal" Spacing="4">
                                                 <icons:MaterialIconExt IconSize="16" Kind="Cellphone" />

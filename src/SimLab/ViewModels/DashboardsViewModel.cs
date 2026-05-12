@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -17,7 +18,7 @@ public partial class DashboardsViewModel : ViewModelBase
     private readonly IDashboardService _dashboardService;
     private CancellationTokenSource? _pollCts;
 
-    public ObservableCollection<DashboardInfo> Dashboards { get; } = [];
+    public ObservableCollection<DashboardInfo> Dashboards { get; private set; } = [];
 
     [ObservableProperty]
     public partial string? StatusText { get; set; }
@@ -39,11 +40,8 @@ public partial class DashboardsViewModel : ViewModelBase
 
     private void ReloadDashboards()
     {
-        Dashboards.Clear();
-        foreach (var d in _repository.GetAllDashboards())
-        {
-            Dashboards.Add(d);
-        }
+        var dashboards = _repository.GetAllDashboards();
+        Dashboards = new ObservableCollection<DashboardInfo>(dashboards);
     }
 
     private void StartPolling()
@@ -74,7 +72,7 @@ public partial class DashboardsViewModel : ViewModelBase
                     }
                     else
                     {
-                        StatusText = null;
+                        StatusText = "Server not running";
                         HasDevices = false;
                     }
                 });
@@ -85,13 +83,15 @@ public partial class DashboardsViewModel : ViewModelBase
     [RelayCommand]
     private void OpenOnThisMachine(DashboardInfo dashboard)
     {
-        _dashboardService.OpenInBrowser(dashboard);
+        _dashboardService.Start(dashboard);
+        _dashboardService.OpenInBrowser();
     }
 
     [RelayCommand]
     private void OpenOnDevice(DashboardInfo dashboard)
     {
-        var url = _dashboardService.GetDashboardUrl(dashboard, useNetwork: true);
+        _dashboardService.Start(dashboard);
+        var url = _dashboardService.GetUrl(useNetwork: true);
         var dialog = new DeviceAccessDialog(dashboard.Name, url);
         dialog.Show();
     }
@@ -99,9 +99,16 @@ public partial class DashboardsViewModel : ViewModelBase
     [RelayCommand]
     private void OpenInBrowser(DashboardInfo dashboard)
     {
-        _dashboardService.OpenInBrowser(dashboard);
+        _dashboardService.Start(dashboard);
+        _dashboardService.OpenInBrowser();
     }
     
+    [RelayCommand]
+    private void StartServer()
+    {
+        _dashboardService.Start(Dashboards.First());
+    }
+
     [RelayCommand]
     private void StopServer()
     {

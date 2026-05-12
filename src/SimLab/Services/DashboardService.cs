@@ -19,35 +19,42 @@ namespace SimLab.Services;
 
 public class DashboardService : IDashboardService
 {
-    private readonly IDashboardRepository _repository;
     private readonly ITelemetryService _telemetryService;
+    private readonly ISettingsService _settingsService;
     private TcpListener? _listener;
     private CancellationTokenSource? _cts;
+    private DashboardInfo? _activeDashboard;
     private readonly ConcurrentDictionary<WebSocket, byte> _connectedSockets = [];
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _deviceSockets = new(StringComparer.OrdinalIgnoreCase);
 
     public bool IsRunning => _listener is not null;
     public int Port { get; private set; }
+    public DashboardInfo? ActiveDashboard => _activeDashboard;
 
     private string LocalUrl => $"http://127.0.0.1:{Port}";
     private string NetworkUrl => $"http://{GetLocalIpAddress()}:{Port}";
 
-    public DashboardService(IDashboardRepository repository, ITelemetryService telemetryService)
+    public DashboardService(IDashboardRepository repository, ITelemetryService telemetryService, ISettingsService settingsService)
     {
-        _repository = repository;
         _telemetryService = telemetryService;
+        _settingsService = settingsService;
     }
 
-    public string GetDashboardUrl(DashboardInfo dashboard, bool useNetwork)
+    public void Start(DashboardInfo dashboard)
     {
+        _activeDashboard = dashboard;
         EnsureRunning();
-        var baseUrl = useNetwork ? NetworkUrl : LocalUrl;
-        return $"{baseUrl}/d/{dashboard.Id}/";
     }
 
-    public void OpenInBrowser(DashboardInfo dashboard)
+    public string GetUrl(bool useNetwork)
     {
-        var url = GetDashboardUrl(dashboard, useNetwork: false);
+        return useNetwork ? NetworkUrl : LocalUrl;
+    }
+
+    public void OpenInBrowser()
+    {
+        if (_activeDashboard is null) return;
+        var url = GetUrl(useNetwork: false);
         try
         {
             Process.Start(new ProcessStartInfo
@@ -62,9 +69,9 @@ public class DashboardService : IDashboardService
         }
     }
 
-    public void OpenInWebView(DashboardInfo dashboard)
+    public void OpenInWebView()
     {
-        OpenInBrowser(dashboard);
+        OpenInBrowser();
     }
 
     public void Stop()
@@ -78,7 +85,14 @@ public class DashboardService : IDashboardService
 
         foreach (var kvp in _connectedSockets)
         {
-            try { kvp.Key.Dispose(); } catch { }
+            try
+            {
+                kvp.Key.Dispose();
+            }
+            catch
+            {
+                // ignored
+            }
         }
         _connectedSockets.Clear();
         _deviceSockets.Clear();
@@ -90,13 +104,38 @@ public class DashboardService : IDashboardService
     {
         if (IsRunning) return;
 
-        Port = FindFreePort();
+        var savedPort = _settingsService.DashboardPort;
+        if (savedPort.HasValue && IsPortAvailable(savedPort.Value))
+        {
+            Port = savedPort.Value;
+        }
+        else
+        {
+            Port = FindFreePort();
+        }
+
         _listener = new TcpListener(IPAddress.Any, Port);
         _listener.Start();
+        _settingsService.DashboardPort = Port;
         _cts = new CancellationTokenSource();
         _ = AcceptConnectionsAsync(_cts.Token);
         _telemetryService.TelemetryReceived += OnTelemetryReceived;
         Log.Information("Dashboard HTTP server started on port {Port}", Port);
+    }
+
+    private static bool IsPortAvailable(int port)
+    {
+        try
+        {
+            using var listener = new TcpListener(IPAddress.Loopback, port);
+            listener.Start();
+            listener.Stop();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private void OnTelemetryReceived(object? sender, TelemetryEventArgs e)
@@ -171,7 +210,14 @@ public class DashboardService : IDashboardService
         {
             _connectedSockets.TryRemove(dead, out _);
             RemoveDeviceSocket(dead);
-            try { dead.Dispose(); } catch { }
+            try
+            {
+                dead.Dispose();
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 
@@ -237,7 +283,7 @@ public class DashboardService : IDashboardService
 
             if (method == "GET")
             {
-                await ServeFile(stream, path, ct, remoteIp);
+                await ServeFile(stream, path, ct);
             }
             else
             {
@@ -310,49 +356,54 @@ public class DashboardService : IDashboardService
         catch (WebSocketException) { }
         finally
         {
-            try { await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None); } catch { }
+            try
+            {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
+            }
+            catch
+            {
+                // ignored
+            }
+
             ws.Dispose();
             _connectedSockets.TryRemove(ws, out _);
             RemoveDeviceSocket(ws);
         }
     }
 
-    private async Task ServeFile(NetworkStream stream, string path, CancellationToken ct, string remoteIp)
+    private async Task ServeFile(NetworkStream stream, string path, CancellationToken ct)
     {
+        if (_activeDashboard is null)
+        {
+            await WriteResponse(stream, 503, "Service Unavailable", "text/plain", "No active dashboard", ct);
+            return;
+        }
+
         var relativePath = path.TrimStart('/');
 
-        if (relativePath == "")
+        if (string.IsNullOrEmpty(relativePath) || relativePath == "index.html")
         {
-            await WriteResponse(stream, 200, "OK", "text/html", GetDashboardListHtml(remoteIp), ct);
+            var dashboardPath = Path.Combine(_activeDashboard.DirectoryPath, "dashboard.html");
+            await ServeFileContent(stream, dashboardPath, ct);
             return;
         }
 
-        if (!relativePath.StartsWith("d/"))
+        if (relativePath == "ws")
         {
-            await WriteResponse(stream, 404, "Not Found", "text/plain", "Not Found", ct);
+            await WriteResponse(stream, 400, "Bad Request", "text/plain", "Use WebSocket upgrade", ct);
             return;
         }
 
-        var afterD = relativePath[2..].TrimStart('/');
-        var slashIdx = afterD.IndexOf('/');
-        var dashboardId = slashIdx > 0 ? afterD[..slashIdx] : afterD;
-        var filePath = slashIdx > 0 ? afterD[(slashIdx + 1)..] : "";
+        var fullPath = Path.Combine(_activeDashboard.DirectoryPath, relativePath);
+        await ServeFileContent(stream, fullPath, ct);
+    }
 
-        var dashboard = _repository.GetById(dashboardId);
-        if (dashboard is null)
-        {
-            await WriteResponse(stream, 404, "Not Found", "text/plain", $"Dashboard '{dashboardId}' not found", ct);
-            return;
-        }
-
-        var dir = dashboard.DirectoryPath;
-        var fullPath = string.IsNullOrEmpty(filePath) || filePath == "index.html"
-            ? Path.Combine(dir, "dashboard.html")
-            : Path.Combine(dir, filePath);
-
-        var fullDir = Path.GetFullPath(dir);
+    private async Task ServeFileContent(NetworkStream stream, string fullPath, CancellationToken ct)
+    {
         var fullFile = Path.GetFullPath(fullPath);
-        if (!fullFile.StartsWith(fullDir, StringComparison.Ordinal))
+        var dashboardDir = Path.GetFullPath(_activeDashboard!.DirectoryPath);
+
+        if (!fullFile.StartsWith(dashboardDir, StringComparison.Ordinal))
         {
             await WriteResponse(stream, 403, "Forbidden", "text/plain", "Forbidden", ct);
             return;
@@ -392,31 +443,6 @@ public class DashboardService : IDashboardService
         await stream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
         await stream.WriteAsync(content, 0, content.Length, ct);
         await stream.FlushAsync(ct);
-    }
-
-    private string GetDashboardListHtml(string remoteIp)
-    {
-        var sb = new StringBuilder();
-        sb.Append("<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">");
-        sb.Append("<title>SimLab Dashboards</title>");
-        sb.Append("<style>");
-        sb.Append("body{font-family:sans-serif;background:#0a0a0f;color:#fff;padding:20px;max-width:600px;margin:0 auto;}");
-        sb.Append("h1{font-size:22px;margin-bottom:20px;}");
-        sb.Append("a{color:#00d4ff;text-decoration:none;display:block;padding:14px;margin:8px 0;background:#14141e;border-radius:10px;border:1px solid rgba(255,255,255,0.06);font-size:16px;}");
-        sb.Append("a:hover{background:#1a1a28;border-color:#00d4ff40;}");
-        sb.Append(".note{color:#666;font-size:13px;margin-top:24px;text-align:center;}");
-        sb.Append("</style>");
-        sb.Append("</head><body>");
-        sb.Append("<h1>SimLab Dashboards</h1>");
-
-        foreach (var d in _repository.GetAllDashboards())
-        {
-            sb.Append($"<a href=\"/d/{d.Id}/\">{d.Name}</a>");
-        }
-
-        sb.Append("<p class=\"note\">Open a dashboard above. Telemetry data will stream automatically.</p>");
-        sb.Append("</body></html>");
-        return sb.ToString();
     }
 
     private static async Task WriteResponse(NetworkStream stream, int statusCode, string statusText,
