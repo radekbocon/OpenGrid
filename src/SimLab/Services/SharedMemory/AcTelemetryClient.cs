@@ -104,6 +104,8 @@ public class AcTelemetryClient : ITelemetryClient
                 Position = graphicsData.Value.Position,
                 EngineMap = graphicsData.Value.EngineMap + 1,
                 BrakeBias = physicsData.Value.BrakeBias,
+                IsDeltaPositive = graphicsData.Value.IsDeltaPositive == 1,
+                IsValidLap = graphicsData.Value.IsValidLap == 1,
             };
             
             return snapshot;

@@ -184,6 +184,8 @@ public class DashboardService : IDashboardService
                 position = e.Telemetry.Position,
                 engineMap = e.Telemetry.EngineMap,
                 brakeBias = e.Telemetry.BrakeBias,
+                isDeltaPositive = e.Telemetry.IsDeltaPositive,
+                isValidLap = e.Telemetry.IsValidLap,
             }
         });
 

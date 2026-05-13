@@ -62,6 +62,10 @@ public record TelemetryRecord
     public int EngineMap { get; set; }
     [ProtoMember(27)]
     public float BrakeBias { get; set; }
+    [ProtoMember(28)]
+    public bool IsDeltaPositive { get; set; }
+    [ProtoMember(29)]
+    public bool IsValidLap { get; set; }
 }
 
 public enum SessionType
