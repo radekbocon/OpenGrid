@@ -76,22 +76,17 @@ public class SessionRepository
         if (CurrentSession is null)
         {
             CurrentSession = new Session(e.Game, e.Telemetry);
-            WriteSession(CurrentSession);
         }
 
-        if (CurrentSession.IsNewSession(e.Telemetry))
+        if (IsNewSession(e.Telemetry))
         {
+            WriteSession(CurrentSession);
             Sessions.Add(CurrentSession);
             CurrentSession = new Session(e.Game, e.Telemetry);
-            WriteSession(CurrentSession);
+            return;
         }
         
-        if (CurrentSession.IsNewLap(e.Telemetry))
-        {
-            CurrentSession.Laps.Add(new Lap(e.Telemetry.CurrentLap, e.Telemetry));
-        }
-        
-        CurrentSession.CurrentLap.Records.Add(e.Telemetry);
+        CurrentSession.AddRecord(e.Telemetry);
     }
     
     private void WriteSession(Session session)
@@ -100,5 +95,10 @@ public class SessionRepository
             $"{session.Info.Car}-{session.Info.Track}-{session.Info.Type}-{session.Info.Id}.bin"));
 
         Serializer.Serialize(file, session);
+    }
+    
+    public bool IsNewSession(TelemetryRecord record)
+    {
+        return record.SessionType != CurrentSession?.Info.Type || record.Track != CurrentSession?.Info.Track || record.Car != CurrentSession?.Info.Car;
     }
 }

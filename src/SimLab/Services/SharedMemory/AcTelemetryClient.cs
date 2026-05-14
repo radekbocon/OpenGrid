@@ -77,7 +77,7 @@ public class AcTelemetryClient : ITelemetryClient
             // Create telemetry snapshot
             var snapshot = new TelemetryRecord
             {
-                RecordedAt = DateTime.UtcNow,
+                Timestamp = DateTime.UtcNow,
                 Track = staticData.Value.Track,
                 Car = staticData.Value.CarModel,
                 SessionType = (SessionType)graphicsData.Value.Session,

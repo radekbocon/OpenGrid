@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProtoBuf;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable NotAccessedPositionalProperty.Global
 
 namespace SimLab.Models;
 
@@ -9,7 +11,7 @@ namespace SimLab.Models;
 public record TelemetryRecord
 {
     [ProtoMember(1)]
-    public DateTime RecordedAt { get; set; }
+    public DateTime Timestamp { get; set; }
     [ProtoMember(2)]
     public string? Car { get; set; }
     [ProtoMember(3)]
@@ -110,35 +112,31 @@ public record Session
     [ProtoMember(1)]
     public SessionInfo Info { get; }
     [ProtoMember(2)]
-    public List<Lap> Laps { get; } = [];
-    public Lap CurrentLap => Laps.Last();
+    public List<TelemetryRecord> Records { get; } = [];
+
+    public List<Lap> Laps => Records.GroupBy(x => x.CurrentLap).Select(x => new Lap(x.Key, x.ToList())).ToList();
 
     private Session()
     {
         
     }
-
+    
     public Session(SteamGame game, TelemetryRecord record)
     {
         Info = new SessionInfo(game, record);
-        Laps.Add(new Lap(record.CurrentLap, record));
+        Records.Add(record);
     }
 
-    public bool IsNewSession(TelemetryRecord record)
+    public void AddRecord(TelemetryRecord record)
     {
-        return record.SessionType != Info.Type || record.Track != Info.Track || record.Car != Info.Car;
-    }
-
-    public bool IsNewLap(TelemetryRecord record)
-    {
-        return record.CurrentLap != CurrentLap.Number || record.LapTime < CurrentLap.Time;
+        Records.Add(record);
     }
 }
 
 [ProtoContract]
 public record SessionInfo
 {
-    public SessionInfo()
+    private SessionInfo()
     {
         
     }
@@ -149,7 +147,7 @@ public record SessionInfo
         Type = record.SessionType;
         Track = record.Track;
         Car = record.Car;
-        StartTime = record.RecordedAt;
+        StartTime = record.Timestamp;
     }
 
     [ProtoMember(1)]
@@ -168,23 +166,16 @@ public record SessionInfo
     public DateTime EndTime { get; set; }
 }
 
-[ProtoContract]
 public record Lap
 {
-    public Lap()
-    {
-        
-    }
-    
-    public Lap(int number, TelemetryRecord record)
+    public Lap(int number, List<TelemetryRecord> records)
     {
         Number = number;
-        Records.Add(record);
+        Records = records;
     }
 
-    [ProtoMember(1)]
     public int Number { get; }
     public TimeSpan Time => Records.MaxBy(x => x.LapTime)?.LapTime ?? TimeSpan.Zero;
-    [ProtoMember(2)]
-    public List<TelemetryRecord> Records { get; set; } = [];
+    public bool IsValid => Records.All(x => x.IsValidLap);
+    public List<TelemetryRecord> Records { get; }
 }

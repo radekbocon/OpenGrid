@@ -68,7 +68,7 @@ public class DebugTelemetryClient : ITelemetryClient
 
         var snapshot = new TelemetryRecord
         {
-            RecordedAt = now,
+            Timestamp = now,
             Car = "DebugCar",
             Track = "DebugTrack",
             SessionType = SessionType.Race,

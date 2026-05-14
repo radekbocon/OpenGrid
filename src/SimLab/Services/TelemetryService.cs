@@ -118,7 +118,6 @@ public class TelemetryService : ITelemetryService
             _cancellationTokenSource.Cancel();
             _sharedMemoryBridgeLauncher.StopBridge();
             _telemetryClient?.Stop();
-            _readingTask?.Wait(5000); // Wait max 5 seconds
             _cancellationTokenSource.Dispose();
             _cancellationTokenSource = null;
             _telemetryClient = null;

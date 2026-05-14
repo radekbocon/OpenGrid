@@ -31,7 +31,7 @@
             Spacing="8">
             <TextBlock
                 VerticalAlignment="Center"
-                FontSize="16"
+                Classes="Subtitle1"
                 Text="Lap#" />
             <ComboBox
                 DisplayMemberBinding="{Binding Number}"
@@ -39,8 +39,15 @@
                 SelectedItem="{Binding SelectedLap}" />
             <TextBlock
                 VerticalAlignment="Center"
-                FontSize="16"
-                Text="{Binding LapTime}" />
+                Classes="Subtitle1"
+                Classes.InvalidLap="{Binding !SelectedLap?.IsValid}"
+                Text="{Binding LapTime}">
+                <TextBlock.Styles>
+                    <Style Selector="TextBlock.InvalidLap">
+                        <Setter Property="Foreground" Value="Red" />
+                    </Style>
+                </TextBlock.Styles>
+            </TextBlock>
         </StackPanel>
 
         <lvc:CartesianChart
