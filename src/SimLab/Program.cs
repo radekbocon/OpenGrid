@@ -10,6 +10,9 @@ sealed class Program
 {
     public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
+    public static string AppDataDirectory { get; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SimLab");
+
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
@@ -23,8 +26,7 @@ sealed class Program
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Debug()
-            .WriteTo.File(Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SimLab", "logs", "simlab.log"), 
+            .WriteTo.File(Path.Combine(AppDataDirectory, "logs", "simlab.log"), 
                 rollingInterval: RollingInterval.Day)
             .CreateLogger();
 

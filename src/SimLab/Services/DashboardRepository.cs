@@ -20,9 +20,8 @@ public class DashboardRepository : IDashboardRepository
 
     public DashboardRepository()
     {
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        _systemDir = Path.Combine(appData, "SimLab", "Dashboards");
+        _systemDir = Path.Combine(Program.AppDataDirectory, "Dashboards");
         _userDir = Path.Combine(documents, "SimLab", "Dashboards");
 
         EnsureSystemDashboards();

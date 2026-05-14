@@ -16,8 +16,7 @@ namespace SimLab.Services;
 public sealed class ThemeService : IThemeService
 {
     private static readonly string ThemesDirectory = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "SimLab",
+        Program.AppDataDirectory,
         "themes");
 
     private readonly List<ThemeInfo> _themes = [];

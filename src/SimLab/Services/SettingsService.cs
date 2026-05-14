@@ -14,8 +14,7 @@ internal record UserSettings
 public sealed class SettingsService : ISettingsService
 {
     private static readonly string SettingsPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "SimLab",
+        Program.AppDataDirectory,
         "settings.json");
     
     private UserSettings _userSettings = new()
