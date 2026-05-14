@@ -2,44 +2,58 @@
   "name": "Dracula",
   "variant": "Dark",
   "colors": {
-    "MaterialPrimaryLightBrush": "#FFD6BCFB",
-    "MaterialPrimaryLightForegroundBrush": "#FF000000",
-    "MaterialPrimaryMidBrush": "#FFBD93F9",
-    "MaterialPrimaryMidForegroundBrush": "#FF000000",
-    "MaterialPrimaryDarkBrush": "#FF9B6EE0",
+    "MaterialPrimaryLightBrush": "#FFFF79C6",
+    "MaterialPrimaryLightForegroundBrush": "#FF282A36",
+    "MaterialPrimaryMidBrush": "#FFFF79C6",
+    "MaterialPrimaryMidForegroundBrush": "#FF282A36",
+    "MaterialPrimaryDarkBrush": "#FFBD4E9B",
     "MaterialPrimaryDarkForegroundBrush": "#FFFFFFFF",
     "MaterialPrimaryForegroundBrush": "#FFFFFFFF",
-    "MaterialSecondaryLightBrush": "#FF8BFBA8",
-    "MaterialSecondaryLightForegroundBrush": "#FF000000",
-    "MaterialSecondaryMidBrush": "#FF50FA7B",
-    "MaterialSecondaryMidForegroundBrush": "#FF000000",
-    "MaterialSecondaryDarkBrush": "#FF3DC85F",
+
+    "MaterialSecondaryLightBrush": "#FF8BE9FD",
+    "MaterialSecondaryLightForegroundBrush": "#FF282A36",
+    "MaterialSecondaryMidBrush": "#FF8BE9FD",
+    "MaterialSecondaryMidForegroundBrush": "#FF282A36",
+    "MaterialSecondaryDarkBrush": "#FF56C7E3",
     "MaterialSecondaryDarkForegroundBrush": "#FF000000",
-    "MaterialValidationErrorBrush": "#FFF44336",
+
+    "MaterialValidationErrorBrush": "#FFFF5555",
+
     "MaterialBackgroundBrush": "#FF1E1F29",
     "MaterialPaperBrush": "#FF282A36",
-    "MaterialCardBackgroundBrush": "#FF313241",
+    "MaterialCardBackgroundBrush": "#FF303341",
     "MaterialToolBarBackgroundBrush": "#FF21222C",
-    "MaterialToolTipBackgroundBrush": "#FF44475A",
-    "MaterialTextFieldBoxBackgroundBrush": "#FF313241",
-    "MaterialBodyBrush": "#FFF8F8F2",
-    "MaterialBodyLightBrush": "#FFA0A0B0",
-    "MaterialColumnHeaderBrush": "#FFE0E0E0",
-    "MaterialDividerBrush": "#FF44475A",
-    "MaterialCheckBoxOffBrush": "#FF6272A4",
-    "MaterialCheckBoxDisabledBrush": "#FF44475A",
-    "MaterialSelectionBrush": "#FFBD93F9",
-    "MaterialTextFieldBoxHoverBackgroundBrush": "#FF3A3D4C",
-    "MaterialTextFieldBoxDisabledBackgroundBrush": "#FF2A2B36",
+    "MaterialToolTipBackgroundBrush": "#FFF8F8F2",
+
+    "MaterialTextFieldBoxBackgroundBrush": "#1AF8F8F2",
+
+    "MaterialBodyBrush": "#DDF8F8F2",
+    "MaterialBodyLightBrush": "#89F8F8F2",
+    "MaterialColumnHeaderBrush": "#BCF8F8F2",
+
+    "MaterialDividerBrush": "#1FFFFFFF",
+
+    "MaterialCheckBoxOffBrush": "#89F8F8F2",
+    "MaterialCheckBoxDisabledBrush": "#FF6272A4",
+
+    "MaterialSelectionBrush": "#FF44475A",
+
+    "MaterialTextFieldBoxHoverBackgroundBrush": "#22F8F8F2",
+    "MaterialTextFieldBoxDisabledBackgroundBrush": "#0DF8F8F2",
+
     "MaterialDataGridRowHoverBackgroundBrush": "#14FFFFFF",
-    "MaterialChipBackgroundBrush": "#FF44475A",
-    "MaterialFlatButtonClickBrush": "#40BD93F9",
-    "MaterialFlatButtonRippleBrush": "#60BD93F9",
-    "MaterialSnackbarBackgroundBrush": "#FF1E1F29",
-    "MaterialSnackbarMouseOverBrush": "#FF282A36",
-    "MaterialSnackbarRippleBrush": "#FFF8F8F2",
-    "MaterialTextBoxBorderBrush": "#FF6272A4",
-    "MaterialTextAreaBorderBrush": "#FF6272A4",
-    "MaterialTextAreaInactiveBorderBrush": "#FF44475A"
+
+    "MaterialChipBackgroundBrush": "#FF3A3D4E",
+
+    "MaterialFlatButtonClickBrush": "#19FFFFFF",
+    "MaterialFlatButtonRippleBrush": "#66FFFFFF",
+
+    "MaterialSnackbarBackgroundBrush": "#FFF8F8F2",
+    "MaterialSnackbarMouseOverBrush": "#FFE2E2DC",
+    "MaterialSnackbarRippleBrush": "#FF44475A",
+
+    "MaterialTextBoxBorderBrush": "#89F8F8F2",
+    "MaterialTextAreaBorderBrush": "#BCF8F8F2",
+    "MaterialTextAreaInactiveBorderBrush": "#1AF8F8F2"
   }
 }

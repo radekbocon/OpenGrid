@@ -22,7 +22,7 @@
             FontWeight="SemiBold"
             Text="Dashboards" />
 
-        <Border
+        <controls:Card
             Grid.Row="1"
             Margin="0,0,0,16"
             Padding="12,8"
@@ -41,7 +41,7 @@
                 <Button
                     Grid.Column="2"
                     HorizontalAlignment="Right"
-                    Classes="Flat"
+                    Classes="Outline"
                     Command="{Binding StopServerCommand}"
                     IsVisible="{Binding IsServerRunning}">
                     <StackPanel Orientation="Horizontal" Spacing="4">
@@ -52,7 +52,7 @@
                 <Button
                     Grid.Column="2"
                     HorizontalAlignment="Right"
-                    Classes="Flat"
+                    Classes="Outline"
                     Command="{Binding StartServerCommand}"
                     IsVisible="{Binding !IsServerRunning}">
                     <StackPanel Orientation="Horizontal" Spacing="4">
@@ -61,7 +61,7 @@
                     </StackPanel>
                 </Button>
             </Grid>
-        </Border>
+        </controls:Card>
 
         <ScrollViewer Grid.Row="3">
             <ItemsControl ItemsSource="{Binding Dashboards}">

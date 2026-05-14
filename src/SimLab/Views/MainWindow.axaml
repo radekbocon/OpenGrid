@@ -17,7 +17,7 @@
     <DockPanel>
         <!--  Top Dock  -->
         <Border
-            Background="{DynamicResource MaterialToolBarBackgroundBrush}"
+            Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}"
             BorderThickness="0,0,0,2"
             DockPanel.Dock="Top">
             <Grid ColumnDefinitions="220, *">
@@ -76,7 +76,7 @@
             Name="SideBar"
             Width="220"
             VerticalAlignment="Stretch"
-            Background="{DynamicResource MaterialToolBarBackgroundBrush}"
+            Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}"
             DockPanel.Dock="Left">
             <ListBox
                 Name="MenuItems"

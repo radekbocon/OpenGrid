@@ -1,0 +1,59 @@
+{
+  "name": "Nordic",
+  "variant": "Dark",
+  "colors": {
+    "MaterialPrimaryLightBrush": "#FF88C0D0",
+    "MaterialPrimaryLightForegroundBrush": "#FF2E3440",
+    "MaterialPrimaryMidBrush": "#FF81A1C1",
+    "MaterialPrimaryMidForegroundBrush": "#FFFFFFFF",
+    "MaterialPrimaryDarkBrush": "#FF5E81AC",
+    "MaterialPrimaryDarkForegroundBrush": "#FFFFFFFF",
+    "MaterialPrimaryForegroundBrush": "#FFFFFFFF",
+
+    "MaterialSecondaryLightBrush": "#FFA3BE8C",
+    "MaterialSecondaryLightForegroundBrush": "#FF2E3440",
+    "MaterialSecondaryMidBrush": "#FF8FBCBB",
+    "MaterialSecondaryMidForegroundBrush": "#FF2E3440",
+    "MaterialSecondaryDarkBrush": "#FF5E9B9A",
+    "MaterialSecondaryDarkForegroundBrush": "#FFFFFFFF",
+
+    "MaterialValidationErrorBrush": "#FFBF616A",
+
+    "MaterialBackgroundBrush": "#FF2E3440",
+    "MaterialPaperBrush": "#FF3B4252",
+    "MaterialCardBackgroundBrush": "#FF434C5E",
+    "MaterialToolBarBackgroundBrush": "#FF2A303B",
+    "MaterialToolTipBackgroundBrush": "#FFECEFF4",
+
+    "MaterialTextFieldBoxBackgroundBrush": "#1AECEFF4",
+
+    "MaterialBodyBrush": "#DDECEFF4",
+    "MaterialBodyLightBrush": "#89ECEFF4",
+    "MaterialColumnHeaderBrush": "#BCECEFF4",
+
+    "MaterialDividerBrush": "#1FECEFF4",
+
+    "MaterialCheckBoxOffBrush": "#89ECEFF4",
+    "MaterialCheckBoxDisabledBrush": "#FF616E88",
+
+    "MaterialSelectionBrush": "#FF4C566A",
+
+    "MaterialTextFieldBoxHoverBackgroundBrush": "#22ECEFF4",
+    "MaterialTextFieldBoxDisabledBackgroundBrush": "#0DECEFF4",
+
+    "MaterialDataGridRowHoverBackgroundBrush": "#14ECEFF4",
+
+    "MaterialChipBackgroundBrush": "#FF4C566A",
+
+    "MaterialFlatButtonClickBrush": "#19ECEFF4",
+    "MaterialFlatButtonRippleBrush": "#66ECEFF4",
+
+    "MaterialSnackbarBackgroundBrush": "#FFECEFF4",
+    "MaterialSnackbarMouseOverBrush": "#FFD8DEE9",
+    "MaterialSnackbarRippleBrush": "#FF4C566A",
+
+    "MaterialTextBoxBorderBrush": "#89ECEFF4",
+    "MaterialTextAreaBorderBrush": "#BCECEFF4",
+    "MaterialTextAreaInactiveBorderBrush": "#1AECEFF4"
+  }
+}
