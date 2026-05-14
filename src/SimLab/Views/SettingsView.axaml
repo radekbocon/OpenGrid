@@ -31,6 +31,7 @@
                     HorizontalAlignment="Right"
                     ItemsSource="{Binding Themes}"
                     SelectedItem="{Binding SelectedTheme}"
+                    DisplayMemberBinding="{Binding Name}"
                     Theme="{StaticResource MaterialFilledComboBox}" />
             </Grid>
         </Border>

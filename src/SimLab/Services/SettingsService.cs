@@ -8,6 +8,7 @@ internal record UserSettings
 {
     public bool MinimizeToTray { get; set; } = true;
     public int? DashboardPort { get; set; }
+    public string? SelectedTheme { get; set; }
 }
 
 public sealed class SettingsService : ISettingsService
@@ -38,6 +39,16 @@ public sealed class SettingsService : ISettingsService
         set
         {
             _userSettings.DashboardPort = value;
+            Save();
+        }
+    }
+
+    public string? SelectedTheme
+    {
+        get => _userSettings.SelectedTheme;
+        set
+        {
+            _userSettings.SelectedTheme = value;
             Save();
         }
     }

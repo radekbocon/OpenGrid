@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -15,6 +16,7 @@ public partial class App : Application
 {
     private TrayIcon? _trayIcon;
     private ISettingsService? _settingsService;
+    private IThemeService? _themeService;
 
     public override void Initialize()
     {
@@ -29,6 +31,8 @@ public partial class App : Application
             var navigationService = Program.ServiceProvider.GetRequiredService<INavigationService>();
             _settingsService = Program.ServiceProvider.GetRequiredService<ISettingsService>();
             _settingsService.Load();
+            _themeService = Program.ServiceProvider.GetRequiredService<IThemeService>();
+            ApplySavedTheme();
             navigationService.Initialize(mainVewModel);
             navigationService.NavigateTo<HomeViewModel>();
             var mainWindow = new MainWindow
@@ -75,6 +79,21 @@ public partial class App : Application
         {
             e.Cancel = true;
             mainWindow.Hide();
+        }
+    }
+
+    private void ApplySavedTheme()
+    {
+        var themeName = _settingsService?.SelectedTheme;
+        var theme = !string.IsNullOrEmpty(themeName)
+            ? _themeService?.GetThemeByName(themeName)
+            : null;
+        theme ??= _themeService?.Themes.FirstOrDefault(t =>
+            string.Equals(t.Name, "Dracula", StringComparison.OrdinalIgnoreCase));
+        theme ??= _themeService?.Themes.FirstOrDefault();
+        if (theme is not null)
+        {
+            _themeService?.ApplyTheme(theme);
         }
     }
 

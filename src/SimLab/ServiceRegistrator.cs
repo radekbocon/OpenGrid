@@ -16,6 +16,7 @@ public static class ServiceRegistrator
         services.AddSingleton<SharedMemoryBridgeLauncher>();
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<ISettingsService, SettingsService>();
+        services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<SessionRepository>();
         services.AddSingleton<IDashboardRepository, DashboardRepository>();
         services.AddSingleton<IDashboardService, DashboardService>();
