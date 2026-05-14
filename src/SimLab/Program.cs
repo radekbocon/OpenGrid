@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using System;
+using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -22,7 +23,9 @@ sealed class Program
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Debug()
-            .WriteTo.File("logs/simlab.log", rollingInterval: RollingInterval.Day)
+            .WriteTo.File(Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SimLab", "logs", "simlab.log"), 
+                rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

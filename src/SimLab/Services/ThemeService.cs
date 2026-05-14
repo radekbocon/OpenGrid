@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -20,17 +21,16 @@ public sealed class ThemeService : IThemeService
         "themes");
 
     private readonly List<ThemeInfo> _themes = [];
-    private ThemeInfo? _currentTheme;
     private ResourceDictionary? _currentThemeDict;
 
     public IReadOnlyList<ThemeInfo> Themes => _themes;
-    public ThemeInfo? CurrentTheme => _currentTheme;
+    public ThemeInfo? CurrentTheme { get; private set; }
 
     public ThemeService()
     {
         InitializeThemes();
     }
-    
+
     public void ApplyTheme(ThemeInfo theme)
     {
         if (Application.Current is null) return;
@@ -60,7 +60,7 @@ public sealed class ThemeService : IThemeService
 
         Application.Current.Resources.MergedDictionaries.Add(dict);
         _currentThemeDict = dict;
-        _currentTheme = theme;
+        CurrentTheme = theme;
 
         Log.Information("Applied theme: {ThemeName} ({Variant})", theme.Name, theme.Variant);
     }
@@ -75,9 +75,8 @@ public sealed class ThemeService : IThemeService
     {
         try
         {
-            Directory.CreateDirectory(ThemesDirectory);
-            ExtractDefaultThemes();
-            LoadThemesFromDirectory();
+            LoadThemesFromEmbeddedResources();
+            LoadCustomThemesFromDirectory();
         }
         catch (Exception ex)
         {
@@ -96,125 +95,100 @@ public sealed class ThemeService : IThemeService
         }
     }
 
-    private void ExtractDefaultThemes()
+    private void LoadThemesFromEmbeddedResources()
     {
-        var existingFiles = Directory.GetFiles(ThemesDirectory, "*.css");
-        if (existingFiles.Length > 0)
-            return;
-
         var assembly = Assembly.GetExecutingAssembly();
         foreach (var resourceName in assembly.GetManifestResourceNames())
         {
-            if (!resourceName.Contains(".Default.") || !resourceName.EndsWith(".css"))
+            if (!resourceName.Contains(".Default.") || !resourceName.EndsWith(".json"))
+            {
                 continue;
+            }
 
             using var stream = assembly.GetManifestResourceStream(resourceName);
-            if (stream is null) continue;
+            if (stream is null)
+            {
+                continue;
+            }
 
-            var parts = resourceName.Split('.');
-            var fileName = string.Join(".", parts[^2], parts[^1]);
-            var filePath = Path.Combine(ThemesDirectory, fileName);
-
-            using var fileStream = File.Create(filePath);
-            stream.CopyTo(fileStream);
-        }
-    }
-
-    private void LoadThemesFromDirectory()
-    {
-        foreach (var cssFile in Directory.GetFiles(ThemesDirectory, "*.css"))
-        {
-            var theme = LoadThemeFromFile(cssFile);
+            var theme = LoadThemeFromStream(stream);
             if (theme is not null)
+            {
                 _themes.Add(theme);
+            }
         }
     }
 
-    private static ThemeInfo? LoadThemeFromFile(string filePath)
+    private void LoadCustomThemesFromDirectory()
+    {
+        Directory.CreateDirectory(ThemesDirectory);
+        foreach (var jsonFile in Directory.GetFiles(ThemesDirectory, "*.json"))
+        {
+            try
+            {
+                using var stream = File.OpenRead(jsonFile);
+                var theme = LoadThemeFromStream(stream);
+                if (theme is not null)
+                {
+                    _themes.Add(theme);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to load custom theme from {File}", jsonFile);
+            }
+        }
+    }
+
+    private static ThemeInfo? LoadThemeFromStream(Stream stream)
     {
         try
         {
-            var css = File.ReadAllText(filePath);
-            var colors = ParseCssColors(css);
-            if (colors.Count == 0) return null;
+            using var reader = new StreamReader(stream);
+            var json = reader.ReadToEnd();
 
-            var themeVariantValue = ExtractRawCssVariable(css, "--ThemeVariant");
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
 
-            var variant = themeVariantValue switch
+            var name = root.GetProperty("name").GetString() ?? "Unknown";
+            var variantStr = root.GetProperty("variant").GetString();
+            var variant = variantStr switch
             {
                 "Light" => ThemeVariant.Light,
                 _ => ThemeVariant.Dark,
             };
 
-            var displayName = themeVariantValue ?? Path.GetFileNameWithoutExtension(filePath);
+            var colors = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase);
+            var colorsElement = root.GetProperty("colors");
+            foreach (var colorProp in colorsElement.EnumerateObject())
+            {
+                var hex = colorProp.Value.GetString();
+                if (hex is null)
+                {
+                    continue;
+                }
 
-            var brushColors = colors
-                .Where(kvp => kvp.Key.StartsWith("Material"))
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                try
+                {
+                    colors[colorProp.Name] = Color.Parse(hex);
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "Failed to parse color '{Value}' for key '{Key}'", hex, colorProp.Name);
+                }
+            }
 
             return new ThemeInfo
             {
-                Name = displayName,
-                FilePath = filePath,
+                Name = name,
                 Variant = variant,
-                Colors = brushColors,
+                Colors = colors,
             };
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Failed to load theme from {File}", filePath);
+            Log.Warning(ex, "Failed to load theme from embedded resource");
             return null;
         }
-    }
-
-    private static string? ExtractRawCssVariable(string css, string variableName)
-    {
-        var prefix = variableName + ":";
-        foreach (var line in css.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries))
-        {
-            var trimmed = line.Trim();
-            if (!trimmed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            var value = trimmed[prefix.Length..].Trim().TrimEnd(';').Trim();
-            return string.IsNullOrEmpty(value) ? null : value;
-        }
-        return null;
-    }
-
-    private static Dictionary<string, Color> ParseCssColors(string css)
-    {
-        var colors = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase);
-        var lines = css.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
-
-        foreach (var line in lines)
-        {
-            var trimmed = line.Trim();
-            if (trimmed.StartsWith("/*") || trimmed.StartsWith(":root") ||
-                trimmed.StartsWith("}") || trimmed.StartsWith("{"))
-                continue;
-
-            var colonIdx = trimmed.IndexOf(':');
-            if (colonIdx < 0) continue;
-
-            var key = trimmed[..colonIdx].Trim();
-            if (!key.StartsWith("--")) continue;
-
-            var valuePart = trimmed[(colonIdx + 1)..].Trim().TrimEnd(';').Trim();
-            if (string.IsNullOrEmpty(valuePart)) continue;
-
-            try
-            {
-                var color = Color.Parse(valuePart);// ParseCssColor(valuePart);
-                var cleanKey = key[2..];
-                colors[cleanKey] = color;
-            }
-            catch (Exception ex)
-            {
-                Log.Debug(ex, "Failed to parse color '{Value}' for key '{Key}'", valuePart, key);
-            }
-        }
-
-        return colors;
     }
 }
