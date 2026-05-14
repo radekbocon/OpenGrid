@@ -4,16 +4,75 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:SimLab.Models"
     xmlns:vm="using:SimLab.ViewModels"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vm:HomeViewModel"
     mc:Ignorable="d">
 
-    <TextBlock
-        HorizontalAlignment="Center"
-        VerticalAlignment="Center"
-        FontSize="24"
-        Text="Home Page" />
+    <DockPanel>
+        <Border Padding="24,16" DockPanel.Dock="Top">
+            <TextBlock Classes="Headline4" Text="SimLab" />
+        </Border>
 
+        <ScrollViewer Margin="0">
+            <StackPanel Margin="24,0,24,16" Spacing="12">
+                <TextBlock
+                    Margin="0,0,0,4"
+                    Classes="Headline6"
+                    Text="Select a game to connect" />
+
+                <ItemsControl ItemsSource="{Binding Games}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:GameItem">
+                            <Border
+                                Padding="16"
+                                Background="{DynamicResource MaterialCardBackgroundBrush}"
+                                BorderBrush="{DynamicResource MaterialDividerBrush}"
+                                BorderThickness="0,0,0,1">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                    <TextBlock
+                                        Width="36"
+                                        Height="36"
+                                        VerticalAlignment="Center"
+                                        FontSize="24"
+                                        Text="{Binding StatusIcon}" />
+
+                                    <StackPanel
+                                        Grid.Column="1"
+                                        Margin="12,0,0,0"
+                                        VerticalAlignment="Center">
+                                        <TextBlock Classes="Subtitle1" Text="{Binding Game.Name}" />
+                                        <TextBlock
+                                            Classes="Body2"
+                                            Foreground="{DynamicResource MaterialBodyTextBrush}"
+                                            Text="{Binding StatusText}" />
+                                    </StackPanel>
+
+                                    <Button
+                                        Grid.Column="2"
+                                        Margin="4,0"
+                                        Padding="12,6"
+                                        Command="{Binding $parent[ItemsControl].DataContext.ConnectCommand}"
+                                        CommandParameter="{Binding}"
+                                        Content="Connect"
+                                        IsVisible="{Binding ShowConnectButton}" />
+
+                                    <Button
+                                        Grid.Column="3"
+                                        Margin="4,0"
+                                        Padding="12,6"
+                                        Command="{Binding $parent[ItemsControl].DataContext.LaunchAndConnectCommand}"
+                                        CommandParameter="{Binding}"
+                                        Content="Launch &amp; Connect"
+                                        IsVisible="{Binding ShowLaunchAndConnectButton}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
 </UserControl>

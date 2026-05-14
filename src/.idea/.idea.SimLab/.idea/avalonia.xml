@@ -8,6 +8,7 @@
         <entry key="SimLab/Views/DashboardsView.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/DeviceAccessDialog.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/DevicesView.axaml" value="SimLab/SimLab.csproj" />
+        <entry key="SimLab/Views/HomeView.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/MainWindow.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/SessionDetailsView.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/SessionsView.axaml" value="SimLab/SimLab.csproj" />

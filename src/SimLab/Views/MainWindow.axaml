@@ -47,25 +47,15 @@
                         Command="{Binding GoBackCommand}"
                         Content="{avalonia:MaterialIconExt Kind=ChevronLeft,
                                                            IconSize=24}" />
-                    <ComboBox
-                        MinWidth="150"
-                        DisplayMemberBinding="{Binding Name}"
-                        ItemsSource="{Binding SupportedGames}"
-                        SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
-                        Theme="{StaticResource MaterialFilledComboBox}" />
+                    <TextBlock VerticalAlignment="Center" Text="{Binding StatusMessage}" />
                     <Button
-                        Command="{Binding ConnectCommand}"
-                        Content="{Binding ConnectLabel}"
-                        IsVisible="{Binding ShowConnectButton}" />
+                        Command="{Binding CancelCommand}"
+                        Content="Cancel"
+                        IsVisible="{Binding ShowCancelButton}" />
                     <Button
                         Command="{Binding DisconnectCommand}"
                         Content="Disconnect"
                         IsVisible="{Binding IsConnected}" />
-                    <Button
-                        Command="{Binding CancelCommand}"
-                        Content="Cancel"
-                        IsVisible="{Binding IsConnecting}" />
-                    <TextBlock VerticalAlignment="Center" Text="{Binding TelemetryStatus}" />
                 </StackPanel>
             </Grid>
         </Border>
