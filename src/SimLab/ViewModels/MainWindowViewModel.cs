@@ -12,8 +12,7 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly INavigationService _navigationService;
     private readonly ITelemetryService _telemetryService;
-
-    internal event Action? CancelRequested;
+    private readonly IGameService _gameService;
 
     public ObservableCollection<MenuItem> MenuItems { get; }
 
@@ -28,25 +27,7 @@ public partial class MainWindowViewModel : ViewModelBase
             }
         }
     }
-
-    [ObservableProperty]
-    private string? _telemetryStatus;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowCancelButton))]
-    [NotifyPropertyChangedFor(nameof(StatusMessage))]
-    private bool _isConnected;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowCancelButton))]
-    [NotifyPropertyChangedFor(nameof(StatusMessage))]
-    private bool _isConnecting;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowCancelButton))]
-    [NotifyPropertyChangedFor(nameof(StatusMessage))]
-    private bool _isWaitingForGame;
-
+    
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(GoBackCommand))]
     public partial bool CanGoBack { get; set; }
@@ -54,24 +35,25 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     public partial MenuItem? SelectedMenuItem { get; set; }
 
-    public bool ShowCancelButton => IsWaitingForGame || IsConnecting;
+    [ObservableProperty]
+    public partial string StatusMessage { get; set; } = "";
 
-    public string StatusMessage => (IsWaitingForGame, IsConnecting, IsConnected) switch
-    {
-        (true, _, _) => "Launching game...",
-        (_, true, _) => "Connecting...",
-        (_, _, true) => "Connected",
-        _ => TelemetryStatus ?? "None"
-    };
+    [ObservableProperty]
+    public partial bool ShowCancelButton { get; set; }
+    
+    [ObservableProperty]
+    public partial bool IsConnected { get; set; }
+
 
     public MainWindowViewModel(INavigationService navigationService,
         ITelemetryService telemetryService,
-        ISettingsService settingsService)
+        IGameService gameService)
     {
         _navigationService = navigationService;
         _telemetryService = telemetryService;
-        _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
+        _gameService = gameService;
         _telemetryService.TelemetryReceived += TelemetryServiceOnTelemetryReceived;
+        _gameService.GameProcessChanged += GameServiceOnGameProcessChanged;
 
         MenuItems =
         [
@@ -83,15 +65,25 @@ public partial class MainWindowViewModel : ViewModelBase
         ];
     }
 
-    private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryEventArgs e)
+    private void GameServiceOnGameProcessChanged(object? sender, GameProcessEventArgs e)
     {
+        IsConnected = e.Status == GameProcessStatus.Connected;
+        ShowCancelButton = e.Status is GameProcessStatus.Connecting or GameProcessStatus.StartingGame;
+        var gameName = e.GameItem?.Game.Name ?? "";
+        var appId = e.GameItem?.Game.AppId;
+
+        StatusMessage = e switch
+        {
+            { Status: GameProcessStatus.Connecting } => $"Connecting to {gameName} ({appId})",
+            { Status: GameProcessStatus.StartingGame } => $"Starting {gameName} ({appId})",
+            { Status: GameProcessStatus.Connected } => $"Connected to {gameName} ({appId})",
+            { Status: GameProcessStatus.None } => "",
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
-    private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
+    private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryEventArgs e)
     {
-        TelemetryStatus = e.ToString();
-        IsConnected = e == TelemetryConnectionStatus.Connected;
-        IsConnecting = e == TelemetryConnectionStatus.Connecting;
     }
 
     [RelayCommand]
@@ -109,8 +101,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void Cancel()
     {
-        CancelRequested?.Invoke();
-        IsWaitingForGame = false;
+        _gameService.Cancel();
     }
 
     [RelayCommand]

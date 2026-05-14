@@ -11,6 +11,15 @@
     x:DataType="vm:HomeViewModel"
     mc:Ignorable="d">
 
+    <Interaction.Behaviors>
+        <EventTriggerBehavior EventName="Loaded">
+            <InvokeCommandAction Command="{Binding LoadedCommand}" />
+        </EventTriggerBehavior>
+        <EventTriggerBehavior EventName="Loaded">
+            <InvokeCommandAction Command="{Binding UnloadedCommand}" />
+        </EventTriggerBehavior>
+    </Interaction.Behaviors>
+
     <DockPanel>
         <Border Padding="24,16" DockPanel.Dock="Top">
             <TextBlock Classes="Headline4" Text="SimLab" />

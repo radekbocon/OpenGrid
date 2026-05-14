@@ -9,7 +9,7 @@ public partial class GameItem : ObservableObject
     public bool IsInstalled { get; }
 
     [ObservableProperty]
-    private bool _isRunning;
+    public partial bool IsRunning { get; set; }
 
     public string StatusIcon => IsRunning ? "\U0001f7e2" : IsInstalled ? "\U0001f7e1" : "\U0001f534";
 
@@ -23,6 +23,6 @@ public partial class GameItem : ObservableObject
     {
         Game = game;
         IsInstalled = isInstalled;
-        _isRunning = isRunning;
+        IsRunning = isRunning;
     }
 }

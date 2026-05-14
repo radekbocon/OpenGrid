@@ -10,22 +10,4 @@ public partial class HomeView : UserControl
     {
         InitializeComponent();
     }
-
-    protected override void OnLoaded(RoutedEventArgs e)
-    {
-        base.OnLoaded(e);
-        if (DataContext is HomeViewModel vm)
-        {
-            vm.OnActivated();
-        }
-    }
-
-    protected override void OnUnloaded(RoutedEventArgs e)
-    {
-        base.OnUnloaded(e);
-        if (DataContext is HomeViewModel vm)
-        {
-            vm.OnDeactivated();
-        }
-    }
 }

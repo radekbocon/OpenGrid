@@ -20,6 +20,7 @@ public static class ServiceRegistrator
         services.AddSingleton<SessionRepository>();
         services.AddSingleton<IDashboardRepository, DashboardRepository>();
         services.AddSingleton<IDashboardService, DashboardService>();
+        services.AddSingleton<IGameService, GameService>();
 
         // Register ViewModels
         services.AddSingleton<MainWindowViewModel>();
