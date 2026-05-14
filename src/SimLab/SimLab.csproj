@@ -12,6 +12,7 @@
     <EmbeddedResource Include="Assets\Dashboards\**\*.html" />
     <EmbeddedResource Include="Assets\Dashboards\**\*.json" />
     <EmbeddedResource Include="Assets\Dashboards\**\*.png" />
+    <EmbeddedResource Include="Assets\DashboardFramework\**\*.html" />
     <EmbeddedResource Include="Themes\Default\*.json" />
     <Content Include="Assets\Dashboards\Template\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

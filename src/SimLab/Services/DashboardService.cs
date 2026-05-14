@@ -7,9 +7,11 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
@@ -33,6 +35,11 @@ public class DashboardService : IDashboardService
 
     private string LocalUrl => $"http://127.0.0.1:{Port}";
     private string NetworkUrl => $"http://{GetLocalIpAddress()}:{Port}";
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     public DashboardService(IDashboardRepository repository, ITelemetryService telemetryService, ISettingsService settingsService)
     {
@@ -145,49 +152,8 @@ public class DashboardService : IDashboardService
         var payload = JsonSerializer.Serialize(new
         {
             type = "telemetry",
-            data = new
-            {
-                speed = e.Telemetry.SpeedKmh,
-                rpm = e.Telemetry.EngineRpm,
-                maxRpm = e.Telemetry.MaxRpm,
-                gear = e.Telemetry.CurrentGear,
-                gas = e.Telemetry.Gas,
-                brake = e.Telemetry.Brake,
-                clutch = e.Telemetry.Clutch,
-                steerAngle = e.Telemetry.SteerAngle,
-                fuel = e.Telemetry.Fuel,
-                car = e.Telemetry.Car,
-                track = e.Telemetry.Track,
-                sessionType = e.Telemetry.SessionType.ToString(),
-                currentLap = e.Telemetry.CurrentLap,
-                lapTime = e.Telemetry.LapTime > TimeSpan.Zero ? e.Telemetry.LapTime.ToString(@"mm\:ss\.fff") : "--:--",
-                lastLapTime = e.Telemetry.LapTime > TimeSpan.Zero ? e.Telemetry.LastLapTime.ToString(@"mm\:ss\.fff") : "--:--",
-                bestLapTime = e.Telemetry.LapTime > TimeSpan.Zero ? e.Telemetry.BestLapTime.ToString(@"mm\:ss\.fff") : "--:--",
-                deltaLapTime = e.Telemetry.DeltaLapTime.ToString(@"ss\.ff"),
-                tireTemps = new
-                {
-                    fl = e.Telemetry.TireTemperatures.FrontLeft,
-                    fr = e.Telemetry.TireTemperatures.FrontRight,
-                    rl = e.Telemetry.TireTemperatures.RearLeft,
-                    rr = e.Telemetry.TireTemperatures.RearRight
-                },
-                tirePressures = new
-                {
-                    fl = e.Telemetry.TirePressures.FrontLeft,
-                    fr = e.Telemetry.TirePressures.FrontRight,
-                    rl = e.Telemetry.TirePressures.RearLeft,
-                    rr = e.Telemetry.TirePressures.RearRight
-                },
-                abs = e.Telemetry.AbsSetting,
-                tc1 = e.Telemetry.Tc1Setting,
-                tc2 = e.Telemetry.Tc2Setting,
-                position = e.Telemetry.Position,
-                engineMap = e.Telemetry.EngineMap,
-                brakeBias = e.Telemetry.BrakeBias,
-                isDeltaPositive = e.Telemetry.IsDeltaPositive,
-                isValidLap = e.Telemetry.IsValidLap,
-            }
-        });
+            data = e.Telemetry
+        }, JsonOptions);
 
         var bytes = Encoding.UTF8.GetBytes(payload);
         var segment = new ArraySegment<byte>(bytes);
@@ -378,6 +344,8 @@ public class DashboardService : IDashboardService
         }
     }
 
+    private static string? _frameworkTemplate;
+
     private async Task ServeFile(NetworkStream stream, string path, CancellationToken ct)
     {
         if (_activeDashboard is null)
@@ -390,8 +358,7 @@ public class DashboardService : IDashboardService
 
         if (string.IsNullOrEmpty(relativePath) || relativePath == "index.html")
         {
-            var dashboardPath = Path.Combine(_activeDashboard.DirectoryPath, "dashboard.html");
-            await ServeFileContent(stream, dashboardPath, ct);
+            await ServeFrameworkPage(stream, ct);
             return;
         }
 
@@ -403,6 +370,51 @@ public class DashboardService : IDashboardService
 
         var fullPath = Path.Combine(_activeDashboard.DirectoryPath, relativePath);
         await ServeFileContent(stream, fullPath, ct);
+    }
+
+    private async Task ServeFrameworkPage(NetworkStream netStream, CancellationToken ct)
+    {
+        if (_frameworkTemplate is null)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = "SimLab.Assets.DashboardFramework.index.html";
+            using var resStream = assembly.GetManifestResourceStream(resourceName);
+            if (resStream is null)
+            {
+                await WriteResponse(netStream, 500, "Internal Server Error", "text/plain", "Framework not found", ct);
+                return;
+            }
+            using var reader = new StreamReader(resStream);
+            _frameworkTemplate = await reader.ReadToEndAsync();
+        }
+
+        var pageContent = _frameworkTemplate;
+        var dashboardPath = Path.Combine(_activeDashboard!.DirectoryPath, "dashboard.html");
+
+        if (File.Exists(dashboardPath))
+        {
+            var dashboardContent = await File.ReadAllTextAsync(dashboardPath, ct);
+            var bodyStart = dashboardContent.IndexOf("<body>", StringComparison.OrdinalIgnoreCase);
+            var bodyEnd = dashboardContent.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);
+
+            if (bodyStart >= 0 && bodyEnd > bodyStart)
+            {
+                var bodyContent = dashboardContent[(bodyStart + 6)..bodyEnd];
+                pageContent = pageContent.Replace("<!--DASHBOARD_CONTENT-->", bodyContent);
+            }
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(pageContent);
+        var header = $"HTTP/1.1 200 OK\r\n" +
+                     $"Content-Type: text/html\r\n" +
+                     $"Content-Length: {bytes.Length}\r\n" +
+                     $"Cache-Control: no-cache\r\n" +
+                     $"Access-Control-Allow-Origin: *\r\n" +
+                     $"Connection: close\r\n\r\n";
+        var headerBytes = Encoding.UTF8.GetBytes(header);
+        await netStream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
+        await netStream.WriteAsync(bytes, 0, bytes.Length, ct);
+        await netStream.FlushAsync(ct);
     }
 
     private async Task ServeFileContent(NetworkStream stream, string fullPath, CancellationToken ct)
