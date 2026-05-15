@@ -1,4 +1,6 @@
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using SimLab.Services;
 
 namespace SimLab.Models;
 
@@ -10,18 +12,28 @@ public partial class GameItem : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText), nameof(ShowConnectButton), nameof(ShowLaunchAndConnectButton))]
-    public partial bool IsRunning { get; set; }
+    public partial GameProcessStatus Status { get; set; }
 
-    public string StatusText => IsRunning ? "Running" : IsInstalled ? "Installed" : "Not installed";
+    public bool IsRunning => Status >= GameProcessStatus.StartedGame;
 
-    public bool ShowConnectButton => IsRunning;
+    public string StatusText => Status switch
+    {
+        GameProcessStatus.None or GameProcessStatus.Error => string.Empty,
+        GameProcessStatus.StartingGame => "Launching...",
+        GameProcessStatus.StartedGame => "Running",
+        GameProcessStatus.Connecting => "Connecting...",
+        GameProcessStatus.Connected => "Connected",
+        _ => throw new ArgumentOutOfRangeException()
+    };
 
-    public bool ShowLaunchAndConnectButton => IsInstalled && !IsRunning && Game.AppId != 0;
+    public bool ShowConnectButton => Status == GameProcessStatus.StartedGame;
 
-    public GameItem(SteamGame game, bool isInstalled, bool isRunning)
+    public bool ShowLaunchAndConnectButton => IsInstalled && Status < GameProcessStatus.StartingGame;
+
+    public GameItem(SteamGame game, bool isInstalled, GameProcessStatus status)
     {
         Game = game;
         IsInstalled = isInstalled;
-        IsRunning = isRunning;
+        Status = status;
     }
 }

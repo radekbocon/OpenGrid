@@ -57,7 +57,7 @@
                                                 VerticalAlignment="Center"
                                                 Classes.Installed="{Binding IsInstalled}"
                                                 Classes.NotInstalled="{Binding !IsInstalled}"
-                                                Classes.Running="{Binding IsRunning}"
+                                                Classes.Running="{Binding Status}"
                                                 Kind="Circle">
                                                 <avalonia:MaterialIcon.Styles>
                                                     <Style Selector="avalonia|MaterialIcon.NotInstalled">

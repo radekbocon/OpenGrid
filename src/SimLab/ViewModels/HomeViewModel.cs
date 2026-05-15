@@ -23,25 +23,12 @@ public partial class HomeViewModel : ViewModelBase
     [RelayCommand]
     private void Loaded()
     {
-        _gameService.GameProcessChanged += GameServiceOnGameProcessChanged;
         DetectGames();
     }
 
     [RelayCommand]
     private void Unloaded()
     {
-        _gameService.GameProcessChanged -= GameServiceOnGameProcessChanged;
-    }
-
-    private void GameServiceOnGameProcessChanged(object? sender, GameProcessEventArgs e)
-    {
-        foreach (var game in Games)
-        {
-            if (game.Game.AppId == e.GameItem.Game.AppId)
-            {
-                game.IsRunning = e.GameItem.IsRunning;
-            }
-        }
     }
 
 

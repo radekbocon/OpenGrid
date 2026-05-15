@@ -106,7 +106,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void Disconnect()
     {
-        _telemetryService.StopReading();
+        _gameService.Disconnect();
         IsConnected = false;
         StatusMessage = "";
     }

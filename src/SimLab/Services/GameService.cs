@@ -18,23 +18,24 @@ public interface IGameService
     Task ConnectAsync(GameItem gameItem);
     void Cancel();
     List<GameItem> DetectGames();
+    void Disconnect();
 }
 
 public enum GameProcessStatus
 {
     None,
+    Error,
     StartingGame,
     StartedGame,
     Connecting,
     Connected,
-    Error
 }
 
 public class GameProcessEventArgs : EventArgs
 {
     public GameProcessStatus Status { get; }
     public GameItem GameItem { get; }
-    
+
     public GameProcessEventArgs(GameProcessStatus status, GameItem gameItem)
     {
         Status = status;
@@ -46,38 +47,37 @@ public class GameService : IGameService
 {
     private readonly ITelemetryService _telemetryService;
     private CancellationTokenSource? _cts;
-    private List<GameItem> _games = [];
+    private List<GameItem> _gameItems = [];
+    private List<GameItem> RunningGames => _gameItems.Where(x => x.IsRunning && x.Game.AppId != 0).ToList();
+    public bool IsGameConnected => _gameItems.Any(x => x.Status == GameProcessStatus.Connected);
 
-    public GameProcessStatus GameProcessStatus { get; private set; }
-    public GameItem? CurrentGame { get; private set; }
-    
-    public event EventHandler<GameProcessEventArgs>? GameProcessChanged; 
+    public event EventHandler<GameProcessEventArgs>? GameProcessChanged;
 
     public GameService(ITelemetryService telemetryService)
     {
         _telemetryService = telemetryService;
         Task.Run(PollCurrentGameProcessAsync);
     }
-    
+
     public List<GameItem> DetectGames()
     {
         var installed = GetInstalledGameIds();
         var running = GetRunningGameProcesses();
 
-        _games = new List<GameItem>();
+        _gameItems = new List<GameItem>();
 
         foreach (var game in SteamGame.GetAll().Where(g => g != SteamGame.Debug))
         {
             var isInstalled = installed.Contains(game.AppId);
-            var isRunning = running.Contains(game.AppId);
-            _games.Add(new GameItem(game, isInstalled, isRunning));
+            var status = running.Contains(game.AppId) ? GameProcessStatus.StartedGame : GameProcessStatus.None;
+            _gameItems.Add(new GameItem(game, isInstalled, status));
         }
 
 #if DEBUG
-        _games.Add(new GameItem(SteamGame.Debug, true, true));
+        _gameItems.Add(new GameItem(SteamGame.Debug, true, GameProcessStatus.StartedGame));
 #endif
-        
-        return _games;
+
+        return _gameItems;
     }
 
     public async Task ConnectAsync(GameItem gameItem)
@@ -86,19 +86,7 @@ public class GameService : IGameService
         _cts?.Dispose();
         _cts = new CancellationTokenSource();
 
-        Log.Information("Connecting to {Game}", gameItem.Game);
-        OnGameProcessChanged(GameProcessStatus.Connecting, gameItem);
-        await _telemetryService.ConnectAsync(gameItem.Game, _cts.Token);
-
-        if (!_cts.Token.IsCancellationRequested)
-        {
-            _telemetryService.StartReading();
-            OnGameProcessChanged(GameProcessStatus.Connected, gameItem);
-        }
-        else
-        {
-            OnGameProcessChanged(GameProcessStatus.None, gameItem);
-        }
+        await ConnectInternalAsync(gameItem);
     }
 
     public async Task LaunchAndConnectAsync(GameItem gameItem)
@@ -122,7 +110,7 @@ public class GameService : IGameService
             {
                 if (IsProcessRunning(gameItem.Game.ProcessName))
                 {
-                    gameItem.IsRunning = true;
+                    OnGameProcessChanged(GameProcessStatus.StartedGame, gameItem);
                     break;
                 }
 
@@ -145,14 +133,38 @@ public class GameService : IGameService
             OnGameProcessChanged(GameProcessStatus.Error, gameItem);
         }
     }
-    
+
+    public void Disconnect()
+    {
+        _telemetryService.StopReading();
+        var connectedGame = _gameItems.Single(x => x.Status == GameProcessStatus.Connected);
+        OnGameProcessChanged(GameProcessStatus.StartedGame, connectedGame);
+    }
+
     public void Cancel()
     {
         _cts?.Cancel();
         _cts?.Dispose();
         _cts = null;
     }
-    
+
+    private async Task ConnectInternalAsync(GameItem gameItem)
+    {
+        Log.Information("Connecting to {Game}", gameItem.Game);
+        OnGameProcessChanged(GameProcessStatus.Connecting, gameItem);
+        await _telemetryService.ConnectAsync(gameItem.Game, _cts!.Token);
+
+        if (_cts?.Token.IsCancellationRequested == false)
+        {
+            _telemetryService.StartReading();
+            OnGameProcessChanged(GameProcessStatus.Connected, gameItem);
+        }
+        else
+        {
+            OnGameProcessChanged(GameProcessStatus.None, gameItem);
+        }
+    }
+
     private List<int> GetInstalledGameIds()
     {
         var installed = new List<int>();
@@ -230,17 +242,13 @@ public class GameService : IGameService
     private bool IsProcessRunning(string processName)
     {
         if (string.IsNullOrEmpty(processName))
+        {
             return false;
+        }
 
         try
         {
             if (Process.GetProcessesByName(processName) is { Length: > 0 })
-            {
-                return true;
-            }
-
-            if (!processName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
-                Process.GetProcessesByName(processName + ".exe") is { Length: > 0 })
             {
                 return true;
             }
@@ -256,19 +264,24 @@ public class GameService : IGameService
     private List<int> GetRunningGameProcesses()
     {
         var running = new List<int>();
-        foreach (var game in SteamGame.GetAll())
+        foreach (var gameItem in _gameItems.Where(g => g.IsInstalled))
         {
-            if (game.AppId == 0 || string.IsNullOrEmpty(game.ProcessName))
+            // Ignore Debug game
+            if (gameItem.Game.AppId == 0 || string.IsNullOrEmpty(gameItem.Game.ProcessName))
+            {
                 continue;
+            }
 
             try
             {
-                if (IsProcessRunning(game.ProcessName))
-                    running.Add(game.AppId);
+                if (IsProcessRunning(gameItem.Game.ProcessName))
+                {
+                    running.Add(gameItem.Game.AppId);
+                }
             }
             catch (Exception ex)
             {
-                Log.Debug(ex, "Failed to check process {Process}", game.ProcessName);
+                Log.Debug(ex, "Failed to check process {Process}", gameItem.Game.ProcessName);
             }
         }
 
@@ -277,48 +290,41 @@ public class GameService : IGameService
 
     private void OnGameProcessChanged(GameProcessStatus status, GameItem gameItem)
     {
-        GameProcessStatus = status;
-        CurrentGame = gameItem;
+        gameItem.Status = status;
         GameProcessChanged?.Invoke(this, new GameProcessEventArgs(status, gameItem));
         Log.Information("Game process status changed to {Status}", status);
     }
-    
+
     private async Task PollCurrentGameProcessAsync()
     {
         while (true)
         {
             // Game was closed
-            if (CurrentGame is not null && CurrentGame is not { Game.AppId: 0 } && GameProcessStatus >= GameProcessStatus.StartedGame)
+            if (RunningGames.Count > 0)
             {
-                var isRunning = IsProcessRunning(CurrentGame.Game.ProcessName);
-                if (!isRunning)
+                foreach (var game in RunningGames)
                 {
-                    _cts?.Cancel();
-                    _cts?.Dispose();
-                    _cts = null;
-                    CurrentGame.IsRunning = false;
-                    OnGameProcessChanged(GameProcessStatus.None, CurrentGame);
-                    CurrentGame = null;
+                    var isRunning = IsProcessRunning(game.Game.ProcessName);
+                    if (!isRunning)
+                    {
+                        _cts?.Cancel();
+                        _cts?.Dispose();
+                        _cts = null;
+                        OnGameProcessChanged(GameProcessStatus.None, game);
+                    }
                 }
             }
 
             // Game was started externally
-            if (CurrentGame is null)
+            var runningGames = GetRunningGameProcesses();
+            if (runningGames.Count > 0)
             {
-                var runningGames = GetRunningGameProcesses();
-
-                if (runningGames.Count > 0)
+                foreach (var game in _gameItems.Where(g => g is { IsInstalled: true, IsRunning: false, } && runningGames.Contains(g.Game.AppId)))
                 {
-                    var gameItem = _games.FirstOrDefault(x => runningGames.Contains(x.Game.AppId));
-
-                    if (gameItem is not null)
-                    {
-                        CurrentGame = gameItem;
-                        CurrentGame.IsRunning = true;
-                        OnGameProcessChanged(GameProcessStatus.StartedGame, gameItem);
-                    }
+                    OnGameProcessChanged(GameProcessStatus.StartedGame, game);
                 }
             }
+
             await Task.Delay(2000);
         }
         // ReSharper disable once FunctionNeverReturns
