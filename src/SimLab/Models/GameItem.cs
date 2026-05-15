@@ -9,9 +9,8 @@ public partial class GameItem : ObservableObject
     public bool IsInstalled { get; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText), nameof(ShowConnectButton), nameof(ShowLaunchAndConnectButton))]
     public partial bool IsRunning { get; set; }
-
-    public string StatusIcon => IsRunning ? "\U0001f7e2" : IsInstalled ? "\U0001f7e1" : "\U0001f534";
 
     public string StatusText => IsRunning ? "Running" : IsInstalled ? "Installed" : "Not installed";
 

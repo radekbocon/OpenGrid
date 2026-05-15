@@ -2,9 +2,12 @@
     x:Class="SimLab.Views.HomeView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:SimLab.Models"
+    xmlns:views="clr-namespace:SimLab.Views"
     xmlns:vm="using:SimLab.ViewModels"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -15,7 +18,7 @@
         <EventTriggerBehavior EventName="Loaded">
             <InvokeCommandAction Command="{Binding LoadedCommand}" />
         </EventTriggerBehavior>
-        <EventTriggerBehavior EventName="Loaded">
+        <EventTriggerBehavior EventName="Unloaded">
             <InvokeCommandAction Command="{Binding UnloadedCommand}" />
         </EventTriggerBehavior>
     </Interaction.Behaviors>
@@ -36,43 +39,58 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="models:GameItem">
                             <Border
-                                Padding="16"
+                                Padding="8"
                                 Background="{DynamicResource MaterialCardBackgroundBrush}"
                                 BorderBrush="{DynamicResource MaterialDividerBrush}"
                                 BorderThickness="0,0,0,1">
                                 <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                                    <TextBlock
-                                        Width="36"
-                                        Height="36"
-                                        VerticalAlignment="Center"
-                                        FontSize="24"
-                                        Text="{Binding StatusIcon}" />
-
+                                    <Image Height="64" asyncImageLoader:ImageLoader.Source="{Binding Game.ImagePath}" />
                                     <StackPanel
                                         Grid.Column="1"
                                         Margin="12,0,0,0"
                                         VerticalAlignment="Center">
                                         <TextBlock Classes="Subtitle1" Text="{Binding Game.Name}" />
-                                        <TextBlock
-                                            Classes="Body2"
-                                            Foreground="{DynamicResource MaterialBodyTextBrush}"
-                                            Text="{Binding StatusText}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <avalonia:MaterialIcon
+                                                Width="16"
+                                                Height="16"
+                                                VerticalAlignment="Center"
+                                                Classes.Installed="{Binding IsInstalled}"
+                                                Classes.NotInstalled="{Binding !IsInstalled}"
+                                                Classes.Running="{Binding IsRunning}"
+                                                Kind="Circle">
+                                                <avalonia:MaterialIcon.Styles>
+                                                    <Style Selector="avalonia|MaterialIcon.NotInstalled">
+                                                        <Setter Property="Foreground" Value="Red" />
+                                                    </Style>
+                                                    <Style Selector="avalonia|MaterialIcon.Installed">
+                                                        <Setter Property="Foreground" Value="Yellow" />
+                                                    </Style>
+                                                    <Style Selector="avalonia|MaterialIcon.Running">
+                                                        <Setter Property="Foreground" Value="Green" />
+                                                    </Style>
+                                                </avalonia:MaterialIcon.Styles>
+                                            </avalonia:MaterialIcon>
+                                            <TextBlock
+                                                Classes="Body2"
+                                                Foreground="{DynamicResource MaterialBodyBrush}"
+                                                Text="{Binding StatusText}" />
+
+                                        </StackPanel>
                                     </StackPanel>
 
                                     <Button
                                         Grid.Column="2"
-                                        Margin="4,0"
-                                        Padding="12,6"
-                                        Command="{Binding $parent[ItemsControl].DataContext.ConnectCommand}"
+                                        Margin="8"
+                                        Command="{Binding $parent[views:HomeView].((vm:HomeViewModel)DataContext)?.ConnectCommand}"
                                         CommandParameter="{Binding}"
                                         Content="Connect"
                                         IsVisible="{Binding ShowConnectButton}" />
 
                                     <Button
                                         Grid.Column="3"
-                                        Margin="4,0"
-                                        Padding="12,6"
-                                        Command="{Binding $parent[ItemsControl].DataContext.LaunchAndConnectCommand}"
+                                        Margin="8"
+                                        Command="{Binding $parent[views:HomeView].((vm:HomeViewModel)DataContext)?.LaunchAndConnectCommand}"
                                         CommandParameter="{Binding}"
                                         Content="Launch &amp; Connect"
                                         IsVisible="{Binding ShowLaunchAndConnectButton}" />

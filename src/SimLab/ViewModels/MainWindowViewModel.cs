@@ -77,8 +77,7 @@ public partial class MainWindowViewModel : ViewModelBase
             { Status: GameProcessStatus.Connecting } => $"Connecting to {gameName} ({appId})",
             { Status: GameProcessStatus.StartingGame } => $"Starting {gameName} ({appId})",
             { Status: GameProcessStatus.Connected } => $"Connected to {gameName} ({appId})",
-            { Status: GameProcessStatus.None } => "",
-            _ => throw new ArgumentOutOfRangeException()
+            _ => "",
         };
     }
 
@@ -108,5 +107,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void Disconnect()
     {
         _telemetryService.StopReading();
+        IsConnected = false;
+        StatusMessage = "";
     }
 }
