@@ -30,7 +30,7 @@ public record SteamGame(
         TelemetryClientType.SharedMemory, 
         "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/805550/header.jpg", 
         "Assetto Corsa Competizione",
-        "ACC");
+        "AC2-Win64-Shipp");
     
     public static SteamGame AcRally => new(
         "Assetto Corsa Rally", 

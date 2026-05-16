@@ -41,7 +41,7 @@
                                 Background="{DynamicResource MaterialCardBackgroundBrush}"
                                 BorderBrush="{DynamicResource MaterialDividerBrush}"
                                 BorderThickness="0,0,0,1">
-                                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
                                     <Image Height="64" asyncImageLoader:ImageLoader.Source="{Binding ImagePath}" />
                                     <StackPanel
                                         Grid.Column="1"
@@ -70,6 +70,13 @@
                                         CommandParameter="{Binding}"
                                         Content="Launch &amp; Connect"
                                         IsVisible="{Binding ShowLaunchAndConnectButton}" />
+
+                                    <Button
+                                        Grid.Column="4"
+                                        Margin="8"
+                                        Command="{Binding DisconnectCommand}"
+                                        Content="Disconnect"
+                                        IsVisible="{Binding ShowDisconnectButton}" />
                                 </Grid>
                             </Border>
                         </DataTemplate>

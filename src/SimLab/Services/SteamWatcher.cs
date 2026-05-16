@@ -13,23 +13,13 @@ namespace SimLab.Services;
 
 public sealed class SteamWatcher : IDisposable
 {
-
-    private readonly TimeSpan _pollInterval;
+    private readonly TimeSpan _pollInterval = TimeSpan.FromSeconds(5);
     private readonly ConcurrentDictionary<int, SteamGameProcess> _installedGames = new();
     private readonly ConcurrentDictionary<int, SteamGameProcess> _runningGames = new();
     private readonly CancellationTokenSource _cts = new();
     
     public event Action<SteamGameProcess>? GameStarted;
     public event Action<SteamGameProcess>? GameStopped;
-
-    public IReadOnlyCollection<SteamGameProcess> InstalledGames => _installedGames.Values.ToList();
-
-    public IReadOnlyCollection<SteamGameProcess> RunningGames => _runningGames.Values.ToList();
-    
-    public SteamWatcher(TimeSpan? pollInterval = null)
-    {
-        _pollInterval = pollInterval ?? TimeSpan.FromSeconds(2);
-    }
 
     public List<SteamGameProcess> GetInstalledGames()
     {
@@ -44,6 +34,7 @@ public sealed class SteamWatcher : IDisposable
     {
         var libraries = DiscoverSteamLibraries();
         LoadInstalledGames(libraries);
+        DetectRunningGames();
         Task.Run(ProcessMonitorLoop);
     }
 
@@ -221,6 +212,7 @@ public sealed class SteamWatcher : IDisposable
             }
             catch
             {
+                // ignored
             }
 
             try
