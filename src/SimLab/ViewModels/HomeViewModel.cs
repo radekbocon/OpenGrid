@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using SimLab.Models;
 using SimLab.Services;
@@ -9,14 +8,14 @@ namespace SimLab.ViewModels;
 public partial class HomeViewModel : ViewModelBase
 {
     private readonly ITelemetryService _telemetryService;
-    private readonly IGameService _gameService;
+    private readonly SteamGameManager _gameManager;
 
-    public ObservableCollection<GameItem> Games { get; } = [];
+    public ObservableCollection<GameItemViewModel> Games { get; } = [];
 
-    public HomeViewModel(ITelemetryService telemetryService, IGameService gameService)
+    public HomeViewModel(ITelemetryService telemetryService, SteamGameManager gameManager)
     {
         _telemetryService = telemetryService;
-        _gameService = gameService;
+        _gameManager = gameManager;
         IsMenuItem = true;
     }
 
@@ -34,29 +33,13 @@ public partial class HomeViewModel : ViewModelBase
 
     private void DetectGames()
     {
+        var games = _gameManager.GetInstalledGames();
         Games.Clear();
-        var detectedGames = _gameService.DetectGames();
-        foreach (var game in detectedGames)
+        foreach (var steamGameProcess in games)
         {
-            Games.Add(game);
+            var vm = new GameItemViewModel();
+            vm.SetGame(steamGameProcess);
+            Games.Add(vm);
         }
-    }
-
-    [RelayCommand]
-    private async Task ConnectAsync(GameItem gameItem)
-    {
-        await _gameService.ConnectAsync(gameItem);
-    }
-
-    [RelayCommand]
-    private async Task LaunchAndConnectAsync(GameItem gameItem)
-    {
-        await _gameService.LaunchAndConnectAsync(gameItem);
-    }
-
-    [RelayCommand]
-    private void Disconnect()
-    {
-        _telemetryService.StopReading();
     }
 }

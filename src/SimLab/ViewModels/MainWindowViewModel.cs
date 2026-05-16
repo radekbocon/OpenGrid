@@ -1,4 +1,3 @@
-using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,7 +11,6 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly INavigationService _navigationService;
     private readonly ITelemetryService _telemetryService;
-    private readonly IGameService _gameService;
 
     public ObservableCollection<MenuItem> MenuItems { get; }
 
@@ -46,14 +44,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
 
     public MainWindowViewModel(INavigationService navigationService,
-        ITelemetryService telemetryService,
-        IGameService gameService)
+        ITelemetryService telemetryService)
     {
         _navigationService = navigationService;
         _telemetryService = telemetryService;
-        _gameService = gameService;
         _telemetryService.TelemetryReceived += TelemetryServiceOnTelemetryReceived;
-        _gameService.GameProcessChanged += GameServiceOnGameProcessChanged;
 
         MenuItems =
         [
@@ -63,22 +58,6 @@ public partial class MainWindowViewModel : ViewModelBase
             new MenuItem { Icon = MaterialIconKind.Devices, Label = "Devices", ViewModelType = typeof(DevicesViewModel) },
             new MenuItem { Icon = MaterialIconKind.Cog, Label = "Settings", ViewModelType = typeof(SettingsViewModel) },
         ];
-    }
-
-    private void GameServiceOnGameProcessChanged(object? sender, GameProcessEventArgs e)
-    {
-        IsConnected = e.Status == GameProcessStatus.Connected;
-        ShowCancelButton = e.Status is GameProcessStatus.Connecting or GameProcessStatus.StartingGame;
-        var gameName = e.GameItem?.Game.Name ?? "";
-        var appId = e.GameItem?.Game.AppId;
-
-        StatusMessage = e switch
-        {
-            { Status: GameProcessStatus.Connecting } => $"Connecting to {gameName} ({appId})",
-            { Status: GameProcessStatus.StartingGame } => $"Starting {gameName} ({appId})",
-            { Status: GameProcessStatus.Connected } => $"Connected to {gameName} ({appId})",
-            _ => "",
-        };
     }
 
     private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryEventArgs e)
@@ -100,13 +79,12 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void Cancel()
     {
-        _gameService.Cancel();
+        
     }
 
     [RelayCommand]
     private void Disconnect()
     {
-        _gameService.Disconnect();
         IsConnected = false;
         StatusMessage = "";
     }

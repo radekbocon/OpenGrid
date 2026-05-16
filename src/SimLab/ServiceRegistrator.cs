@@ -20,7 +20,8 @@ public static class ServiceRegistrator
         services.AddSingleton<SessionRepository>();
         services.AddSingleton<IDashboardRepository, DashboardRepository>();
         services.AddSingleton<IDashboardService, DashboardService>();
-        services.AddSingleton<IGameService, GameService>();
+        services.AddSingleton<SteamWatcher>();
+        services.AddSingleton<SteamGameManager>();
 
         // Register ViewModels
         services.AddSingleton<MainWindowViewModel>();
