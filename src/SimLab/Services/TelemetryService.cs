@@ -34,10 +34,9 @@ public interface ITelemetryService: IDisposable
 
 public enum TelemetryConnectionStatus
 {
-    None,
+    Disconnected,
     Connecting,
     Connected,
-    Disconnected
 }
 
 /// <summary>
@@ -75,11 +74,11 @@ public class TelemetryService : ITelemetryService
 
     public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
     {
+        CurrentGame = game;
         SetConnectionStatus(TelemetryConnectionStatus.Connecting);
         
         _telemetryClient = game == SteamGame.Debug ? _debugTelemetryClient : _acTelemetryClient;
         
-        CurrentGame = game;
         if (game.RequiresSharedMemoryBridge)
         {
             await _sharedMemoryBridgeLauncher.LaunchBridgeAsync(game, cancellationToken);

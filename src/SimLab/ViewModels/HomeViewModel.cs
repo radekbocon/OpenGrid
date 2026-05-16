@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.Input;
 using SimLab.Models;
 using SimLab.Services;
@@ -8,65 +9,57 @@ namespace SimLab.ViewModels;
 public partial class HomeViewModel : ViewModelBase
 {
     private readonly ITelemetryService _telemetryService;
-    private readonly SteamGameManager _gameManager;
+    private readonly SteamGameManager _steamGameManager;
 
     public ObservableCollection<GameItemViewModel> Games { get; } = [];
 
-    public HomeViewModel(ITelemetryService telemetryService, SteamGameManager gameManager)
+    public HomeViewModel(ITelemetryService telemetryService, SteamGameManager steamGameManager)
     {
         _telemetryService = telemetryService;
-        _gameManager = gameManager;
+        _steamGameManager = steamGameManager;
         IsMenuItem = true;
     }
 
     [RelayCommand]
     private void Loaded()
     {
-        _gameManager.GameStarted += OnGameStarted;
-        _gameManager.GameStopped += OnGameStopped;
-        DetectGames();
+        _steamGameManager.GameStarted += OnSteamGameStarted;
+        _steamGameManager.GameStopped += OnSteamGameStopped;
+        SetInstalledGames();
     }
 
     [RelayCommand]
     private void Unloaded()
     {
-        _gameManager.GameStarted -= OnGameStarted;
-        _gameManager.GameStopped -= OnGameStopped;
+        _steamGameManager.GameStarted -= OnSteamGameStarted;
+        _steamGameManager.GameStopped -= OnSteamGameStopped;
     }
 
-    private void OnGameStarted(SteamGameProcess game)
+    private void OnSteamGameStarted(SteamGameProcess game)
     {
-        var vm = FindGameVm(game);
-        if (vm != null)
-            vm.IsRunning = true;
+        var vm = FindGameViewModel(game);
+        vm?.IsRunning = true;
     }
 
-    private void OnGameStopped(SteamGameProcess game)
+    private void OnSteamGameStopped(SteamGameProcess game)
     {
-        var vm = FindGameVm(game);
-        if (vm != null)
-            vm.IsRunning = false;
+        var vm = FindGameViewModel(game);
+        vm?.IsRunning = false;
     }
 
-    private GameItemViewModel? FindGameVm(SteamGameProcess game)
+    private GameItemViewModel? FindGameViewModel(SteamGameProcess game)
     {
-        foreach (var vm in Games)
-        {
-            if (vm.Matches(game))
-                return vm;
-        }
-        return null;
+        return Games.FirstOrDefault(vm => vm.Matches(game));
     }
 
-    private void DetectGames()
+    private void SetInstalledGames()
     {
-        var games = _gameManager.GetInstalledGames();
+        var games = _steamGameManager.GetInstalledGames();
         Games.Clear();
         foreach (var steamGameProcess in games)
         {
-            var vm = new GameItemViewModel();
-            vm.SetGame(steamGameProcess, _gameManager, _telemetryService);
-            vm.IsRunning = _gameManager.IsRunning(steamGameProcess);
+            var vm = new GameItemViewModel(_steamGameManager, _telemetryService);
+            vm.SetGame(steamGameProcess);
             Games.Add(vm);
         }
     }

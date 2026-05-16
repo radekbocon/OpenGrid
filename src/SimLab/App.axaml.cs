@@ -17,6 +17,8 @@ public partial class App : Application
     private TrayIcon? _trayIcon;
     private ISettingsService? _settingsService;
     private IThemeService? _themeService;
+    
+    public static MainWindow? MainWindow { get; private set; }
 
     public override void Initialize()
     {
@@ -40,6 +42,7 @@ public partial class App : Application
                 DataContext = mainVewModel,
             };
             desktop.MainWindow = mainWindow;
+            MainWindow = mainWindow;
 
             mainWindow.Closing += MainWindowOnClosing;
             

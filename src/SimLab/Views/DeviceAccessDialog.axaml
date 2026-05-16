@@ -7,6 +7,9 @@
     Title="Open on Device"
     d:DesignHeight="500"
     d:DesignWidth="400"
+    CanMaximize="False"
+    CanMinimize="False"
+    WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <Grid
         Margin="24"

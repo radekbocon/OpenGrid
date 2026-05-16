@@ -9,7 +9,6 @@ namespace SimLab.Services;
 public class SteamGameManager
 {
     private readonly SteamWatcher _steamWatcher;
-    private readonly HashSet<int> _runningAppIds = [];
     private List<SteamGameProcess>? _installedGames;
 
     public event Action<SteamGameProcess>? GameStarted;
@@ -25,15 +24,11 @@ public class SteamGameManager
 
     private void SteamWatcherOnGameStopped(SteamGameProcess gameProcess)
     {
-        lock (_runningAppIds)
-            _runningAppIds.Remove(gameProcess.SteamGame.AppId);
         GameStopped?.Invoke(gameProcess);
     }
 
     private void SteamWatcherOnGameStarted(SteamGameProcess gameProcess)
     {
-        lock (_runningAppIds)
-            _runningAppIds.Add(gameProcess.SteamGame.AppId);
         GameStarted?.Invoke(gameProcess);
     }
 
@@ -45,8 +40,7 @@ public class SteamGameManager
 
     public bool IsRunning(SteamGameProcess game)
     {
-        lock (_runningAppIds)
-            return _runningAppIds.Contains(game.SteamGame.AppId);
+        return _steamWatcher.RunningGames.Contains(game);
     }
 
     public void LaunchGame(SteamGameProcess game)

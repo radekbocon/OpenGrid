@@ -54,7 +54,7 @@ public class AccSharedMemoryBridge : IDisposable
         }
         finally
         {
-            Disconnect();
+            Dispose();
         }
     }
     
@@ -133,12 +133,6 @@ public class AccSharedMemoryBridge : IDisposable
         }
     }
     
-    private void Disconnect()
-    {
-        _isConnected = false;
-        Console.WriteLine("Disconnected");
-    }
-    
     private static byte[] ReadBytes(MemoryMappedViewAccessor accessor)
     {
         var buffer = new byte[accessor.Capacity];
@@ -154,10 +148,15 @@ public class AccSharedMemoryBridge : IDisposable
         _graphicsAccessor?.Dispose();
         _staticAccessor?.Dispose();
 
+        File.Delete(ShmPhysicsPath);
+        File.Delete(ShmGraphicsPath);
+        File.Delete(ShmStaticPath);
+        
         _physicsFile?.Dispose();
         _graphicsFile?.Dispose();
         _staticFile?.Dispose();
 
+        _isConnected = false;
         _disposed = true;
     }
 }

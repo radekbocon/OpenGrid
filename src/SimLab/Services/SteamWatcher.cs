@@ -18,6 +18,8 @@ public sealed class SteamWatcher : IDisposable
     private readonly ConcurrentDictionary<int, SteamGameProcess> _runningGames = new();
     private readonly CancellationTokenSource _cts = new();
     
+    public IReadOnlyList<SteamGameProcess> RunningGames => _runningGames.Values.ToList();
+    
     public event Action<SteamGameProcess>? GameStarted;
     public event Action<SteamGameProcess>? GameStopped;
 

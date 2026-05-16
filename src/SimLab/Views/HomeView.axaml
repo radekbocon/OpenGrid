@@ -77,6 +77,13 @@
                                         Command="{Binding DisconnectCommand}"
                                         Content="Disconnect"
                                         IsVisible="{Binding ShowDisconnectButton}" />
+
+                                    <Button
+                                        Grid.Column="4"
+                                        Margin="8"
+                                        Command="{Binding CancelCommand}"
+                                        Content="Cancel"
+                                        IsVisible="{Binding ShowCancelButton}" />
                                 </Grid>
                             </Border>
                         </DataTemplate>
