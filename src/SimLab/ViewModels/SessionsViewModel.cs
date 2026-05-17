@@ -29,6 +29,7 @@ public partial class SessionsViewModel : ViewModelBase
         _sessionRepository = sessionRepository;
         _telemetryService = telemetryService;
         _navigationService = navigationService;
+        _sessionRepository.IsRecordingChanged += (_, _) => OnPropertyChanged(nameof(IsRecording));
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
         
         CanStartRecording = _telemetryService.ConnectionStatus == TelemetryConnectionStatus.Connected;

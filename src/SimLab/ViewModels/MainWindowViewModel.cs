@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
+using SimLab.Models;
 using SimLab.Services;
 
 namespace SimLab.ViewModels;
@@ -11,6 +13,7 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly INavigationService _navigationService;
     private readonly ITelemetryService _telemetryService;
+    private readonly SessionRepository _sessionRepository;
 
     public ObservableCollection<MenuItem> MenuItems { get; }
 
@@ -34,21 +37,34 @@ public partial class MainWindowViewModel : ViewModelBase
     public partial MenuItem? SelectedMenuItem { get; set; }
 
     [ObservableProperty]
-    public partial string StatusMessage { get; set; } = "";
+    [NotifyPropertyChangedFor(nameof(CanStartRecording))]
+    [NotifyPropertyChangedFor(nameof(CanStopRecording))]
+    public partial TelemetryConnectionStatus ConnectionStatus { get; set; }
 
     [ObservableProperty]
-    public partial bool ShowCancelButton { get; set; }
-    
-    [ObservableProperty]
-    public partial bool IsConnected { get; set; }
+    public partial string TelemetryStatusText { get; set; } = "Not connected";
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanStartRecording))]
+    [NotifyPropertyChangedFor(nameof(CanStopRecording))]
+    public partial bool IsRecording { get; set; }
+
+    public bool CanStartRecording => ConnectionStatus == TelemetryConnectionStatus.Connected && !IsRecording;
+    public bool CanStopRecording => IsRecording;
 
     public MainWindowViewModel(INavigationService navigationService,
-        ITelemetryService telemetryService)
+        ITelemetryService telemetryService,
+        SessionRepository sessionRepository)
     {
         _navigationService = navigationService;
         _telemetryService = telemetryService;
+        _sessionRepository = sessionRepository;
+        _sessionRepository.IsRecordingChanged += (_, args) => IsRecording = args;
         _telemetryService.TelemetryReceived += TelemetryServiceOnTelemetryReceived;
+        _telemetryService.TelemetryStatusChanged += OnTelemetryStatusChanged;
+
+        ConnectionStatus = _telemetryService.ConnectionStatus;
+        OnTelemetryStatusChanged(_telemetryService, _telemetryService.ConnectionStatus);
 
         MenuItems =
         [
@@ -58,6 +74,18 @@ public partial class MainWindowViewModel : ViewModelBase
             new MenuItem { Icon = MaterialIconKind.Devices, Label = "Devices", ViewModelType = typeof(DevicesViewModel) },
             new MenuItem { Icon = MaterialIconKind.Cog, Label = "Settings", ViewModelType = typeof(SettingsViewModel) },
         ];
+    }
+
+    private void OnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus status)
+    {
+        ConnectionStatus = status;
+        var gameName = _telemetryService.CurrentGame?.Name;
+        TelemetryStatusText = status switch
+        {
+            TelemetryConnectionStatus.Connecting => $"Connecting to {gameName}",
+            TelemetryConnectionStatus.Connected => $"Connected to {gameName}",
+            _ => "",
+        };
     }
 
     private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryEventArgs e)
@@ -77,15 +105,27 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Cancel()
+    private async Task StartRecordingAsync()
     {
-        
+        await _sessionRepository.StartRecordingAsync();
+        IsRecording = true;
+    }
+
+    [RelayCommand]
+    private async Task StopRecordingAsync()
+    {
+        await _sessionRepository.StopRecordingAsync();
+        IsRecording = false;
     }
 
     [RelayCommand]
     private void Disconnect()
     {
-        IsConnected = false;
-        StatusMessage = "";
+        if (IsRecording)
+        {
+            _ = _sessionRepository.StopRecordingAsync();
+            IsRecording = false;
+        }
+        _telemetryService.StopReading();
     }
 }

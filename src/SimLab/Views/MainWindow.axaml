@@ -47,15 +47,17 @@
                         Command="{Binding GoBackCommand}"
                         Content="{avalonia:MaterialIconExt Kind=ChevronLeft,
                                                            IconSize=24}" />
-                    <TextBlock VerticalAlignment="Center" Text="{Binding StatusMessage}" />
+                    <TextBlock VerticalAlignment="Center" Text="{Binding TelemetryStatusText}" />
                     <Button
-                        Command="{Binding CancelCommand}"
-                        Content="Cancel"
-                        IsVisible="{Binding ShowCancelButton}" />
+                        Classes="outline"
+                        Command="{Binding StartRecordingCommand}"
+                        Content="Start Recording"
+                        IsVisible="{Binding CanStartRecording}" />
                     <Button
-                        Command="{Binding DisconnectCommand}"
-                        Content="Disconnect"
-                        IsVisible="{Binding IsConnected}" />
+                        Classes="outline"
+                        Command="{Binding StopRecordingCommand}"
+                        Content="Stop Recording"
+                        IsVisible="{Binding CanStopRecording}" />
                 </StackPanel>
             </Grid>
         </Border>

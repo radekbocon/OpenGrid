@@ -57,6 +57,11 @@ public partial class GameItemViewModel : ViewModelBase
     {
         _game = game;
         IsRunning = _gameManager.IsRunning(game);
+        
+        if (_telemetryService.CurrentGame?.AppId == game.SteamGame.AppId)
+        {
+            TelemetryStatus = _telemetryService.ConnectionStatus;
+        }
     }
 
     private void OnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus status)

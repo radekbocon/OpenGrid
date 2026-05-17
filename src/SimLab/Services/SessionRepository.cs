@@ -17,8 +17,18 @@ public class SessionRepository
     public Session? CurrentSession { get; private set; }
 
     public ObservableCollection<Session> Sessions { get; private set; } = [];
-    
-    public bool IsRecording { get; private set; }
+
+    public bool IsRecording
+    {
+        get;
+        private set
+        {
+            field = value;
+            IsRecordingChanged?.Invoke(this, value);
+        }
+    }
+
+    public event EventHandler<bool>? IsRecordingChanged;
 
     public SessionRepository(ITelemetryService telemetryService)
     {
