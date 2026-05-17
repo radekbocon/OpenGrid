@@ -31,6 +31,9 @@ public partial class SessionDetailsViewModel : ViewModelBase
     [ObservableProperty]
     public partial ObservableCollection<ChartData> Rpm { get; set; } = [];
     
+    public double DataMinX { get; private set; }
+    public double DataMaxX { get; private set; }
+
     [ObservableProperty]
     public partial double MinX { get; set; }
 
@@ -78,8 +81,10 @@ public partial class SessionDetailsViewModel : ViewModelBase
             value.Records.Select(r => new ObservablePoint(r.Distance, r.EngineRpm)), 
             new SolidColorPaint(SKColors.DodgerBlue, 2));
         
-        MinX = value.Records.Min(r => r.Distance);
-        MaxX = value.Records.Max(r => r.Distance);
+        DataMinX = value.Records.Min(r => r.Distance);
+        DataMaxX = value.Records.Max(r => r.Distance);
+        MinX = DataMinX;
+        MaxX = DataMaxX;
 
         Inputs = [gasData, brakeData, steeringData];
         Speed = [speedData];
