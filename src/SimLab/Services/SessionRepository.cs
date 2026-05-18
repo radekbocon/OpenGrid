@@ -101,12 +101,20 @@ public class SessionRepository
     
     private void WriteSession(Session session)
     {
-        using var file = File.Create(Path.Combine(_telemetryFolder,
-            $"{session.Info.Car}-{session.Info.Track}-{session.Info.Type}-{session.Info.Id}.bin"));
-
+        using var file = File.Create(Path.Combine(_telemetryFolder, session.Info.FileName));
         Serializer.Serialize(file, session);
     }
     
+    public void DeleteSession(Session session)
+    {
+        var filePath = Path.Combine(_telemetryFolder, session.Info.FileName);
+        if (File.Exists(filePath))
+        {
+            File.Delete(filePath);
+        }
+        Sessions.Remove(session);
+    }
+
     public bool IsNewSession(TelemetryRecord record)
     {
         return record.SessionType != CurrentSession?.Info.Type || record.Track != CurrentSession?.Info.Track || record.Car != CurrentSession?.Info.Car;

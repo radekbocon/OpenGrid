@@ -4,6 +4,7 @@
     <option name="projectPerEditor">
       <map>
         <entry key="SimLab/App.axaml" value="SimLab/SimLab.csproj" />
+        <entry key="SimLab/Views/ConfirmDialog.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/DashboardWebWindow.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/DashboardsView.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/DeviceAccessDialog.axaml" value="SimLab/SimLab.csproj" />

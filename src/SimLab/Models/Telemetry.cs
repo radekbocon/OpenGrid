@@ -164,6 +164,8 @@ public record SessionInfo
     public DateTime StartTime { get; set; }
     [ProtoMember(7)]
     public DateTime EndTime { get; set; }
+
+    public string FileName => $"{Car}-{Track}-{Type}-{Id}.bin";
 }
 
 public record Lap

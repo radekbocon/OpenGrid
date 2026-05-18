@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SimLab.Models;
 using SimLab.Services;
+using SimLab.Views;
 
 namespace SimLab.ViewModels;
 
@@ -66,5 +67,16 @@ public partial class SessionsViewModel : ViewModelBase
     private void SessionSelected(Session session)
     {
         _navigationService.NavigateTo<SessionDetailsViewModel>(session);
+    }
+
+    [RelayCommand]
+    private async Task DeleteSessionAsync(Session session)
+    {
+        var dialog = new ConfirmDialog($"Delete session from {session.Info.StartTime}?");
+        var result = await dialog.ShowDialog<bool>(App.MainWindow!);
+        if (result)
+        {
+            _sessionRepository.DeleteSession(session);
+        }
     }
 }
