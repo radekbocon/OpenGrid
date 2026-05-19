@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DialogHostAvalonia;
 using SimLab.Models;
 using SimLab.Services;
 using SimLab.Views;
@@ -13,26 +14,26 @@ public partial class SessionsViewModel : ViewModelBase
     private readonly SessionRepository _sessionRepository;
     private readonly ITelemetryService _telemetryService;
     private readonly INavigationService _navigationService;
-    
-    [ObservableProperty]
-    public partial bool CanStartRecording { get; private set; } 
-    
+
+    [ObservableProperty] public partial bool CanStartRecording { get; private set; }
+
     public ObservableCollection<Session> Sessions => _sessionRepository.Sessions;
-    
-    public string CurrentSession => _sessionRepository.CurrentSession is null 
-        ? "No session" 
+
+    public string CurrentSession => _sessionRepository.CurrentSession is null
+        ? "No session"
         : $"{_sessionRepository.CurrentSession.Info.Type} | {_sessionRepository.CurrentSession.Info.Car} at {_sessionRepository.CurrentSession.Info.Track}";
-    
+
     public bool IsRecording => _sessionRepository.IsRecording;
 
-    public SessionsViewModel(SessionRepository sessionRepository, ITelemetryService telemetryService, INavigationService navigationService)
+    public SessionsViewModel(SessionRepository sessionRepository, ITelemetryService telemetryService,
+        INavigationService navigationService)
     {
         _sessionRepository = sessionRepository;
         _telemetryService = telemetryService;
         _navigationService = navigationService;
         _sessionRepository.IsRecordingChanged += (_, _) => OnPropertyChanged(nameof(IsRecording));
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
-        
+
         CanStartRecording = _telemetryService.ConnectionStatus == TelemetryConnectionStatus.Connected;
         IsMenuItem = true;
     }
@@ -41,7 +42,7 @@ public partial class SessionsViewModel : ViewModelBase
     {
         CanStartRecording = e == TelemetryConnectionStatus.Connected;
     }
-    
+
     [RelayCommand]
     private void Loaded()
     {
@@ -55,14 +56,14 @@ public partial class SessionsViewModel : ViewModelBase
         await _sessionRepository.StartRecordingAsync();
         OnPropertyChanged(nameof(IsRecording));
     }
-    
+
     [RelayCommand]
     private async Task StopSessionAsync()
     {
         await _sessionRepository.StopRecordingAsync();
         OnPropertyChanged(nameof(IsRecording));
     }
-    
+
     [RelayCommand]
     private void SessionSelected(Session session)
     {
@@ -72,9 +73,10 @@ public partial class SessionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task DeleteSessionAsync(Session session)
     {
-        var dialog = new ConfirmDialog($"Delete session from {session.Info.StartTime}?");
-        var result = await dialog.ShowDialog<bool>(App.MainWindow!);
-        if (result)
+        var confirmDialog = new ConfirmDialog("Are you sure you want to delete this session?");
+        await DialogHost.Show(confirmDialog);
+
+        if (confirmDialog.Result)
         {
             _sessionRepository.DeleteSession(session);
         }

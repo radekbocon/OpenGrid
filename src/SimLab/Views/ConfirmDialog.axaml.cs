@@ -1,10 +1,13 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using DialogHostAvalonia;
 
 namespace SimLab.Views;
 
-public partial class ConfirmDialog : Window
+public partial class ConfirmDialog : UserControl
 {
+    public bool Result { get; private set; }
+    
     public ConfirmDialog(string message)
     {
         InitializeComponent();
@@ -13,11 +16,13 @@ public partial class ConfirmDialog : Window
 
     private void YesClick(object? sender, RoutedEventArgs e)
     {
-        Close(true);
+        Result = true;
+        DialogHost.Close(null);
     }
 
     private void NoClick(object? sender, RoutedEventArgs e)
     {
-        Close(false);
+        Result = false;   
+        DialogHost.Close(null);
     }
 }

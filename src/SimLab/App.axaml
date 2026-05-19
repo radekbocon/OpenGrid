@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:dialogHostAvalonia="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
     xmlns:local="using:SimLab"
     xmlns:themes="clr-namespace:Material.Styles.Themes;assembly=Material.Styles"
     RequestedThemeVariant="Dark">
@@ -13,5 +14,6 @@
     <Application.Styles>
         <avalonia:MaterialIconStyles />
         <themes:MaterialTheme />
+        <dialogHostAvalonia:DialogHostStyles />
     </Application.Styles>
 </Application>

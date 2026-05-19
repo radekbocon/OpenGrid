@@ -1,40 +1,36 @@
-<Window
+<UserControl
     x:Class="SimLab.Views.ConfirmDialog"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="Confirm"
-    Width="360"
-    Height="180"
-    CanResize="False"
-    WindowStartupLocation="CenterOwner"
-    ShowInTaskbar="False">
+    CornerRadius="8">
     <Grid
         Margin="24"
-        RowDefinitions="*, Auto"
+        RowDefinitions="Auto, *, Auto"
         RowSpacing="24">
         <TextBlock
             x:Name="MessageText"
-            Grid.Row="0"
+            Grid.Row="1"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             FontSize="15"
-            TextWrapping="Wrap"
-            TextAlignment="Center" />
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
         <StackPanel
-            Grid.Row="1"
+            Grid.Row="2"
             HorizontalAlignment="Center"
             Orientation="Horizontal"
             Spacing="12">
             <Button
                 x:Name="YesButton"
+                MinWidth="80"
+                Click="YesClick"
                 Content="Yes"
-                Width="80"
-                Click="YesClick" />
+                Theme="{StaticResource MaterialOutlineButton}" />
             <Button
                 x:Name="NoButton"
-                Content="No"
-                Width="80"
-                Click="NoClick" />
+                MinWidth="80"
+                Click="NoClick"
+                Content="No" />
         </StackPanel>
     </Grid>
-</Window>
+</UserControl>
