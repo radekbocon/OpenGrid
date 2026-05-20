@@ -2,7 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using DialogHostAvalonia;
 
-namespace SimLab.Views;
+namespace SimLab.Controls;
 
 public partial class ConfirmDialog : UserControl
 {
