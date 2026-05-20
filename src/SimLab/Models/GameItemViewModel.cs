@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SimLab.Services;
+using SimLab.Services.Telemetry;
 using SimLab.ViewModels;
 
 namespace SimLab.Models;

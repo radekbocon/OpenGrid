@@ -6,6 +6,7 @@ using DialogHostAvalonia;
 using SimLab.Controls;
 using SimLab.Models;
 using SimLab.Services;
+using SimLab.Services.Telemetry;
 
 namespace SimLab.ViewModels;
 

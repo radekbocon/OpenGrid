@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Serilog;
 using SimLab.Models;
 
-namespace SimLab.Services.SharedMemory;
+namespace SimLab.Services.Telemetry;
 
 public class DirtRallyTelemetryClient : ITelemetryClient
 {

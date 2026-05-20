@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SimLab.Models;
 
-namespace SimLab.Services.SharedMemory;
+namespace SimLab.Services.Telemetry;
 
 public class DebugTelemetryClient : ITelemetryClient
 {

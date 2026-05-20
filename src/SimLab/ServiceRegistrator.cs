@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SimLab.Services;
-using SimLab.Services.SharedMemory;
+using SimLab.Services.Telemetry;
 using SimLab.ViewModels;
 
 namespace SimLab;

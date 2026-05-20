@@ -16,6 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 using SimLab.Models;
+using SimLab.Services.Telemetry;
 
 namespace SimLab.Services;
 

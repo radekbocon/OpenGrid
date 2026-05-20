@@ -5,9 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 using SimLab.Models;
-using SimLab.Services.SharedMemory;
 
-namespace SimLab.Services;
+namespace SimLab.Services.Telemetry;
 
 public class TelemetryEventArgs : EventArgs
 {

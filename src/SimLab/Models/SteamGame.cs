@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SimLab.Services.SharedMemory;
+using SimLab.Services.Telemetry;
 
 namespace SimLab.Models;
 

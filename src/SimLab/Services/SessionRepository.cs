@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ProtoBuf;
 using Serilog;
 using SimLab.Models;
+using SimLab.Services.Telemetry;
 
 namespace SimLab.Services;
 

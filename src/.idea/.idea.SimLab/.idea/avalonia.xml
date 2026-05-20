@@ -5,6 +5,8 @@
       <map>
         <entry key="SimLab/App.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Controls/AllSupportedGamesDialog.axaml" value="SimLab/SimLab.csproj" />
+        <entry key="SimLab/Controls/ConfirmDialog.axaml" value="SimLab/SimLab.csproj" />
+        <entry key="SimLab/Controls/DeviceAccessDialog.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/ConfirmDialog.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/DashboardWebWindow.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/DashboardsView.axaml" value="SimLab/SimLab.csproj" />

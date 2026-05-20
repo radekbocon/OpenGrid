@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
 using SimLab.Models;
 using SimLab.Services;
+using SimLab.Services.Telemetry;
 
 namespace SimLab.ViewModels;
 

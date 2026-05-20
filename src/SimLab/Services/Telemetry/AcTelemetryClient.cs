@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Serilog;
 using SimLab.Models;
 
-namespace SimLab.Services.SharedMemory;
+namespace SimLab.Services.Telemetry;
 
 /// <summary>
 /// Service for reading binary telemetry data from shared memory files
