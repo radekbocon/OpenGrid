@@ -21,7 +21,7 @@ public class TelemetryEventArgs : EventArgs
     public TelemetryRecord Telemetry { get; }
 }
 
-public interface ITelemetryService: IDisposable
+public interface ITelemetryService : IDisposable
 {
     TelemetryConnectionStatus ConnectionStatus { get; }
     SteamGame? CurrentGame { get; }
@@ -47,38 +47,39 @@ public class TelemetryService : ITelemetryService
 {
     private const int PollIntervalMs = 1000 / 30;
 
-    private readonly AcTelemetryClient _acTelemetryClient;
-    private readonly DebugTelemetryClient _debugTelemetryClient;
+    private readonly List<ITelemetryClient> _telemetryClients;
     private readonly SharedMemoryBridgeLauncher _sharedMemoryBridgeLauncher;
-    private readonly Lock _observersLock = new();
+    private readonly SteamWatcher _steamWatcher;
 
     private ITelemetryClient? _telemetryClient;
-    
+
     private CancellationTokenSource? _cancellationTokenSource;
-    private Task? _readingTask;
     private bool _disposed;
 
     public event EventHandler<TelemetryEventArgs>? TelemetryReceived;
-    public event EventHandler<TelemetryConnectionStatus>? TelemetryStatusChanged; 
+    public event EventHandler<TelemetryConnectionStatus>? TelemetryStatusChanged;
 
     public TelemetryConnectionStatus ConnectionStatus { get; private set; }
     public SteamGame? CurrentGame { get; private set; }
 
-    public TelemetryService(IEnumerable<ITelemetryClient> telemetryClients, SharedMemoryBridgeLauncher sharedMemoryBridgeLauncher)
+    public TelemetryService(IEnumerable<ITelemetryClient> telemetryClients,
+        SharedMemoryBridgeLauncher sharedMemoryBridgeLauncher, SteamWatcher steamWatcher)
     {
         var clients = telemetryClients.ToList();
-        _acTelemetryClient = (AcTelemetryClient)clients.First(x => x is AcTelemetryClient);
-        _debugTelemetryClient = (DebugTelemetryClient)clients.First(x => x is DebugTelemetryClient);
+        _telemetryClients = clients.ToList();
         _sharedMemoryBridgeLauncher = sharedMemoryBridgeLauncher;
+        _steamWatcher = steamWatcher;
+
+        _steamWatcher.GameStopped += SteamWatcherOnGameStopped;
     }
 
     public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
     {
         CurrentGame = game;
         SetConnectionStatus(TelemetryConnectionStatus.Connecting);
-        
-        _telemetryClient = game == SteamGame.Debug ? _debugTelemetryClient : _acTelemetryClient;
-        
+
+        _telemetryClient = _telemetryClients.First(x => x.GetType() == game.TelemetryClientType);
+
         if (game.RequiresSharedMemoryBridge)
         {
             await _sharedMemoryBridgeLauncher.LaunchBridgeAsync(game, cancellationToken);
@@ -97,11 +98,11 @@ public class TelemetryService : ITelemetryService
             Log.Warning("Cannot start reading telemetry: not connected");
             return;
         }
-        
+
         try
         {
             _cancellationTokenSource = new CancellationTokenSource();
-            _readingTask = ReadPollingLoopAsync(_cancellationTokenSource.Token);
+            _ = ReadPollingLoopAsync(_cancellationTokenSource.Token);
         }
         catch (Exception ex)
         {
@@ -109,20 +110,16 @@ public class TelemetryService : ITelemetryService
             TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
         }
     }
-    
+
     public void StopReading()
     {
-        if (_cancellationTokenSource != null)
-        {
-            _cancellationTokenSource.Cancel();
-            _sharedMemoryBridgeLauncher.StopBridge();
-            _telemetryClient?.Stop();
-            _cancellationTokenSource.Dispose();
-            _cancellationTokenSource = null;
-            _telemetryClient = null;
-        }
-
-        _readingTask = null;
+        TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
+        _sharedMemoryBridgeLauncher.StopBridge();
+        _telemetryClient?.Stop();
+        _telemetryClient = null;
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = null;
     }
 
     public void Dispose()
@@ -136,6 +133,14 @@ public class TelemetryService : ITelemetryService
         _disposed = true;
     }
 
+    private void SteamWatcherOnGameStopped(SteamGameProcess gameProcess)
+    {
+        if (CurrentGame?.AppId == gameProcess.SteamGame.AppId)
+        {
+            Dispose();
+        }
+    }
+
     private async Task ReadPollingLoopAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
@@ -147,7 +152,7 @@ public class TelemetryService : ITelemetryService
                 {
                     TelemetryReceived?.Invoke(this, new TelemetryEventArgs(CurrentGame, snapshot));
                 }
-                
+
                 await Task.Delay(PollIntervalMs, cancellationToken);
             }
             catch (OperationCanceledException)
@@ -162,7 +167,7 @@ public class TelemetryService : ITelemetryService
             }
         }
     }
-    
+
     private void SetConnectionStatus(TelemetryConnectionStatus status)
     {
         ConnectionStatus = status;
