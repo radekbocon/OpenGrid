@@ -1,0 +1,53 @@
+<UserControl
+    x:Class="SimLab.Controls.AllSupportedGamesDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:models="using:SimLab.Models"
+    MinWidth="400"
+    MaxHeight="600">
+    <Grid RowDefinitions="Auto,*">
+        <Border Grid.Row="0" Padding="4">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Text="All Supported Games" />
+                <Button
+                    Grid.Column="1"
+                    Padding="8"
+                    Classes="Flat"
+                    Click="CloseClick"
+                    Content="{avalonia:MaterialIconExt Kind=Close,
+                                                       IconSize=24}" />
+            </Grid>
+        </Border>
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl x:Name="GameList" Margin="16,8">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:SteamGame">
+                        <Border
+                            Padding="0,8"
+                            BorderBrush="{DynamicResource MaterialDividerBrush}"
+                            BorderThickness="0,0,0,1">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Image
+                                    Width="184"
+                                    Height="69"
+                                    asyncImageLoader:ImageLoader.Source="{Binding ImagePath}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="15"
+                                    Text="{Binding Name}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

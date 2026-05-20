@@ -1,6 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using DialogHostAvalonia;
+using SimLab.Controls;
 using SimLab.Models;
 using SimLab.Services;
 
@@ -33,6 +36,13 @@ public partial class HomeViewModel : ViewModelBase
     {
         _steamGameManager.GameStarted -= OnSteamGameStarted;
         _steamGameManager.GameStopped -= OnSteamGameStopped;
+    }
+
+    [RelayCommand]
+    private async Task ShowAllSupportedGamesAsync()
+    {
+        var dialog = new AllSupportedGamesDialog();
+        await DialogHost.Show(dialog);
     }
 
     private void OnSteamGameStarted(SteamGameProcess game)

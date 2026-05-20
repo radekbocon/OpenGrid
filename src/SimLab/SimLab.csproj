@@ -56,6 +56,9 @@
         <DependentUpon>DeviceAccessDialog.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Controls\AllSupportedGamesDialog.axaml.cs">
+        <DependentUpon>AllSupportedGamesDialog.axaml</DependentUpon>
+      </Compile>
     </ItemGroup>
 
 

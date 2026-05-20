@@ -70,7 +70,7 @@ public record SteamGame(
         "DiRT Rally 2.0",
         "dirtrally2.exe");
 
-    public static List<SteamGame> GetAllSupported() => [Debug, Ac, Acc, AcRally, AcEvo, DirtRally, DirtRally2];
+    public static List<SteamGame> GetAllSupported() => [Ac, Acc, AcRally, AcEvo, DirtRally, DirtRally2];
 
     public static SteamGame? GetByAppId(int appId)
     {

@@ -28,10 +28,19 @@
 
         <ScrollViewer Margin="0">
             <StackPanel Margin="24,0,24,16" Spacing="12">
-                <TextBlock
-                    Margin="0,0,0,4"
-                    Classes="Headline6"
-                    Text="Select a game to connect" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock
+                        Margin="0,0,0,4"
+                        VerticalAlignment="Center"
+                        Classes="Headline6"
+                        Text="Select a game to connect" />
+
+                    <Button
+                        Margin="0,0,0,8"
+                        HorizontalAlignment="Right"
+                        Command="{Binding ShowAllSupportedGamesCommand}"
+                        Content="Show All Supported Games" />
+                </StackPanel>
 
                 <ItemsControl ItemsSource="{Binding Games}">
                     <ItemsControl.ItemTemplate>
