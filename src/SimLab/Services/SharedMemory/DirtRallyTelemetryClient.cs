@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
@@ -11,7 +12,8 @@ namespace SimLab.Services.SharedMemory;
 public class DirtRallyTelemetryClient : ITelemetryClient
 {
     private const int DefaultPort = 20777;
-    private const int PacketSize = 256;
+    private static readonly int PacketSize = Marshal.SizeOf<DirtRallyUdpData>();
+    private static readonly int MinimumPacketSize = 256;
     private static readonly IPAddress BroadcastAddress = IPAddress.Parse("127.0.0.1");
 
     private UdpClient? _udpClient;
@@ -71,58 +73,47 @@ public class DirtRallyTelemetryClient : ITelemetryClient
 
         try
         {
-            if (_udpClient.Available < PacketSize)
+            if (_udpClient.Available < MinimumPacketSize)
                 return null;
 
             var remoteEp = new IPEndPoint(BroadcastAddress, Port);
             var data = _udpClient.Receive(ref remoteEp);
 
-            if (data.Length < PacketSize)
+            if (data.Length < MinimumPacketSize)
                 return null;
 
             // Drain stale packets to get the latest
-            while (_udpClient.Available >= PacketSize)
+            while (_udpClient.Available >= MinimumPacketSize)
             {
                 data = _udpClient.Receive(ref remoteEp);
-                if (data.Length < PacketSize)
+                if (data.Length < MinimumPacketSize)
                     return null;
             }
 
             if (IsResetPacket(data))
                 return null;
 
-            var floats = new float[64];
-            for (var i = 0; i < 64; i++)
-            {
-                floats[i] = BitConverter.ToSingle(data, i * 4);
-            }
-
-            var speedKmh = floats[7] * 3.6f;
-            var gearRaw = (int)Math.Round(floats[33]);
-            var engineRpm = floats[37] * 10f;
-            var maxRpm = floats[63] * 10f;
-            var lapTimeSeconds = floats[1];
-            var lastLapTimeSeconds = floats[61];
-            var currentLap = (int)Math.Round(floats[36]);
-            var distance = floats[2];
+            var buffer = data.Length >= PacketSize ? data : PadToStructSize(data);
+            var packet = MemoryMarshal.Read<DirtRallyUdpData>(buffer.AsSpan());
 
             return new TelemetryRecord
             {
                 Timestamp = DateTime.UtcNow,
-                SpeedKmh = speedKmh,
-                Gas = floats[29],
-                Brake = floats[31],
-                Clutch = floats[32],
-                SteerAngle = floats[30],
-                CurrentGear = MapGear(gearRaw),
-                EngineRpm = engineRpm,
-                MaxRpm = maxRpm,
-                LapTime = TimeSpan.FromSeconds(lapTimeSeconds),
-                LastLapTime = TimeSpan.FromSeconds(lastLapTimeSeconds),
-                CurrentLap = currentLap,
-                Distance = distance,
-                TireTemperatures = new TireValues(floats[57], floats[58], floats[55], floats[56]),
+                SpeedKmh = packet.Speed * 3.6f,
+                Gas = packet.Throttle,
+                Brake = packet.Brake,
+                Clutch = packet.Clutch,
+                SteerAngle = packet.Steering,
+                CurrentGear = MapGear((int)packet.Gear),
+                EngineRpm = packet.EngineRPM * 10f,
+                MaxRpm = packet.MaxRPM * 10f,
+                LapTime = TimeSpan.FromSeconds(packet.LapTime),
+                LastLapTime = TimeSpan.FromSeconds(packet.LastLapTime),
+                CurrentLap = (int)packet.Lap,
+                Distance = packet.Distance,
+                Position = (int)packet.RacePos,
                 SessionType = SessionType.Race,
+                TirePressures = new TireValues(packet.TirePressureFL, packet.TirePressureFR, packet.TirePressureRL, packet.TirePressureRR)
             };
         }
         catch (Exception ex)
@@ -130,6 +121,13 @@ public class DirtRallyTelemetryClient : ITelemetryClient
             Log.Error(ex, "DirtRallyTelemetryClient: Error reading telemetry");
             return null;
         }
+    }
+
+    private static byte[] PadToStructSize(byte[] data)
+    {
+        var padded = new byte[PacketSize];
+        Array.Copy(data, padded, data.Length);
+        return padded;
     }
 
     private static Gear MapGear(int gear)

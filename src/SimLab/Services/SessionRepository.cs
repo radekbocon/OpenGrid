@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
 using ProtoBuf;
+using Serilog;
 using SimLab.Models;
 
 namespace SimLab.Services;
@@ -45,9 +46,16 @@ public class SessionRepository
 
         foreach (var file in files)
         {
-            using var stream = File.OpenRead(file);
-            var session = Serializer.Deserialize<Session>(stream);
-            sessions.Add(session);
+            try
+            {
+                using var stream = File.OpenRead(file);
+                var session = Serializer.Deserialize<Session>(stream);
+                sessions.Add(session);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to load session from {File}", file);
+            }
         }
 
         Sessions = new ObservableCollection<Session>(sessions);
