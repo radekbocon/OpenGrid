@@ -8,36 +8,6 @@ using SimLab.Models;
 
 namespace SimLab.Services.Telemetry;
 
-public class TelemetryEventArgs : EventArgs
-{
-    public TelemetryEventArgs(SteamGame game, TelemetryRecord telemetry)
-    {
-        Game = game;
-        Telemetry = telemetry;
-    }
-
-    public SteamGame Game { get; }
-    public TelemetryRecord Telemetry { get; }
-}
-
-public interface ITelemetryService : IDisposable
-{
-    TelemetryConnectionStatus ConnectionStatus { get; }
-    SteamGame? CurrentGame { get; }
-    Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken);
-    void StartReading();
-    void StopReading();
-    event EventHandler<TelemetryEventArgs>? TelemetryReceived;
-    event EventHandler<TelemetryConnectionStatus>? TelemetryStatusChanged;
-}
-
-public enum TelemetryConnectionStatus
-{
-    Disconnected,
-    Connecting,
-    Connected,
-}
-
 /// <summary>
 /// Service for reading telemetry data from shared files written by the bridge
 /// Polls the shared memory files continuously for new data
@@ -172,4 +142,11 @@ public class TelemetryService : ITelemetryService
         ConnectionStatus = status;
         TelemetryStatusChanged?.Invoke(this, status);
     }
+}
+
+public enum TelemetryConnectionStatus
+{
+    Disconnected,
+    Connecting,
+    Connected,
 }
