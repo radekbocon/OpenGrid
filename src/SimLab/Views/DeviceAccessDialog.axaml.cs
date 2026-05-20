@@ -6,17 +6,17 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using DialogHostAvalonia;
 
 namespace SimLab.Views;
 
-public partial class DeviceAccessDialog : Window
+public partial class DeviceAccessDialog : UserControl
 {
     private static readonly HttpClient _httpClient = new();
 
     public DeviceAccessDialog(string dashboardName, string url)
     {
         InitializeComponent();
-        Title = dashboardName;
         DashboardNameText.Text = dashboardName;
         UrlText.Text = url;
 
@@ -40,8 +40,8 @@ public partial class DeviceAccessDialog : Window
         }
     }
 
-    private void CloseClick(object? sender, RoutedEventArgs e)
+    private void Close(object? sender, RoutedEventArgs e)
     {
-        Close();
+        DialogHost.Close(null);
     }
 }

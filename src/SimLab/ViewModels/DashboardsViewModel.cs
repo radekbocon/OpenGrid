@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DialogHostAvalonia;
 using SimLab.Models;
 using SimLab.Services;
 using SimLab.Views;
@@ -93,9 +94,7 @@ public partial class DashboardsViewModel : ViewModelBase
         _dashboardService.Start(dashboard);
         var url = _dashboardService.GetUrl(useNetwork: true);
         var dialog = new DeviceAccessDialog(dashboard.Name, url);
-        dialog.Width = 450;
-        dialog.Height = 500;
-        dialog.ShowDialog<string>(App.MainWindow!);
+        DialogHost.Show(dialog);
     }
 
     [RelayCommand]

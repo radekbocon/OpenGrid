@@ -1,15 +1,11 @@
-<Window
+<UserControl
     x:Class="SimLab.Views.DeviceAccessDialog"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="Open on Device"
     d:DesignHeight="500"
     d:DesignWidth="400"
-    CanMaximize="False"
-    CanMinimize="False"
-    WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <Grid
         Margin="24"
@@ -27,7 +23,6 @@
             Width="280"
             Height="280"
             HorizontalAlignment="Center"
-            Background="{DynamicResource MaterialCardBackgroundBrush}"
             CornerRadius="8">
             <Image
                 x:Name="QrCodeImage"
@@ -38,7 +33,6 @@
         <Border
             Grid.Row="2"
             Padding="12"
-            Background="{DynamicResource MaterialCardBackgroundBrush}"
             CornerRadius="8">
             <StackPanel Orientation="Vertical" Spacing="8">
                 <TextBlock
@@ -55,9 +49,9 @@
 
         <Button
             Grid.Row="3"
-            HorizontalAlignment="Center"
+            HorizontalAlignment="Right"
             Classes="Flat"
-            Click="CloseClick"
+            Click="Close"
             Content="Close" />
     </Grid>
-</Window>
+</UserControl>

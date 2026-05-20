@@ -1,5 +1,5 @@
 {
-  "name": "Ferrari 296 GT3",
-  "description": "Speed, RPM, gear, inputs and tire temperatures",
+  "name": "GT3",
+  "description": "Speed, RPM, gear, and tire temperatures and pressures",
   "version": "1.0"
 }

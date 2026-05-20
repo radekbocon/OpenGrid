@@ -14,7 +14,10 @@
     Icon="/Assets/simlab_icon.ico"
     mc:Ignorable="d">
 
-    <dialogHostAvalonia:DialogHost BlurBackground="True" OverlayBackground="Black">
+    <dialogHostAvalonia:DialogHost
+        Background="{DynamicResource MaterialCardBackgroundBrush}"
+        BlurBackground="True"
+        OverlayBackground="#90000000">
         <dialogHostAvalonia:DialogHost.DialogContent>
             <ContentPresenter />
         </dialogHostAvalonia:DialogHost.DialogContent>
