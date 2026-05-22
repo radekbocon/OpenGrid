@@ -2,6 +2,7 @@
     x:Class="SimLab.Views.SettingsView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:SimLab.ViewModels"
@@ -15,10 +16,7 @@
             Classes="Subtitle1"
             FontWeight="SemiBold"
             Text="Appearance" />
-        <Border
-            Padding="16,8"
-            Background="{DynamicResource MaterialCardBackgroundBrush}"
-            CornerRadius="4">
+        <controls:Card Padding="16,8">
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock
                     Grid.Column="0"
@@ -29,22 +27,19 @@
                     Grid.Column="1"
                     Width="160"
                     HorizontalAlignment="Right"
+                    DisplayMemberBinding="{Binding Name}"
                     ItemsSource="{Binding Themes}"
                     SelectedItem="{Binding SelectedTheme}"
-                    DisplayMemberBinding="{Binding Name}"
                     Theme="{StaticResource MaterialFilledComboBox}" />
             </Grid>
-        </Border>
+        </controls:Card>
 
         <TextBlock
             Margin="0,16,0,0"
             Classes="Subtitle1"
             FontWeight="SemiBold"
             Text="General" />
-        <Border
-            Padding="16,16"
-            Background="{DynamicResource MaterialCardBackgroundBrush}"
-            CornerRadius="4">
+        <controls:Card Padding="16,16">
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock
                     Grid.Column="0"
@@ -53,7 +48,7 @@
                     Text="Minimize to tray" />
                 <ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTray}" />
             </Grid>
-        </Border>
+        </controls:Card>
 
     </StackPanel>
 

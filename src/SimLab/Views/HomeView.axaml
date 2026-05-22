@@ -38,13 +38,14 @@
                     <Button
                         Margin="0,0,0,8"
                         HorizontalAlignment="Right"
+                        Classes="Outline"
                         Command="{Binding ShowAllSupportedGamesCommand}"
                         Content="Show All Supported Games" />
                 </StackPanel>
 
                 <ItemsControl ItemsSource="{Binding Games}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:GameItemViewModel">
+                        <DataTemplate x:DataType="vm:GameItemViewModel">
                             <Border
                                 Padding="8"
                                 Background="{DynamicResource MaterialCardBackgroundBrush}"

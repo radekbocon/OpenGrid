@@ -22,8 +22,8 @@ public record SteamGame(
         true, 
         typeof(AcTelemetryClient), 
         "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/244210/header.jpg", 
-        "Assetto Corsa",
-        "ac");
+        "assettocorsa.ex",
+        "");
     
     public static SteamGame Acc => new(
         "Assetto Corsa Competizione", 
@@ -59,7 +59,7 @@ public record SteamGame(
         typeof(DirtRallyTelemetryClient), 
         "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/310560/header.jpg",
         "DiRT Rally",
-        "DirtRally");
+        "drt.exe");
 
     public static SteamGame DirtRally2 => new(
         "DiRT Rally 2.0",

@@ -93,48 +93,11 @@ public sealed class SteamWatcher : IDisposable
         var libraries = new List<string>();
         var lines = content.Split('\n');
 
-        var depth = 0;
-        var insideLibraryBlock = false;
-        var insideLibraryFolders = false;
-
         foreach (var rawLine in lines)
         {
             var line = rawLine.Trim();
 
-            if (line.Length == 0 || line.StartsWith("//") || line.StartsWith("/*"))
-                continue;
-
-            if (line == "{")
-            {
-                depth++;
-                continue;
-            }
-
-            if (line == "}")
-            {
-                depth--;
-                if (insideLibraryBlock && depth == 1)
-                    insideLibraryBlock = false;
-                continue;
-            }
-
-            if (depth == 0 && line.StartsWith("\"libraryfolders\""))
-            {
-                insideLibraryFolders = true;
-                continue;
-            }
-
-            if (!insideLibraryFolders)
-                continue;
-
-            // Inside libraryfolders, look for quoted index blocks like "0" { ... }
-            if (depth == 1 && line.EndsWith("{") && line.Contains('"'))
-            {
-                insideLibraryBlock = true;
-                continue;
-            }
-
-            if (insideLibraryBlock && depth == 2 && line.StartsWith("\"path\""))
+            if (line.StartsWith("\"path\""))
             {
                 var match = Regex.Match(line, "\"path\"\\s+\"(.+)\"");
                 if (match.Success)

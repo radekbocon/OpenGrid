@@ -1,10 +1,5 @@
-using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Avalonia.Threading;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using SimLab.Models;
@@ -17,18 +12,11 @@ public partial class DashboardsViewModel : ViewModelBase
 {
     private readonly IDashboardRepository _repository;
     private readonly IDashboardService _dashboardService;
-    private CancellationTokenSource? _pollCts;
 
     public ObservableCollection<DashboardInfo> Dashboards { get; private set; } = [];
-
-    [ObservableProperty]
-    public partial string? StatusText { get; set; }
-
-    [ObservableProperty]
-    public partial bool IsServerRunning { get; set; }
-
-    [ObservableProperty]
-    public partial bool HasDevices { get; set; }
+    
+    public string StatusText => _dashboardService.IsRunning ? $"Server running on port {_dashboardService.Port}" : "Server not running";
+    public bool IsServerRunning => _dashboardService.IsRunning;
 
     public DashboardsViewModel(IDashboardRepository repository, IDashboardService dashboardService)
     {
@@ -36,7 +24,7 @@ public partial class DashboardsViewModel : ViewModelBase
         _dashboardService = dashboardService;
         IsMenuItem = true;
         ReloadDashboards();
-        StartPolling();
+        _dashboardService.IsRunningChanged += OnIsRunningChanged;
     }
 
     private void ReloadDashboards()
@@ -45,40 +33,10 @@ public partial class DashboardsViewModel : ViewModelBase
         Dashboards = new ObservableCollection<DashboardInfo>(dashboards);
     }
 
-    private void StartPolling()
+    private void OnIsRunningChanged(object? sender, bool isRunning)
     {
-        _pollCts?.Cancel();
-        _pollCts = new CancellationTokenSource();
-        var ct = _pollCts.Token;
-
-        Task.Run(async () =>
-        {
-            while (!ct.IsCancellationRequested)
-            {
-                try
-                {
-                    await Task.Delay(2000, ct);
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-
-                Dispatcher.UIThread.Post(() =>
-                {
-                    IsServerRunning = _dashboardService.IsRunning;
-                    if (_dashboardService.IsRunning)
-                    {
-                        StatusText = $"Server running on port {_dashboardService.Port}";
-                    }
-                    else
-                    {
-                        StatusText = "Server not running";
-                        HasDevices = false;
-                    }
-                });
-            }
-        }, ct);
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(IsServerRunning));
     }
 
     [RelayCommand]

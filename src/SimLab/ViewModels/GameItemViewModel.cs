@@ -2,11 +2,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using SimLab.Models;
 using SimLab.Services;
 using SimLab.Services.Telemetry;
-using SimLab.ViewModels;
 
-namespace SimLab.Models;
+namespace SimLab.ViewModels;
 
 public partial class GameItemViewModel : ViewModelBase
 {
@@ -99,9 +99,16 @@ public partial class GameItemViewModel : ViewModelBase
             return;
         }
         
+        var launchCts = new CancellationTokenSource();
+        launchCts.CancelAfter(10000);
+        
         _gameManager.LaunchGame(_game);
         while (!_gameManager.IsRunning(_game))
         {
+            if (launchCts.IsCancellationRequested)
+            {
+                return;
+            }
             await Task.Delay(1000);
         }
 

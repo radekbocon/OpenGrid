@@ -16,6 +16,7 @@ public class SharedMemoryBridgeLauncher
     {
         try
         {
+            Log.Information("Launching bridge for game: {0}", steamGame.AppId);
             var bridgeExePath = Path.Combine(AppContext.BaseDirectory, "SimLabBridge.exe");
 
             if (!File.Exists(bridgeExePath))
@@ -62,6 +63,7 @@ public class SharedMemoryBridgeLauncher
         {
             try
             {
+                Log.Information("Killing bridge process");
                 _bridgeProcess.Kill();
                 _bridgeProcess.WaitForExit(2000);
             }

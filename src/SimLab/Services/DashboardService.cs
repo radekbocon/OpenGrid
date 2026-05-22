@@ -33,6 +33,7 @@ public class DashboardService : IDashboardService
     public bool IsRunning => _listener is not null;
     public int Port { get; private set; }
     public DashboardInfo? ActiveDashboard => _activeDashboard;
+    public event EventHandler<bool>? IsRunningChanged;
 
     private string LocalUrl => $"http://127.0.0.1:{Port}";
     private string NetworkUrl => $"http://{GetLocalIpAddress()}:{Port}";
@@ -90,6 +91,7 @@ public class DashboardService : IDashboardService
         _cts?.Cancel();
         _listener?.Stop();
         _listener = null;
+        IsRunningChanged?.Invoke(this, false);
 
         foreach (var kvp in _connectedSockets)
         {
@@ -128,6 +130,7 @@ public class DashboardService : IDashboardService
         _cts = new CancellationTokenSource();
         _ = AcceptConnectionsAsync(_cts.Token);
         _telemetryService.TelemetryReceived += OnTelemetryReceived;
+        IsRunningChanged?.Invoke(this, true);
         Log.Information("Dashboard HTTP server started on port {Port}", Port);
     }
 
