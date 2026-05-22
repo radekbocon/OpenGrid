@@ -52,6 +52,7 @@ public class TelemetryService : ITelemetryService
 
     public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
     {
+        _disposed = false;
         CurrentGame = game;
         ConnectionStatus = TelemetryConnectionStatus.Connecting;
 
@@ -150,5 +151,5 @@ public enum TelemetryConnectionStatus
 {
     Disconnected,
     Connecting,
-    Connected,
+    Connected
 }

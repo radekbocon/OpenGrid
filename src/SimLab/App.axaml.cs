@@ -9,16 +9,15 @@ using SimLab.ViewModels;
 using SimLab.Views;
 using Microsoft.Extensions.DependencyInjection;
 using SimLab.Services;
+using SimLab.Services.Telemetry;
 
 namespace SimLab;
 
-public partial class App : Application
+public class App : Application
 {
     private TrayIcon? _trayIcon;
     private ISettingsService? _settingsService;
     private IThemeService? _themeService;
-    
-    public static MainWindow? MainWindow { get; private set; }
 
     public override void Initialize()
     {
@@ -39,12 +38,12 @@ public partial class App : Application
             navigationService.NavigateTo<HomeViewModel>();
             var mainWindow = new MainWindow
             {
-                DataContext = mainVewModel,
+                DataContext = mainVewModel
             };
             desktop.MainWindow = mainWindow;
-            MainWindow = mainWindow;
 
             mainWindow.Closing += MainWindowOnClosing;
+            desktop.Exit += DesktopOnExit;
             
 
             using var iconStream = AssetLoader.Open(new Uri("avares://SimLab/Assets/simlab_icon.ico"));
@@ -82,6 +81,19 @@ public partial class App : Application
         {
             e.Cancel = true;
             mainWindow.Hide();
+        }
+    }
+
+    private void DesktopOnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    {
+        try
+        {
+            var telemetryService = Program.ServiceProvider.GetService<ITelemetryService>();
+            telemetryService?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Error during application exit cleanup");
         }
     }
 

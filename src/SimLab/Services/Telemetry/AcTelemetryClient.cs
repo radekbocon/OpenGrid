@@ -14,13 +14,9 @@ namespace SimLab.Services.Telemetry;
 /// </summary>
 public class AcTelemetryClient : ITelemetryClient
 {
-    private const string ShmPhysicsPath = "/dev/shm/acpmf_physics";
-    private const string ShmGraphicsPath = "/dev/shm/acpmf_graphics";
-    private const string ShmStaticPath = "/dev/shm/acpmf_static";
-
-    private bool IsConnected => File.Exists(ShmPhysicsPath) &&
-                                File.Exists(ShmGraphicsPath) &&
-                                File.Exists(ShmStaticPath);
+    private bool IsConnected => File.Exists(AcConstants.ShmPhysicsPath) &&
+                                File.Exists(AcConstants.ShmGraphicsPath) &&
+                                File.Exists(AcConstants.ShmStaticPath);
 
     public async Task<bool> ConnectAsync(CancellationToken cancellationToken)
     {
@@ -46,14 +42,24 @@ public class AcTelemetryClient : ITelemetryClient
 
     public void Stop()
     {
-        if (!IsConnected)
-        {
-            return;
-        }
+        TryDeleteFile(AcConstants.ShmPhysicsPath);
+        TryDeleteFile(AcConstants.ShmGraphicsPath);
+        TryDeleteFile(AcConstants.ShmStaticPath);
+    }
 
-        File.Delete(ShmPhysicsPath);
-        File.Delete(ShmGraphicsPath);
-        File.Delete(ShmStaticPath);
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Could not delete file: {Path}", path);
+        }
     }
 
     public TelemetryRecord? ReadTelemetry()
@@ -65,9 +71,9 @@ public class AcTelemetryClient : ITelemetryClient
                 return null;
             }
 
-            var physicsData = ReadStructFromFile<SPageFilePhysics>(ShmPhysicsPath, 2048);
-            var graphicsData = ReadStructFromFile<SPageFileGraphic>(ShmGraphicsPath, 2048);
-            var staticData = ReadStructFromFile<SPageFileStatic>(ShmStaticPath, 2048);
+            var physicsData = ReadStructFromFile<SPageFilePhysics>(AcConstants.ShmPhysicsPath, 2048);
+            var graphicsData = ReadStructFromFile<SPageFileGraphic>(AcConstants.ShmGraphicsPath, 2048);
+            var staticData = ReadStructFromFile<SPageFileStatic>(AcConstants.ShmStaticPath, 2048);
 
             if (physicsData == null || graphicsData == null || staticData == null)
             {
@@ -80,7 +86,7 @@ public class AcTelemetryClient : ITelemetryClient
                 Timestamp = DateTime.UtcNow,
                 Track = staticData.Value.Track,
                 Car = staticData.Value.CarModel,
-                SessionType = (SessionType)graphicsData.Value.Session,
+                SessionType = graphicsData.Value.Session,
                 CurrentLap = graphicsData.Value.CompletedLaps,
                 SpeedKmh = physicsData.Value.SpeedKmh,
                 SteerAngle = physicsData.Value.SteerAngle,
@@ -105,7 +111,7 @@ public class AcTelemetryClient : ITelemetryClient
                 EngineMap = graphicsData.Value.EngineMap + 1,
                 BrakeBias = physicsData.Value.BrakeBias,
                 IsDeltaPositive = graphicsData.Value.IsDeltaPositive == 1,
-                IsValidLap = graphicsData.Value.IsValidLap == 1,
+                IsValidLap = graphicsData.Value.IsValidLap == 1
             };
             
             return snapshot;

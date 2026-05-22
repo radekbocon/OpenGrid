@@ -11,7 +11,7 @@ namespace SimLab.Services.Telemetry;
 public class SharedMemoryBridgeLauncher
 {
     private Process? _bridgeProcess;
-    
+
     public async Task LaunchBridgeAsync(SteamGame steamGame, CancellationToken cancellationToken)
     {
         try
@@ -38,13 +38,17 @@ public class SharedMemoryBridgeLauncher
             {
                 return;
             }
-            
+
             _bridgeProcess = Process.Start(startInfo);
             if (_bridgeProcess != null)
             {
                 // Wait a bit for the bridge to establish connection
-                await Task.Delay(2000);
+                await Task.Delay(2000, cancellationToken);
             }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when cancellation is requested
         }
         catch (Exception exception)
         {
@@ -56,9 +60,49 @@ public class SharedMemoryBridgeLauncher
     {
         if (_bridgeProcess is { HasExited: false })
         {
-            _bridgeProcess.Kill();
+            try
+            {
+                _bridgeProcess.Kill();
+                _bridgeProcess.WaitForExit(2000);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error killing bridge process");
+            }
             _bridgeProcess.Dispose();
             _bridgeProcess = null;
+        }
+        CleanupSharedMemoryFiles();
+    }
+
+
+    private static void CleanupSharedMemoryFiles()
+    {
+        try
+        {
+            TryDeleteFile(AcConstants.ShmPhysicsPath);
+            TryDeleteFile(AcConstants.ShmGraphicsPath);
+            TryDeleteFile(AcConstants.ShmStaticPath);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error cleaning up shared memory files");
+        }
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                Log.Information("Deleted shared memory file: {Path}", path);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Could not delete file: {Path}", path);
         }
     }
 }
