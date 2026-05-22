@@ -28,14 +28,22 @@ public class TelemetryService : ITelemetryService
     public event EventHandler<TelemetryEventArgs>? TelemetryReceived;
     public event EventHandler<TelemetryConnectionStatus>? TelemetryStatusChanged;
 
-    public TelemetryConnectionStatus ConnectionStatus { get; private set; }
+    public TelemetryConnectionStatus ConnectionStatus
+    {
+        get;
+        private set
+        {
+            field = value;
+            TelemetryStatusChanged?.Invoke(this, value);
+        }
+    }
+
     public SteamGame? CurrentGame { get; private set; }
 
     public TelemetryService(IEnumerable<ITelemetryClient> telemetryClients,
         SharedMemoryBridgeLauncher sharedMemoryBridgeLauncher, SteamWatcher steamWatcher)
     {
-        var clients = telemetryClients.ToList();
-        _telemetryClients = clients.ToList();
+        _telemetryClients = telemetryClients.ToList();
         _sharedMemoryBridgeLauncher = sharedMemoryBridgeLauncher;
         _steamWatcher = steamWatcher;
 
@@ -45,7 +53,7 @@ public class TelemetryService : ITelemetryService
     public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
     {
         CurrentGame = game;
-        SetConnectionStatus(TelemetryConnectionStatus.Connecting);
+        ConnectionStatus = TelemetryConnectionStatus.Connecting;
 
         _telemetryClient = _telemetryClients.First(x => x.GetType() == game.TelemetryClientType);
 
@@ -55,7 +63,7 @@ public class TelemetryService : ITelemetryService
         }
 
         var result = await _telemetryClient.ConnectAsync(cancellationToken);
-        SetConnectionStatus(result ? TelemetryConnectionStatus.Connected : TelemetryConnectionStatus.Disconnected);
+        ConnectionStatus = result ? TelemetryConnectionStatus.Connected : TelemetryConnectionStatus.Disconnected;
 
         return result;
     }
@@ -76,13 +84,13 @@ public class TelemetryService : ITelemetryService
         catch (Exception ex)
         {
             Log.Error(ex, "Error starting reading telemetry: {0}", ex.Message);
-            TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
+            ConnectionStatus = TelemetryConnectionStatus.Disconnected;
         }
     }
 
     public void StopReading()
     {
-        TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
+        ConnectionStatus = TelemetryConnectionStatus.Disconnected;
         _sharedMemoryBridgeLauncher.StopBridge();
         _telemetryClient?.Stop();
         _telemetryClient = null;
@@ -126,21 +134,15 @@ public class TelemetryService : ITelemetryService
             }
             catch (OperationCanceledException)
             {
-                TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
+                ConnectionStatus = TelemetryConnectionStatus.Disconnected;
                 break;
             }
             catch (Exception)
             {
-                TelemetryStatusChanged?.Invoke(this, TelemetryConnectionStatus.Disconnected);
+                ConnectionStatus = TelemetryConnectionStatus.Disconnected;
                 await Task.Delay(1000, cancellationToken); // Wait longer on error
             }
         }
-    }
-
-    private void SetConnectionStatus(TelemetryConnectionStatus status)
-    {
-        ConnectionStatus = status;
-        TelemetryStatusChanged?.Invoke(this, status);
     }
 }
 
