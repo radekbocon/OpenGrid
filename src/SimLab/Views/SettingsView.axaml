@@ -11,7 +11,10 @@
     x:DataType="vm:SettingsViewModel"
     mc:Ignorable="d">
 
-    <StackPanel Margin="24" Spacing="8">
+    <StackPanel
+        MaxWidth="1000"
+        Margin="24"
+        Spacing="8">
         <TextBlock
             Classes="Subtitle1"
             FontWeight="SemiBold"

@@ -3,12 +3,12 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:SimLab.Models"
     xmlns:views="clr-namespace:SimLab.Views"
     xmlns:vm="using:SimLab.ViewModels"
-    x:Name="ThisRoot"
     Padding="16"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -52,51 +52,54 @@
             </Interaction.Behaviors>
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:Session">
-                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*" RowDefinitions="Auto, Auto">
-                        <TextBlock
-                            Grid.Row="0"
-                            Grid.Column="0"
-                            Grid.ColumnSpan="5"
-                            Margin="4"
-                            FontSize="14"
-                            Text="{Binding Info.StartTime}" />
-                        <TextBlock
-                            Grid.Row="1"
-                            Grid.Column="0"
-                            Margin="4"
-                            FontSize="16"
-                            Text="{Binding Info.Game.Name}" />
-                        <TextBlock
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Margin="4"
-                            FontSize="16"
-                            Text="{Binding Info.Car}" />
-                        <TextBlock
-                            Grid.Row="1"
-                            Grid.Column="2"
-                            Margin="4"
-                            FontSize="16"
-                            Text="{Binding Info.Type}" />
-                        <TextBlock
-                            Grid.Row="1"
-                            Grid.Column="3"
-                            Margin="4"
-                            FontSize="16"
-                            Text="{Binding Laps.Count, StringFormat='Laps: {0}'}" />
-                        <Button
-                            Grid.Row="1"
-                            Grid.Column="4"
-                            Margin="4"
-                            Padding="8"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Classes="flat"
-                            Command="{Binding $parent[views:SessionsView].((vm:SessionsViewModel)DataContext)?.DeleteSessionCommand}"
-                            CommandParameter="{Binding}"
-                            Content="{avalonia:MaterialIconExt Kind=Trash,
-                                                               IconSize=24}" />
-                    </Grid>
+                    <controls:Card MaxWidth="1000">
+                        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*" RowDefinitions="Auto, Auto">
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="5"
+                                Margin="4"
+                                FontSize="14"
+                                Text="{Binding Info.StartTime}" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Margin="4"
+                                FontSize="16"
+                                Text="{Binding Info.Game.Name}" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Margin="4"
+                                FontSize="16"
+                                Text="{Binding Info.Car}" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Margin="4"
+                                FontSize="16"
+                                Text="{Binding Info.Type}" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="3"
+                                Margin="4"
+                                FontSize="16"
+                                Text="{Binding Laps.Count, StringFormat='Laps: {0}'}" />
+                            <Button
+                                Grid.Row="1"
+                                Grid.Column="4"
+                                Margin="4"
+                                Padding="8"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Classes="flat"
+                                Command="{Binding $parent[views:SessionsView].((vm:SessionsViewModel)DataContext)?.DeleteSessionCommand}"
+                                CommandParameter="{Binding}"
+                                Content="{avalonia:MaterialIconExt Kind=Trash,
+                                                                   IconSize=24}" />
+                        </Grid>
+                    </controls:Card>
+
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

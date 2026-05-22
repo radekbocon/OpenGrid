@@ -12,9 +12,13 @@ namespace SimLab.Services;
 
 public class SessionRepository
 {
+    private const int RecordHz = 15;
+
     private readonly string _telemetryFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SimLab", "Telemetry");
 
     private readonly ITelemetryService _telemetryService;
+    private readonly TimeSpan _recordInterval = TimeSpan.FromMilliseconds(1000.0 / RecordHz);
+    private DateTime _lastRecordTimestamp;
     
     public Session? CurrentSession { get; private set; }
 
@@ -95,6 +99,8 @@ public class SessionRepository
         if (CurrentSession is null)
         {
             CurrentSession = new Session(e.Game, e.Telemetry);
+            _lastRecordTimestamp = e.Telemetry.Timestamp;
+            return;
         }
 
         if (IsNewSession(e.Telemetry))
@@ -102,10 +108,16 @@ public class SessionRepository
             WriteSession(CurrentSession);
             Sessions.Add(CurrentSession);
             CurrentSession = new Session(e.Game, e.Telemetry);
+            _lastRecordTimestamp = e.Telemetry.Timestamp;
             return;
         }
-        
-        CurrentSession.AddRecord(e.Telemetry);
+
+        var now = e.Telemetry.Timestamp;
+        if (now - _lastRecordTimestamp >= _recordInterval)
+        {
+            CurrentSession.AddRecord(e.Telemetry);
+            _lastRecordTimestamp = now;
+        }
     }
     
     private void WriteSession(Session session)

@@ -14,7 +14,7 @@ namespace SimLab.Services.Telemetry;
 /// </summary>
 public class TelemetryService : ITelemetryService
 {
-    private const int PollIntervalMs = 1000 / 30;
+    private const int PollIntervalMs = 1000 / 60;
 
     private readonly List<ITelemetryClient> _telemetryClients;
     private readonly SharedMemoryBridgeLauncher _sharedMemoryBridgeLauncher;

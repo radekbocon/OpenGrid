@@ -16,6 +16,7 @@
         <entry key="SimLab/Views/MainWindow.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/SessionDetailsView.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Views/SessionsView.axaml" value="SimLab/SimLab.csproj" />
+        <entry key="SimLab/Views/SettingsView.axaml" value="SimLab/SimLab.csproj" />
       </map>
     </option>
   </component>

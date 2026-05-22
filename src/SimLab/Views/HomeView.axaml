@@ -43,7 +43,7 @@
                         Content="Show All Supported Games" />
                 </StackPanel>
 
-                <ItemsControl ItemsSource="{Binding Games}">
+                <ItemsControl MaxWidth="1000" ItemsSource="{Binding Games}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:GameItemViewModel">
                             <Border

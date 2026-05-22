@@ -47,10 +47,10 @@ public class DebugTelemetryClient : ITelemetryClient
         var gas = 0.4f + (float)((Math.Sin(_tick * 0.2) + 1) * 0.25); // 0.4 - 0.95
         var brake = Math.Max(0f, (float)Math.Sin(_tick * 0.25) * 0.2f);
         var clutch = 0f;
-        var steer = (float)Math.Sin(_tick * 0.15) * 20f; // -20..20 deg
+        var steer = (float)Math.Sin(_tick * 0.15); // -20..20 deg
         var fuel = Math.Max(0f, 100f - _tick * 0.25f);
 
-        var currentLap = (_tick / 60) + 1;
+        var currentLap = (_tick / 300) + 1;
         var currentGear = (Gear)(_tick % 8);
         var engineRpm = 5000f + (float)(Math.Abs(Math.Sin(_tick * 0.2)) * 7000f);
         float[] temps = [
@@ -85,7 +85,8 @@ public class DebugTelemetryClient : ITelemetryClient
             LapTime = TimeSpan.FromSeconds(75 + (_tick % 30)),
             Distance = (float)(_tick * 1.5),
             MaxRpm = 12000f,
-            TirePressures = TireValues.FromArray(pressures)
+            TirePressures = TireValues.FromArray(pressures),
+            IsValidLap = true
         };
 
         return snapshot;
