@@ -100,7 +100,7 @@ public partial class GameItemViewModel : ViewModelBase
         }
         
         var launchCts = new CancellationTokenSource();
-        launchCts.CancelAfter(10000);
+        launchCts.CancelAfter(30000);
         
         _gameManager.LaunchGame(_game);
         while (!_gameManager.IsRunning(_game))

@@ -73,5 +73,13 @@ public partial class HomeViewModel : ViewModelBase
             vm.SetGame(steamGameProcess);
             Games.Add(vm);
         }
+#if DEBUG
+        var debugVm = new GameItemViewModel(_steamGameManager, _telemetryService);
+        debugVm.SetGame(new SteamGameProcess
+        {
+            SteamGame = SteamGame.Debug
+        });
+        Games.Add(debugVm);
+#endif
     }
 }

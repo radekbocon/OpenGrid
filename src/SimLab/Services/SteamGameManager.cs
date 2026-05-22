@@ -40,6 +40,11 @@ public class SteamGameManager
 
     public bool IsRunning(SteamGameProcess game)
     {
+        if (game.SteamGame == SteamGame.Debug)
+        {
+            return true;
+        }
+        
         return _steamWatcher.RunningGames.Contains(game);
     }
 

@@ -22,8 +22,8 @@ public record SteamGame(
         true, 
         typeof(AcTelemetryClient), 
         "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/244210/header.jpg", 
-        "assettocorsa.ex",
-        "");
+        "assettocorsa",
+        "assettocorsa.ex");
     
     public static SteamGame Acc => new(
         "Assetto Corsa Competizione", 
