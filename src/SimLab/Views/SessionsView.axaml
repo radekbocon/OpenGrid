@@ -44,6 +44,7 @@
         <ListBox
             Name="SessionsList"
             Grid.Row="2"
+            MaxWidth="1000"
             ItemsSource="{Binding Sessions}">
             <Interaction.Behaviors>
                 <EventTriggerBehavior EventName="SelectionChanged">
@@ -52,7 +53,7 @@
             </Interaction.Behaviors>
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:Session">
-                    <controls:Card MaxWidth="1000">
+                    <controls:Card>
                         <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*" RowDefinitions="Auto, Auto">
                             <TextBlock
                                 Grid.Row="0"
