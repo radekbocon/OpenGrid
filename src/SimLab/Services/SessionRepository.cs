@@ -12,7 +12,7 @@ namespace SimLab.Services;
 
 public class SessionRepository
 {
-    private const int RecordHz = 15;
+    private const int RecordHz = 30;
 
     private readonly string _telemetryFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SimLab", "Telemetry");
 
@@ -136,7 +136,7 @@ public class SessionRepository
         Sessions.Remove(session);
     }
 
-    public bool IsNewSession(TelemetryRecord record)
+    private bool IsNewSession(TelemetryRecord record)
     {
         return record.SessionType != CurrentSession?.Info.Type || record.Track != CurrentSession?.Info.Track || record.Car != CurrentSession?.Info.Car;
     }

@@ -15,8 +15,6 @@ public class DebugTelemetryClient : ITelemetryClient
     {
         try
         {
-            // Simulate some startup delay
-            await Task.Delay(100, cancellationToken);
             _connected = true;
             _tick = 0;
             return true;

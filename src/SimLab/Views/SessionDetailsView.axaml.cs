@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -20,7 +21,7 @@ public partial class SessionDetailsView : UserControl
     public SessionDetailsView()
     {
         InitializeComponent();
-        var charts = ChartGrid.Children.OfType<CartesianChart>();
+        List<CartesianChart> charts = [InputsChart, SteeringChart, SpeedChart, GearChart, RpmChart];
         foreach (var chart in charts)
         {
             chart.PointerWheelChanged += Chart_PointerWheelChanged;

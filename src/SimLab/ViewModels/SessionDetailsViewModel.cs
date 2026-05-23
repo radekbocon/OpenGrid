@@ -25,6 +25,8 @@ public partial class SessionDetailsViewModel : ViewModelBase
     [ObservableProperty]
     public partial ObservableCollection<ChartData> Inputs { get; set; } = [];
     [ObservableProperty]
+    public partial ObservableCollection<ChartData> Steering { get; set; } = [];
+    [ObservableProperty]
     public partial ObservableCollection<ChartData> Speed { get; set; } = [];
     [ObservableProperty]
     public partial ObservableCollection<ChartData> Gear { get; set; } = [];
@@ -69,8 +71,8 @@ public partial class SessionDetailsViewModel : ViewModelBase
             value.Records.Select(r => new ObservablePoint(r.Distance, r.Brake)), 
             new SolidColorPaint(SKColors.Red, 2));
         var steeringData = new ChartData("Steering", 
-            value.Records.Select(r => new ObservablePoint(r.Distance, Math.Abs(r.SteerAngle))), 
-            new SolidColorPaint(SKColors.Gray, 2));
+            value.Records.Select(r => new ObservablePoint(r.Distance, r.SteerAngle)), 
+            new SolidColorPaint(SKColors.DodgerBlue, 2));
         var speedData = new ChartData("Speed", 
             value.Records.Select(r => new ObservablePoint(r.Distance, Math.Round(r.SpeedKmh, 1))), 
             new SolidColorPaint(SKColors.DodgerBlue,2));
@@ -86,7 +88,8 @@ public partial class SessionDetailsViewModel : ViewModelBase
         MinX = DataMinX;
         MaxX = DataMaxX;
 
-        Inputs = [gasData, brakeData, steeringData];
+        Inputs = [gasData, brakeData];
+        Steering = [steeringData];
         Speed = [speedData];
         Gear = [gearData];
         Rpm = [rpmData];
@@ -110,7 +113,7 @@ public partial class SessionDetailsViewModel : ViewModelBase
     private void ResampleAllCharts()
     {
         // TODO: set actual width
-        const int widthPixels = 500;
+        const int widthPixels = 1000;
         
         foreach (var chartData in Rpm)
         {

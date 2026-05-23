@@ -2,10 +2,12 @@
     x:Class="SimLab.Views.SessionDetailsView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:SimLab.ViewModels"
+    Padding="16"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vm:SessionDetailsViewModel"
@@ -23,7 +25,10 @@
 
     </UserControl.Resources>
     <ScrollViewer>
-        <Grid x:Name="ChartGrid" RowDefinitions="50, 200, 200, 200, 200">
+        <Grid
+            x:Name="ChartGrid"
+            RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto"
+            RowSpacing="4">
             <StackPanel
                 Grid.Row="0"
                 Margin="8"
@@ -48,83 +53,124 @@
                         </Style>
                     </TextBlock.Styles>
                 </TextBlock>
-                <TextBlock
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Center"
-                    Opacity="0.6"
-                    Classes="Caption"
-                    Text="Ctrl+Scroll to zoom, drag to pan" />
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <avalonia:MaterialIcon IconSize="24" Kind="Info" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Classes="Caption"
+                        Opacity="0.6"
+                        Text="Ctrl+Scroll to zoom, drag to pan the charts"
+                        TextAlignment="Center" />
+
+                </StackPanel>
             </StackPanel>
 
-            <lvc:CartesianChart
-                Grid.Row="1"
-                AnimationsSpeed="0"
-                DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
-                SeriesSource="{Binding Inputs}"
-                SeriesTemplate="{StaticResource DataTemplate}"
-                ZoomMode="None">
-                <lvc:CartesianChart.XAxes>
-                    <lvc:XamlAxis
-                        MaxLimit="{Binding MaxX, Mode=TwoWay}"
-                        MinLimit="{Binding MinX, Mode=TwoWay}"
-                        PropertyChangedCommand="{Binding ChangeZoomCommand}" />
-                </lvc:CartesianChart.XAxes>
-                <lvc:CartesianChart.YAxes>
-                    <lvc:XamlAxis MaxLimit="1" MinLimit="0" />
-                </lvc:CartesianChart.YAxes>
-            </lvc:CartesianChart>
-            <lvc:CartesianChart
-                Grid.Row="2"
-                AnimationsSpeed="0"
-                DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
-                SeriesSource="{Binding Speed}"
-                SeriesTemplate="{StaticResource DataTemplate}"
-                ZoomMode="None">
-                <lvc:CartesianChart.XAxes>
-                    <lvc:XamlAxis
-                        MaxLimit="{Binding MaxX, Mode=TwoWay}"
-                        MinLimit="{Binding MinX, Mode=TwoWay}"
-                        PropertyChangedCommand="{Binding ChangeZoomCommand}" />
-                </lvc:CartesianChart.XAxes>
-            </lvc:CartesianChart>
-            <lvc:CartesianChart
-                Grid.Row="3"
-                AnimationsSpeed="0"
-                DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
-                SeriesSource="{Binding Gear}"
-                SeriesTemplate="{StaticResource DataTemplate}"
-                ZoomMode="None">
-                <lvc:CartesianChart.XAxes>
-                    <lvc:XamlAxis
-                        MaxLimit="{Binding MaxX, Mode=TwoWay}"
-                        MinLimit="{Binding MinX, Mode=TwoWay}"
-                        PropertyChangedCommand="{Binding ChangeZoomCommand}" />
-                </lvc:CartesianChart.XAxes>
-                <lvc:CartesianChart.YAxes>
-                    <lvc:XamlAxis
-                        Labeler="{Binding GearLabeler}"
-                        MaxLimit="7"
-                        MinLimit="0"
-                        MinStep="1" />
-                </lvc:CartesianChart.YAxes>
-            </lvc:CartesianChart>
-            <lvc:CartesianChart
-                Grid.Row="4"
-                AnimationsSpeed="0"
-                DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
-                SeriesSource="{Binding Rpm}"
-                SeriesTemplate="{StaticResource DataTemplate}"
-                ZoomMode="None">
-                <lvc:CartesianChart.XAxes>
-                    <lvc:XamlAxis
-                        MaxLimit="{Binding MaxX, Mode=TwoWay}"
-                        MinLimit="{Binding MinX, Mode=TwoWay}"
-                        PropertyChangedCommand="{Binding ChangeZoomCommand}" />
-                </lvc:CartesianChart.XAxes>
-                <lvc:CartesianChart.YAxes>
-                    <lvc:XamlAxis MinLimit="0" />
-                </lvc:CartesianChart.YAxes>
-            </lvc:CartesianChart>
+            <StackPanel Grid.Row="1" Spacing="4">
+                <TextBlock Classes="Subtitle1" Text="Inputs" />
+                <lvc:CartesianChart
+                    Name="InputsChart"
+                    Height="250"
+                    AnimationsSpeed="0"
+                    DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
+                    SeriesSource="{Binding Inputs}"
+                    SeriesTemplate="{StaticResource DataTemplate}"
+                    ZoomMode="None">
+                    <lvc:CartesianChart.XAxes>
+                        <lvc:XamlAxis
+                            MaxLimit="{Binding MaxX, Mode=TwoWay}"
+                            MinLimit="{Binding MinX, Mode=TwoWay}"
+                            PropertyChangedCommand="{Binding ChangeZoomCommand}" />
+                    </lvc:CartesianChart.XAxes>
+                    <lvc:CartesianChart.YAxes>
+                        <lvc:XamlAxis MaxLimit="1" MinLimit="0" />
+                    </lvc:CartesianChart.YAxes>
+                </lvc:CartesianChart>
+            </StackPanel>
+            <StackPanel Grid.Row="2" Spacing="4">
+                <TextBlock Classes="Subtitle1" Text="Steering" />
+                <lvc:CartesianChart
+                    Name="SteeringChart"
+                    Height="250"
+                    AnimationsSpeed="0"
+                    DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
+                    SeriesSource="{Binding Steering}"
+                    SeriesTemplate="{StaticResource DataTemplate}"
+                    ZoomMode="None">
+                    <lvc:CartesianChart.XAxes>
+                        <lvc:XamlAxis
+                            MaxLimit="{Binding MaxX, Mode=TwoWay}"
+                            MinLimit="{Binding MinX, Mode=TwoWay}"
+                            PropertyChangedCommand="{Binding ChangeZoomCommand}" />
+                    </lvc:CartesianChart.XAxes>
+                    <lvc:CartesianChart.YAxes>
+                        <lvc:XamlAxis MaxLimit="1" MinLimit="-1" />
+                    </lvc:CartesianChart.YAxes>
+                </lvc:CartesianChart>
+            </StackPanel>
+            <StackPanel Grid.Row="3" Spacing="4">
+                <TextBlock Classes="Subtitle1" Text="Speed" />
+                <lvc:CartesianChart
+                    Name="SpeedChart"
+                    Height="250"
+                    AnimationsSpeed="0"
+                    DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
+                    SeriesSource="{Binding Speed}"
+                    SeriesTemplate="{StaticResource DataTemplate}"
+                    ZoomMode="None">
+                    <lvc:CartesianChart.XAxes>
+                        <lvc:XamlAxis
+                            MaxLimit="{Binding MaxX, Mode=TwoWay}"
+                            MinLimit="{Binding MinX, Mode=TwoWay}"
+                            PropertyChangedCommand="{Binding ChangeZoomCommand}" />
+                    </lvc:CartesianChart.XAxes>
+                </lvc:CartesianChart>
+            </StackPanel>
+            <StackPanel Grid.Row="4" Spacing="4">
+                <TextBlock Classes="Subtitle1" Text="Gear" />
+                <lvc:CartesianChart
+                    Name="GearChart"
+                    Height="250"
+                    AnimationsSpeed="0"
+                    DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
+                    SeriesSource="{Binding Gear}"
+                    SeriesTemplate="{StaticResource DataTemplate}"
+                    ZoomMode="None">
+                    <lvc:CartesianChart.XAxes>
+                        <lvc:XamlAxis
+                            MaxLimit="{Binding MaxX, Mode=TwoWay}"
+                            MinLimit="{Binding MinX, Mode=TwoWay}"
+                            PropertyChangedCommand="{Binding ChangeZoomCommand}" />
+                    </lvc:CartesianChart.XAxes>
+                    <lvc:CartesianChart.YAxes>
+                        <lvc:XamlAxis
+                            Labeler="{Binding GearLabeler}"
+                            MaxLimit="7"
+                            MinLimit="0"
+                            MinStep="1" />
+                    </lvc:CartesianChart.YAxes>
+                </lvc:CartesianChart>
+            </StackPanel>
+            <StackPanel Grid.Row="5" Spacing="4">
+                <TextBlock Classes="Subtitle1" Text="RPM" />
+                <lvc:CartesianChart
+                    Name="RpmChart"
+                    Height="250"
+                    AnimationsSpeed="0"
+                    DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
+                    SeriesSource="{Binding Rpm}"
+                    SeriesTemplate="{StaticResource DataTemplate}"
+                    ZoomMode="None">
+                    <lvc:CartesianChart.XAxes>
+                        <lvc:XamlAxis
+                            MaxLimit="{Binding MaxX, Mode=TwoWay}"
+                            MinLimit="{Binding MinX, Mode=TwoWay}"
+                            PropertyChangedCommand="{Binding ChangeZoomCommand}" />
+                    </lvc:CartesianChart.XAxes>
+                    <lvc:CartesianChart.YAxes>
+                        <lvc:XamlAxis MinLimit="0" />
+                    </lvc:CartesianChart.YAxes>
+                </lvc:CartesianChart>
+            </StackPanel>
 
         </Grid>
     </ScrollViewer>
