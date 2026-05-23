@@ -22,7 +22,6 @@
                 Stroke="{Binding Stroke}"
                 Values="{Binding Points}" />
         </DataTemplate>
-
     </UserControl.Resources>
     <ScrollViewer>
         <Grid
@@ -61,7 +60,6 @@
                         Opacity="0.6"
                         Text="Ctrl+Scroll to zoom, drag to pan the charts"
                         TextAlignment="Center" />
-
                 </StackPanel>
             </StackPanel>
 
@@ -74,15 +72,26 @@
                     DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
                     SeriesSource="{Binding Inputs}"
                     SeriesTemplate="{StaticResource DataTemplate}"
+                    TooltipPosition="Hidden"
                     ZoomMode="None">
                     <lvc:CartesianChart.XAxes>
                         <lvc:XamlAxis
+CrosshairLabelsBackground="{lvc:Color '#666666'}"
+                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
+                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
+                            Labeler="{Binding IntegerLabeler}"
                             MaxLimit="{Binding MaxX, Mode=TwoWay}"
                             MinLimit="{Binding MinX, Mode=TwoWay}"
                             PropertyChangedCommand="{Binding ChangeZoomCommand}" />
                     </lvc:CartesianChart.XAxes>
                     <lvc:CartesianChart.YAxes>
-                        <lvc:XamlAxis MaxLimit="1" MinLimit="0" />
+                        <lvc:XamlAxis
+CrosshairLabelsBackground="{lvc:Color '#666666'}"
+                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
+                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
+                            Labeler="{Binding DoubleLabeler}"
+                            MaxLimit="1"
+                            MinLimit="0" />
                     </lvc:CartesianChart.YAxes>
                 </lvc:CartesianChart>
             </StackPanel>
@@ -95,15 +104,26 @@
                     DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
                     SeriesSource="{Binding Steering}"
                     SeriesTemplate="{StaticResource DataTemplate}"
+                    TooltipPosition="Hidden"
                     ZoomMode="None">
                     <lvc:CartesianChart.XAxes>
                         <lvc:XamlAxis
+CrosshairLabelsBackground="{lvc:Color '#666666'}"
+                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
+                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
+                            Labeler="{Binding IntegerLabeler}"
                             MaxLimit="{Binding MaxX, Mode=TwoWay}"
                             MinLimit="{Binding MinX, Mode=TwoWay}"
                             PropertyChangedCommand="{Binding ChangeZoomCommand}" />
                     </lvc:CartesianChart.XAxes>
                     <lvc:CartesianChart.YAxes>
-                        <lvc:XamlAxis MaxLimit="1" MinLimit="-1" />
+                        <lvc:XamlAxis
+CrosshairLabelsBackground="{lvc:Color '#666666'}"
+                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
+                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
+                            Labeler="{Binding DoubleLabeler}"
+                            MaxLimit="1"
+                            MinLimit="-1" />
                     </lvc:CartesianChart.YAxes>
                 </lvc:CartesianChart>
             </StackPanel>
@@ -116,13 +136,25 @@
                     DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
                     SeriesSource="{Binding Speed}"
                     SeriesTemplate="{StaticResource DataTemplate}"
+                    TooltipPosition="Hidden"
                     ZoomMode="None">
                     <lvc:CartesianChart.XAxes>
                         <lvc:XamlAxis
+CrosshairLabelsBackground="{lvc:Color '#666666'}"
+                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
+                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
+                            Labeler="{Binding IntegerLabeler}"
                             MaxLimit="{Binding MaxX, Mode=TwoWay}"
                             MinLimit="{Binding MinX, Mode=TwoWay}"
                             PropertyChangedCommand="{Binding ChangeZoomCommand}" />
                     </lvc:CartesianChart.XAxes>
+                    <lvc:CartesianChart.YAxes>
+                        <lvc:XamlAxis
+CrosshairLabelsBackground="{lvc:Color '#666666'}"
+                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
+                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
+                            Labeler="{Binding IntegerLabeler}" />
+                    </lvc:CartesianChart.YAxes>
                 </lvc:CartesianChart>
             </StackPanel>
             <StackPanel Grid.Row="4" Spacing="4">
@@ -134,15 +166,23 @@
                     DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
                     SeriesSource="{Binding Gear}"
                     SeriesTemplate="{StaticResource DataTemplate}"
+                    TooltipPosition="Hidden"
                     ZoomMode="None">
                     <lvc:CartesianChart.XAxes>
                         <lvc:XamlAxis
+CrosshairLabelsBackground="{lvc:Color '#666666'}"
+                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
+                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
+                            Labeler="{Binding IntegerLabeler}"
                             MaxLimit="{Binding MaxX, Mode=TwoWay}"
                             MinLimit="{Binding MinX, Mode=TwoWay}"
                             PropertyChangedCommand="{Binding ChangeZoomCommand}" />
                     </lvc:CartesianChart.XAxes>
                     <lvc:CartesianChart.YAxes>
                         <lvc:XamlAxis
+CrosshairLabelsBackground="{lvc:Color '#666666'}"
+                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
+                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
                             Labeler="{Binding GearLabeler}"
                             MaxLimit="7"
                             MinLimit="0"
@@ -159,15 +199,25 @@
                     DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
                     SeriesSource="{Binding Rpm}"
                     SeriesTemplate="{StaticResource DataTemplate}"
+                    TooltipPosition="Hidden"
                     ZoomMode="None">
                     <lvc:CartesianChart.XAxes>
                         <lvc:XamlAxis
+CrosshairLabelsBackground="{lvc:Color '#666666'}"
+                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
+                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
+                            Labeler="{Binding IntegerLabeler}"
                             MaxLimit="{Binding MaxX, Mode=TwoWay}"
                             MinLimit="{Binding MinX, Mode=TwoWay}"
                             PropertyChangedCommand="{Binding ChangeZoomCommand}" />
                     </lvc:CartesianChart.XAxes>
                     <lvc:CartesianChart.YAxes>
-                        <lvc:XamlAxis MinLimit="0" />
+                        <lvc:XamlAxis
+CrosshairLabelsBackground="{lvc:Color '#666666'}"
+                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
+                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
+                            Labeler="{Binding IntegerLabeler}"
+                            MinLimit="0" />
                     </lvc:CartesianChart.YAxes>
                 </lvc:CartesianChart>
             </StackPanel>

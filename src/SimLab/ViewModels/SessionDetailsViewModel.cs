@@ -44,6 +44,12 @@ public partial class SessionDetailsViewModel : ViewModelBase
     
     public Func<double, string> GearLabeler { get; set; } =
         value => Enum.GetName(typeof(Gear), (int)value) ?? "";
+    
+    public Func<double, string> DoubleLabeler { get; set; } =
+        value => value.ToString("N2");
+    
+    public Func<double, string> IntegerLabeler { get; set; } =
+        value => value.ToString("N0");
 
     [ObservableProperty]
     public partial string? LapTime { get; set; }
