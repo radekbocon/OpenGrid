@@ -48,7 +48,7 @@ public class DebugTelemetryClient : ITelemetryClient
         var steer = (float)Math.Sin(_tick * 0.15); // -20..20 deg
         var fuel = Math.Max(0f, 100f - _tick * 0.25f);
 
-        var currentLap = (_tick / 300) + 1;
+        var currentLap = (_tick / 1000) + 1;
         var currentGear = (Gear)(_tick % 8);
         var engineRpm = 5000f + (float)(Math.Abs(Math.Sin(_tick * 0.2)) * 7000f);
         float[] temps = [

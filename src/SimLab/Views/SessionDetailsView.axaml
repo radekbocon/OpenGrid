@@ -3,8 +3,8 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:controls="clr-namespace:SimLab.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:SimLab.ViewModels"
     Padding="16"
@@ -12,17 +12,6 @@
     d:DesignWidth="800"
     x:DataType="vm:SessionDetailsViewModel"
     mc:Ignorable="d">
-    <UserControl.Resources>
-        <DataTemplate x:Key="DataTemplate" x:DataType="vm:ChartData">
-            <lvc:XamlLineSeries
-                Fill="{x:Null}"
-                GeometrySize="0"
-                LineSmoothness="0"
-                SeriesName="{Binding Name}"
-                Stroke="{Binding Stroke}"
-                Values="{Binding Points}" />
-        </DataTemplate>
-    </UserControl.Resources>
     <ScrollViewer>
         <Grid
             x:Name="ChartGrid"
@@ -63,165 +52,44 @@
                 </StackPanel>
             </StackPanel>
 
-            <StackPanel Grid.Row="1" Spacing="4">
-                <TextBlock Classes="Subtitle1" Text="Inputs" />
-                <lvc:CartesianChart
-                    Name="InputsChart"
-                    Height="250"
-                    AnimationsSpeed="0"
-                    DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
-                    SeriesSource="{Binding Inputs}"
-                    SeriesTemplate="{StaticResource DataTemplate}"
-                    TooltipPosition="Hidden"
-                    ZoomMode="None">
-                    <lvc:CartesianChart.XAxes>
-                        <lvc:XamlAxis
-CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
-                            Labeler="{Binding IntegerLabeler}"
-                            MaxLimit="{Binding MaxX, Mode=TwoWay}"
-                            MinLimit="{Binding MinX, Mode=TwoWay}"
-                            PropertyChangedCommand="{Binding ChangeZoomCommand}" />
-                    </lvc:CartesianChart.XAxes>
-                    <lvc:CartesianChart.YAxes>
-                        <lvc:XamlAxis
-CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
-                            Labeler="{Binding DoubleLabeler}"
-                            MaxLimit="1"
-                            MinLimit="0" />
-                    </lvc:CartesianChart.YAxes>
-                </lvc:CartesianChart>
-            </StackPanel>
-            <StackPanel Grid.Row="2" Spacing="4">
-                <TextBlock Classes="Subtitle1" Text="Steering" />
-                <lvc:CartesianChart
-                    Name="SteeringChart"
-                    Height="250"
-                    AnimationsSpeed="0"
-                    DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
-                    SeriesSource="{Binding Steering}"
-                    SeriesTemplate="{StaticResource DataTemplate}"
-                    TooltipPosition="Hidden"
-                    ZoomMode="None">
-                    <lvc:CartesianChart.XAxes>
-                        <lvc:XamlAxis
-CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
-                            Labeler="{Binding IntegerLabeler}"
-                            MaxLimit="{Binding MaxX, Mode=TwoWay}"
-                            MinLimit="{Binding MinX, Mode=TwoWay}"
-                            PropertyChangedCommand="{Binding ChangeZoomCommand}" />
-                    </lvc:CartesianChart.XAxes>
-                    <lvc:CartesianChart.YAxes>
-                        <lvc:XamlAxis
-CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
-                            Labeler="{Binding DoubleLabeler}"
-                            MaxLimit="1"
-                            MinLimit="-1" />
-                    </lvc:CartesianChart.YAxes>
-                </lvc:CartesianChart>
-            </StackPanel>
-            <StackPanel Grid.Row="3" Spacing="4">
-                <TextBlock Classes="Subtitle1" Text="Speed" />
-                <lvc:CartesianChart
-                    Name="SpeedChart"
-                    Height="250"
-                    AnimationsSpeed="0"
-                    DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
-                    SeriesSource="{Binding Speed}"
-                    SeriesTemplate="{StaticResource DataTemplate}"
-                    TooltipPosition="Hidden"
-                    ZoomMode="None">
-                    <lvc:CartesianChart.XAxes>
-                        <lvc:XamlAxis
-CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
-                            Labeler="{Binding IntegerLabeler}"
-                            MaxLimit="{Binding MaxX, Mode=TwoWay}"
-                            MinLimit="{Binding MinX, Mode=TwoWay}"
-                            PropertyChangedCommand="{Binding ChangeZoomCommand}" />
-                    </lvc:CartesianChart.XAxes>
-                    <lvc:CartesianChart.YAxes>
-                        <lvc:XamlAxis
-CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
-                            Labeler="{Binding IntegerLabeler}" />
-                    </lvc:CartesianChart.YAxes>
-                </lvc:CartesianChart>
-            </StackPanel>
-            <StackPanel Grid.Row="4" Spacing="4">
-                <TextBlock Classes="Subtitle1" Text="Gear" />
-                <lvc:CartesianChart
-                    Name="GearChart"
-                    Height="250"
-                    AnimationsSpeed="0"
-                    DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
-                    SeriesSource="{Binding Gear}"
-                    SeriesTemplate="{StaticResource DataTemplate}"
-                    TooltipPosition="Hidden"
-                    ZoomMode="None">
-                    <lvc:CartesianChart.XAxes>
-                        <lvc:XamlAxis
-CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
-                            Labeler="{Binding IntegerLabeler}"
-                            MaxLimit="{Binding MaxX, Mode=TwoWay}"
-                            MinLimit="{Binding MinX, Mode=TwoWay}"
-                            PropertyChangedCommand="{Binding ChangeZoomCommand}" />
-                    </lvc:CartesianChart.XAxes>
-                    <lvc:CartesianChart.YAxes>
-                        <lvc:XamlAxis
-CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
-                            Labeler="{Binding GearLabeler}"
-                            MaxLimit="7"
-                            MinLimit="0"
-                            MinStep="1" />
-                    </lvc:CartesianChart.YAxes>
-                </lvc:CartesianChart>
-            </StackPanel>
-            <StackPanel Grid.Row="5" Spacing="4">
-                <TextBlock Classes="Subtitle1" Text="RPM" />
-                <lvc:CartesianChart
-                    Name="RpmChart"
-                    Height="250"
-                    AnimationsSpeed="0"
-                    DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
-                    SeriesSource="{Binding Rpm}"
-                    SeriesTemplate="{StaticResource DataTemplate}"
-                    TooltipPosition="Hidden"
-                    ZoomMode="None">
-                    <lvc:CartesianChart.XAxes>
-                        <lvc:XamlAxis
-CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
-                            Labeler="{Binding IntegerLabeler}"
-                            MaxLimit="{Binding MaxX, Mode=TwoWay}"
-                            MinLimit="{Binding MinX, Mode=TwoWay}"
-                            PropertyChangedCommand="{Binding ChangeZoomCommand}" />
-                    </lvc:CartesianChart.XAxes>
-                    <lvc:CartesianChart.YAxes>
-                        <lvc:XamlAxis
-CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                             CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                             CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
-                            Labeler="{Binding IntegerLabeler}"
-                            MinLimit="0" />
-                    </lvc:CartesianChart.YAxes>
-                </lvc:CartesianChart>
-            </StackPanel>
-
+            <controls:ChartControl
+                x:Name="InputsChart"
+                Grid.Row="1"
+                Title="Inputs"
+                SeriesSource="{Binding Inputs}"
+                YLabeler="{Binding DoubleLabeler}"
+                YMaxLimit="1"
+                YMinLimit="0" />
+            <controls:ChartControl
+                x:Name="SteeringChart"
+                Grid.Row="2"
+                Title="Steering"
+                SeriesSource="{Binding Steering}"
+                YLabeler="{Binding DoubleLabeler}"
+                YMaxLimit="1"
+                YMinLimit="-1" />
+            <controls:ChartControl
+                x:Name="SpeedChart"
+                Grid.Row="3"
+                Title="Speed"
+                SeriesSource="{Binding Speed}"
+                YLabeler="{Binding IntegerLabeler}" />
+            <controls:ChartControl
+                x:Name="GearChart"
+                Grid.Row="4"
+                Title="Gear"
+                SeriesSource="{Binding Gear}"
+                YLabeler="{Binding GearLabeler}"
+                YMaxLimit="7"
+                YMinLimit="0"
+                YMinStep="1" />
+            <controls:ChartControl
+                x:Name="RpmChart"
+                Grid.Row="5"
+                Title="RPM"
+                SeriesSource="{Binding Rpm}"
+                YLabeler="{Binding IntegerLabeler}"
+                YMinLimit="0" />
         </Grid>
     </ScrollViewer>
 </UserControl>

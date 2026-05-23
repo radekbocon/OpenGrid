@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using LiveChartsCore.SkiaSharpView.Avalonia;
+using SimLab.Controls;
 using SimLab.ViewModels;
 
 namespace SimLab.Views;
@@ -21,7 +22,7 @@ public partial class SessionDetailsView : UserControl
     public SessionDetailsView()
     {
         InitializeComponent();
-        List<CartesianChart> charts = [InputsChart, SteeringChart, SpeedChart, GearChart, RpmChart];
+        List<CartesianChart> charts = [InputsChart.Chart, SteeringChart.Chart, SpeedChart.Chart, GearChart.Chart, RpmChart.Chart];
         foreach (var chart in charts)
         {
             chart.PointerWheelChanged += Chart_PointerWheelChanged;
