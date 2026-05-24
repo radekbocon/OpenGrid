@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Markup.Xaml.Templates;
 using LiveChartsCore.SkiaSharpView.Avalonia;
 
 namespace SimLab.Controls;
@@ -9,6 +10,9 @@ namespace SimLab.Controls;
 public partial class ChartControl : UserControl
 {
     public CartesianChart Chart => ChartElement;
+    
+    public static readonly StyledProperty<DataTemplate?> SeriesTemplateProperty =
+        AvaloniaProperty.Register<ChartControl, DataTemplate?>(nameof(SeriesTemplate));
 
     public static readonly StyledProperty<string> TitleProperty =
         AvaloniaProperty.Register<ChartControl, string>(nameof(Title));
@@ -62,6 +66,12 @@ public partial class ChartControl : UserControl
     {
         get => GetValue(YMinStepProperty);
         set => SetValue(YMinStepProperty, value);
+    }
+
+    public DataTemplate? SeriesTemplate
+    {
+        get => GetValue(SeriesTemplateProperty);
+        set => SetValue(SeriesTemplateProperty, value);
     }
 
     public ChartControl()

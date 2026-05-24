@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:avalonia1="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
     xmlns:controls="clr-namespace:SimLab.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -12,6 +13,25 @@
     d:DesignWidth="800"
     x:DataType="vm:SessionDetailsViewModel"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <DataTemplate x:Key="ChartLineSeriesTemplate" x:DataType="vm:ChartData">
+            <avalonia1:XamlLineSeries
+                Fill="{x:Null}"
+                GeometrySize="0"
+                LineSmoothness="0"
+                SeriesName="{Binding Name}"
+                Stroke="{Binding Stroke}"
+                Values="{Binding Points}" />
+        </DataTemplate>
+        <DataTemplate x:Key="StepLineSeriesTemplate" x:DataType="vm:ChartData">
+            <avalonia1:XamlStepLineSeries
+                Fill="{x:Null}"
+                GeometrySize="0"
+                SeriesName="{Binding Name}"
+                Stroke="{Binding Stroke}"
+                Values="{Binding Points}" />
+        </DataTemplate>
+    </UserControl.Resources>
     <ScrollViewer>
         <Grid
             x:Name="ChartGrid"
@@ -54,40 +74,45 @@
 
             <controls:ChartControl
                 x:Name="InputsChart"
-                Grid.Row="1"
                 Title="Inputs"
+                Grid.Row="1"
                 SeriesSource="{Binding Inputs}"
+                SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding DoubleLabeler}"
                 YMaxLimit="1"
                 YMinLimit="0" />
             <controls:ChartControl
                 x:Name="SteeringChart"
-                Grid.Row="2"
                 Title="Steering"
+                Grid.Row="2"
                 SeriesSource="{Binding Steering}"
+                SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding DoubleLabeler}"
                 YMaxLimit="1"
                 YMinLimit="-1" />
             <controls:ChartControl
                 x:Name="SpeedChart"
-                Grid.Row="3"
                 Title="Speed"
+                Grid.Row="3"
                 SeriesSource="{Binding Speed}"
+                SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding IntegerLabeler}" />
             <controls:ChartControl
                 x:Name="GearChart"
-                Grid.Row="4"
                 Title="Gear"
+                Grid.Row="4"
                 SeriesSource="{Binding Gear}"
+                SeriesTemplate="{StaticResource StepLineSeriesTemplate}"
                 YLabeler="{Binding GearLabeler}"
                 YMaxLimit="7"
                 YMinLimit="0"
                 YMinStep="1" />
             <controls:ChartControl
                 x:Name="RpmChart"
-                Grid.Row="5"
                 Title="RPM"
+                Grid.Row="5"
                 SeriesSource="{Binding Rpm}"
+                SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding IntegerLabeler}"
                 YMinLimit="0" />
         </Grid>

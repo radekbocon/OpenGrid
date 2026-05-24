@@ -1,22 +1,11 @@
 <UserControl
     x:Class="SimLab.Controls.ChartControl"
-    x:Name="Root"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
     xmlns:vm="clr-namespace:SimLab.ViewModels"
+    x:Name="Root"
     x:CompileBindings="False">
-    <UserControl.Resources>
-        <DataTemplate x:Key="ChartLineSeriesTemplate" x:DataType="vm:ChartData">
-            <lvc:XamlLineSeries
-                Fill="{x:Null}"
-                GeometrySize="0"
-                LineSmoothness="0"
-                SeriesName="{Binding Name}"
-                Stroke="{Binding Stroke}"
-                Values="{Binding Points}" />
-        </DataTemplate>
-    </UserControl.Resources>
     <StackPanel Spacing="4">
         <TextBlock Classes="Subtitle1" Text="{Binding Title, ElementName=Root}" />
         <lvc:CartesianChart
@@ -25,7 +14,7 @@
             AnimationsSpeed="0"
             DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
             SeriesSource="{Binding SeriesSource, ElementName=Root}"
-            SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
+            SeriesTemplate="{Binding SeriesTemplate, ElementName=Root}"
             TooltipPosition="Hidden"
             ZoomMode="None">
             <lvc:CartesianChart.XAxes>
