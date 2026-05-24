@@ -19,9 +19,6 @@
             ZoomMode="None">
             <lvc:CartesianChart.XAxes>
                 <lvc:XamlAxis
-                    CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                    CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                    CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
                     Labeler="{Binding IntegerLabeler}"
                     MaxLimit="{Binding MaxX, Mode=TwoWay}"
                     MinLimit="{Binding MinX, Mode=TwoWay}"
@@ -29,9 +26,6 @@
             </lvc:CartesianChart.XAxes>
             <lvc:CartesianChart.YAxes>
                 <lvc:XamlAxis
-                    CrosshairLabelsBackground="{lvc:Color '#666666'}"
-                    CrosshairLabelsPaint="{lvc:SolidColorPaint Color='#EEEEEE'}"
-                    CrosshairPaint="{lvc:SolidColorPaint Color='#999999'}"
                     Labeler="{Binding YLabeler, ElementName=Root}"
                     MaxLimit="{Binding YMaxLimit, ElementName=Root}"
                     MinLimit="{Binding YMinLimit, ElementName=Root}"
