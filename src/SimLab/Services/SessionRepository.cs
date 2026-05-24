@@ -126,6 +126,13 @@ public class SessionRepository
         Serializer.Serialize(file, session);
     }
     
+    public void DeleteLap(Session session, int lapNumber)
+    {
+        session.Records.RemoveAll(r => r.CurrentLap == lapNumber);
+        session.Laps.RemoveAll(l => l.Number == lapNumber);
+        WriteSession(session);
+    }
+
     public void DeleteSession(Session session)
     {
         var filePath = Path.Combine(_telemetryFolder, session.Info.FileName);

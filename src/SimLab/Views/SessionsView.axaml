@@ -97,7 +97,8 @@
                                 Command="{Binding $parent[views:SessionsView].((vm:SessionsViewModel)DataContext)?.DeleteSessionCommand}"
                                 CommandParameter="{Binding}"
                                 Content="{avalonia:MaterialIconExt Kind=Trash,
-                                                                   IconSize=24}" />
+                                                                   IconSize=24}"
+                                ToolTip.Tip="Delete session" />
                         </Grid>
                     </controls:Card>
 

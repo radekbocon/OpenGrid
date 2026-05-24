@@ -50,6 +50,13 @@
                     DisplayMemberBinding="{Binding Number}"
                     ItemsSource="{Binding Laps}"
                     SelectedItem="{Binding SelectedLap}" />
+                <Button
+                    Padding="8"
+                    Classes="Flat"
+                    Command="{Binding DeleteLapCommand}"
+                    ToolTip.Tip="Delete lap">
+                    <avalonia:MaterialIcon IconSize="24" Kind="Delete" />
+                </Button>
                 <TextBlock
                     VerticalAlignment="Center"
                     Classes="Subtitle1"
@@ -76,9 +83,6 @@
                 x:Name="InputsChart"
                 Title="Inputs"
                 Grid.Row="1"
-                CrosshairLabelsBackground="{DynamicResource MaterialToolBarBackgroundBrush}"
-                CrosshairLabelsPaint="{DynamicResource MaterialBodyBrush}"
-                CrosshairPaint="{DynamicResource MaterialBodyBrush}"
                 SeriesSource="{Binding Inputs}"
                 SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding DoubleLabeler}"
