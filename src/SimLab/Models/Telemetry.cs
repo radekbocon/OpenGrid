@@ -1,72 +1,41 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProtoBuf;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable NotAccessedPositionalProperty.Global
 
 namespace SimLab.Models;
 
-[ProtoContract]
 public record TelemetryRecord
 {
-    [ProtoMember(1)]
     public DateTime Timestamp { get; set; }
-    [ProtoMember(2)]
     public string? Car { get; set; }
-    [ProtoMember(3)]
     public string? Track { get; set; }
-    [ProtoMember(4)]
     public SessionType SessionType { get; set; }
-    [ProtoMember(5)]
     public int CurrentLap { get; set; }
-    [ProtoMember(6)]
     public float SpeedKmh { get; set; }
-    [ProtoMember(7)]
     public float Gas { get; set; }
-    [ProtoMember(8)]
     public float Brake { get; set; }
-    [ProtoMember(9)]
     public float Clutch { get; set; }
-    [ProtoMember(10)]
     public float SteerAngle { get; set; }
-    [ProtoMember(11)]
     public float Fuel { get; set; }
-    [ProtoMember(12)]
     public Gear CurrentGear { get; set; }
-    [ProtoMember(13)]
     public float EngineRpm { get; set; }
-    [ProtoMember(14)]
     public TireValues TireTemperatures { get; set; }
-    [ProtoMember(15)]
     public TimeSpan LapTime { get; set; }
-    [ProtoMember(16)]
     public float Distance { get; set; }
-    [ProtoMember(17)]
     public float MaxRpm { get; set; }
-    [ProtoMember(18)]
     public TireValues TirePressures { get; set; }
-    [ProtoMember(19)]
     public TimeSpan LastLapTime { get; set; }
-    [ProtoMember(20)]
     public TimeSpan BestLapTime { get; set; }
-    [ProtoMember(21)]
     public int AbsSetting { get; set; }
-    [ProtoMember(22)]
     public int Tc1Setting { get; set; }
-    [ProtoMember(23)]
     public int Tc2Setting { get; set; }
-    [ProtoMember(24)]
     public TimeSpan DeltaLapTime { get; set; }
-    [ProtoMember(25)]
     public int Position { get; set; }
-    [ProtoMember(26)]
     public int EngineMap { get; set; }
-    [ProtoMember(27)]
     public float BrakeBias { get; set; }
-    [ProtoMember(28)]
     public bool IsDeltaPositive { get; set; }
-    [ProtoMember(29)]
     public bool IsValidLap { get; set; }
 }
 
@@ -95,7 +64,6 @@ public enum Gear
     N6 = 7
 }
 
-[ProtoContract]
 public record struct TireValues(float FrontLeft, float FrontRight, float RearLeft, float RearRight)
 {
     public static TireValues FromArray(float[] array)
@@ -106,19 +74,16 @@ public record struct TireValues(float FrontLeft, float FrontRight, float RearLef
     }
 }
 
-[ProtoContract]
 public record Session
 {
-    [ProtoMember(1)]
     public SessionInfo Info { get; }
-    [ProtoMember(2)]
     public List<TelemetryRecord> Records { get; } = [];
 
     public List<Lap> Laps => Records.GroupBy(x => x.CurrentLap).Select(x => new Lap(x.Key, x.ToList())).ToList();
 
     private Session()
     {
-        
+        Info = null!;
     }
     
     public Session(SteamGame game, TelemetryRecord record)
@@ -127,18 +92,23 @@ public record Session
         Records.Add(record);
     }
 
+    public Session(SessionInfo info, List<TelemetryRecord> records)
+    {
+        Info = info;
+        Records = records;
+    }
+
     public void AddRecord(TelemetryRecord record)
     {
         Records.Add(record);
     }
 }
 
-[ProtoContract]
 public record SessionInfo
 {
     private SessionInfo()
     {
-        
+        Game = null!;
     }
     public SessionInfo(SteamGame game, TelemetryRecord record)
     {
@@ -150,22 +120,24 @@ public record SessionInfo
         StartTime = record.Timestamp;
     }
 
-    [ProtoMember(1)]
-    public Guid Id { get; init; }
-    [ProtoMember(2)]
-    public SteamGame Game { get; init; }
-    [ProtoMember(3)]
-    public SessionType Type { get; }
-    [ProtoMember(4)]
-    public string? Car { get; }
-    [ProtoMember(5)]
-    public string? Track { get;  }
-    [ProtoMember(6)]
-    public DateTime StartTime { get; set; }
-    [ProtoMember(7)]
-    public DateTime EndTime { get; set; }
+    public SessionInfo(Guid id, SteamGame game, SessionType type, string? car, string? track, DateTime startTime)
+    {
+        Id = id;
+        Game = game;
+        Type = type;
+        Car = car;
+        Track = track;
+        StartTime = startTime;
+    }
 
-    public string FileName => $"{Car}-{Track}-{Type}-{Id}.bin";
+    public Guid Id { get; init; }
+    public SteamGame Game { get; init; }
+    public SessionType Type { get; }
+    public string? Car { get; }
+    public string? Track { get;  }
+    public DateTime StartTime { get; set; }
+
+    public string FileName => $"{Car}-{Track}-{Type}-{Id}.csv";
 }
 
 public record Lap

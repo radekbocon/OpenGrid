@@ -74,6 +74,11 @@ public record SteamGame(
 
     public static SteamGame? GetByAppId(int appId)
     {
+        if (appId == 0)
+        {
+            return Debug;
+        }
+        
         return GetAllSupported().FirstOrDefault(x => x.AppId == appId);
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
-using ProtoBuf;
 using Serilog;
 using SimLab.Models;
 using SimLab.Services.Telemetry;
@@ -17,9 +16,11 @@ public class SessionRepository
     private readonly string _telemetryFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SimLab", "Telemetry");
 
     private readonly ITelemetryService _telemetryService;
+    private readonly SessionWriter _sessionWriter;
     private readonly TimeSpan _recordInterval = TimeSpan.FromMilliseconds(1000.0 / RecordHz);
     private DateTime _lastRecordTimestamp;
-    
+    private StreamWriter? _currentFileWriter;
+
     public Session? CurrentSession { get; private set; }
 
     public ObservableCollection<Session> Sessions { get; private set; } = [];
@@ -39,6 +40,7 @@ public class SessionRepository
     public SessionRepository(ITelemetryService telemetryService)
     {
         Directory.CreateDirectory(_telemetryFolder);
+        _sessionWriter = new SessionWriter(_telemetryFolder);
         _telemetryService = telemetryService;
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
     }
@@ -46,16 +48,17 @@ public class SessionRepository
     public void LoadSessions()
     {
         var sessions = new List<Session>();
-        
-        var files = Directory.GetFiles(_telemetryFolder, "*.bin");
+        var files = Directory.GetFiles(_telemetryFolder, "*.csv");
 
         foreach (var file in files)
         {
             try
             {
-                using var stream = File.OpenRead(file);
-                var session = Serializer.Deserialize<Session>(stream);
-                sessions.Add(session);
+                var session = _sessionWriter.LoadFile(file);
+                if (session is not null)
+                {
+                    sessions.Add(session);
+                }
             }
             catch (Exception e)
             {
@@ -79,7 +82,7 @@ public class SessionRepository
         IsRecording = true;
         _telemetryService.TelemetryReceived += TelemetryServiceOnTelemetryReceived;
     }
-    
+
     public async Task StopRecordingAsync()
     {
         _telemetryService.TelemetryReceived -= TelemetryServiceOnTelemetryReceived;
@@ -87,11 +90,10 @@ public class SessionRepository
 
         if (CurrentSession is not null)
         {
+            CloseCurrentFile();
             Sessions.Add(CurrentSession);
-            WriteSession(CurrentSession);
             CurrentSession = null;
         }
-        
     }
 
     private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryEventArgs e)
@@ -99,15 +101,17 @@ public class SessionRepository
         if (CurrentSession is null)
         {
             CurrentSession = new Session(e.Game, e.Telemetry);
+            _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
             _lastRecordTimestamp = e.Telemetry.Timestamp;
             return;
         }
 
         if (IsNewSession(e.Telemetry))
         {
-            WriteSession(CurrentSession);
+            CloseCurrentFile();
             Sessions.Add(CurrentSession);
             CurrentSession = new Session(e.Game, e.Telemetry);
+            _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
             _lastRecordTimestamp = e.Telemetry.Timestamp;
             return;
         }
@@ -116,21 +120,27 @@ public class SessionRepository
         if (now - _lastRecordTimestamp >= _recordInterval)
         {
             CurrentSession.AddRecord(e.Telemetry);
+            _sessionWriter.AppendRecord(_currentFileWriter!, e.Telemetry);
             _lastRecordTimestamp = now;
         }
     }
-    
-    private void WriteSession(Session session)
+
+    private void CloseCurrentFile()
     {
-        using var file = File.Create(Path.Combine(_telemetryFolder, session.Info.FileName));
-        Serializer.Serialize(file, session);
+        if (_currentFileWriter is null)
+        {
+            return;
+        }
+
+        _sessionWriter.CloseFile(_currentFileWriter);
+        _currentFileWriter = null;
     }
-    
+
     public void DeleteLap(Session session, int lapNumber)
     {
         session.Records.RemoveAll(r => r.CurrentLap == lapNumber);
         session.Laps.RemoveAll(l => l.Number == lapNumber);
-        WriteSession(session);
+        _sessionWriter.WriteFull(session);
     }
 
     public void DeleteSession(Session session)
