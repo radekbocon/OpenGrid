@@ -79,7 +79,9 @@ public partial class SessionsViewModel : ViewModelBase
     [RelayCommand]
     private void OpenLapComparison()
     {
-        _navigationService.NavigateTo<LapSelectionViewModel>();
+        var viewModel = new LapSelectionViewModel(_sessionRepository, _navigationService);
+        var dialog = new LapSelectionDialog { DataContext = viewModel };
+        DialogHost.Show(dialog);
     }
 
     [RelayCommand]

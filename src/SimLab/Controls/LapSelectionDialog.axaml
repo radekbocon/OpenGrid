@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="SimLab.Views.LapSelectionView"
+    x:Class="SimLab.Controls.LapSelectionDialog"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
@@ -8,49 +8,36 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:SimLab.ViewModels"
-    Padding="16"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="600"
+    d:DesignWidth="600"
     x:DataType="vm:LapSelectionViewModel"
     mc:Ignorable="d">
     <UserControl.Resources>
         <converters:ExpandedToIconConverter x:Key="ExpandedToIconConverter" />
     </UserControl.Resources>
-    <Interaction.Behaviors>
-        <EventTriggerBehavior EventName="Loaded">
-            <InvokeCommandAction Command="{Binding LoadedCommand}" />
-        </EventTriggerBehavior>
-    </Interaction.Behaviors>
-
-    <Grid RowDefinitions="Auto, Auto, *">
-        <StackPanel
+    <Grid
+        Margin="16"
+        RowDefinitions="Auto, Auto, *, Auto"
+        RowSpacing="16"
+        MinWidth="500"
+        MinHeight="400">
+        <TextBlock
             Grid.Row="0"
-            Margin="0,0,0,8"
-            Orientation="Horizontal"
-            Spacing="8">
-            <TextBlock
-                VerticalAlignment="Center"
-                Classes="H6"
-                Text="Select Laps to Compare" />
-            <Button
-                x:Name="CompareButton"
-                HorizontalAlignment="Right"
-                Command="{Binding CompareSelectedCommand}"
-                Content="Compare Selected"
-                IsEnabled="{Binding CanCompare}" />
-        </StackPanel>
-
+            Classes="H6"
+            Text="Select Laps to Compare" />
         <TextBlock
             Grid.Row="1"
-            Margin="0,0,0,8"
             Classes="Caption"
             Opacity="0.7">
-            <Run Text="Selected: " />
-            <Run Text="{Binding SelectedCount}" />
-            <Run Text=" laps (select at least 2)" />
+            <TextBlock.Text>
+                <MultiBinding StringFormat="Selected: {0} laps (select at least 2)">
+                    <Binding Path="SelectedCount" />
+                </MultiBinding>
+            </TextBlock.Text>
         </TextBlock>
-
-        <ScrollViewer Grid.Row="2">
+        <ScrollViewer
+            Grid.Row="2"
+            MaxHeight="350">
             <StackPanel Spacing="8">
                 <ItemsControl ItemsSource="{Binding Sessions}">
                     <ItemsControl.ItemTemplate>
@@ -79,7 +66,6 @@
                                                 Text="{Binding LapCount, StringFormat='Laps: {0}'}" />
                                         </Grid>
                                     </ToggleButton>
-
                                     <ItemsControl
                                         Grid.Row="1"
                                         Margin="16,4,0,0"
@@ -115,5 +101,20 @@
                 </ItemsControl>
             </StackPanel>
         </ScrollViewer>
+        <StackPanel
+            Grid.Row="3"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button
+                MinWidth="80"
+                Command="{Binding CancelCommand}"
+                Content="Cancel"
+                Theme="{StaticResource MaterialOutlineButton}" />
+            <Button
+                MinWidth="80"
+                Command="{Binding CompareCommand}"
+                Content="Compare" />
+        </StackPanel>
     </Grid>
 </UserControl>

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DialogHostAvalonia;
 using SimLab.Models;
 using SimLab.Services;
 
@@ -54,38 +56,31 @@ public partial class SelectableSession : ObservableObject
     }
 }
 
-public partial class LapSelectionViewModel : ViewModelBase
+public partial class LapSelectionViewModel : ObservableObject
 {
     private readonly SessionRepository _sessionRepository;
     private readonly INavigationService _navigationService;
+    private readonly Session? _initialSession;
 
     [ObservableProperty]
     public partial ObservableCollection<SelectableSession> Sessions { get; set; } = [];
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CompareCommand))]
     public partial int SelectedCount { get; set; }
 
     public bool CanCompare => SelectedCount >= 2;
 
-    public LapSelectionViewModel(SessionRepository sessionRepository, INavigationService navigationService)
+    public LapSelectionViewModel(SessionRepository sessionRepository, INavigationService navigationService, Session? initialSession = null)
     {
         _sessionRepository = sessionRepository;
         _navigationService = navigationService;
+        _initialSession = initialSession;
+        
+        LoadSessions();
     }
 
-    public override void SetParameters(params object[] parameters)
-    {
-        if (parameters.Length > 0 && parameters[0] is Session session)
-        {
-            LoadSessions(session);
-        }
-        else
-        {
-            LoadSessions();
-        }
-    }
-
-    private void LoadSessions(Session? selectedSession = null)
+    private void LoadSessions()
     {
         Sessions.Clear();
         
@@ -97,7 +92,7 @@ public partial class LapSelectionViewModel : ViewModelBase
         {
             var selectableSession = new SelectableSession(session);
             
-            if (selectedSession != null && session.Info.Id == selectedSession.Info.Id)
+            if (_initialSession != null && session.Info.Id == _initialSession.Info.Id)
             {
                 selectableSession.IsExpanded = true;
             }
@@ -111,7 +106,7 @@ public partial class LapSelectionViewModel : ViewModelBase
         }
     }
 
-    private void Lap_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void Lap_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(SelectableLap.IsSelected))
         {
@@ -126,21 +121,10 @@ public partial class LapSelectionViewModel : ViewModelBase
             .Count(l => l.IsSelected);
         
         OnPropertyChanged(nameof(CanCompare));
-        CompareSelectedCommand.NotifyCanExecuteChanged();
-    }
-
-    [RelayCommand]
-    private void Loaded()
-    {
-        if (Sessions.Count == 0)
-        {
-            _sessionRepository.LoadSessions();
-            LoadSessions();
-        }
     }
 
     [RelayCommand(CanExecute = nameof(CanCompare))]
-    private void CompareSelected()
+    private void Compare()
     {
         var selectedLaps = Sessions
             .SelectMany(s => s.Laps.Where(l => l.IsSelected)
@@ -155,11 +139,12 @@ public partial class LapSelectionViewModel : ViewModelBase
         }
 
         _navigationService.NavigateTo<LapComparisonViewModel>(comparisonItems);
+        DialogHost.Close(null);
     }
 
     [RelayCommand]
-    private void GoBack()
+    private void Cancel()
     {
-        _navigationService.GoBack();
+        DialogHost.Close(null);
     }
 }

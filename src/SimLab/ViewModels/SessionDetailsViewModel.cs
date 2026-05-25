@@ -83,7 +83,9 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
     {
         if (_session is not null)
         {
-            _navigationService.NavigateTo<LapSelectionViewModel>(_session);
+            var viewModel = new LapSelectionViewModel(_sessionRepository, _navigationService, _session);
+            var dialog = new LapSelectionDialog { DataContext = viewModel };
+            DialogHost.Show(dialog);
         }
     }
 
