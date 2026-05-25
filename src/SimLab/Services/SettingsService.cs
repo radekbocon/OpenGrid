@@ -9,6 +9,7 @@ internal record UserSettings
     public bool MinimizeToTray { get; set; } = true;
     public int? DashboardPort { get; set; }
     public string? SelectedTheme { get; set; }
+    public int RecordingRateHz { get; set; } = 30;
 }
 
 public sealed class SettingsService : ISettingsService
@@ -48,6 +49,16 @@ public sealed class SettingsService : ISettingsService
         set
         {
             _userSettings.SelectedTheme = value;
+            Save();
+        }
+    }
+
+    public int RecordingRateHz
+    {
+        get => _userSettings.RecordingRateHz;
+        set
+        {
+            _userSettings.RecordingRateHz = value;
             Save();
         }
     }

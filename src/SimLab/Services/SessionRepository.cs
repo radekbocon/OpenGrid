@@ -11,13 +11,12 @@ namespace SimLab.Services;
 
 public class SessionRepository
 {
-    private const int RecordHz = 30;
-
     private readonly string _telemetryFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SimLab", "Telemetry");
 
     private readonly ITelemetryService _telemetryService;
+    private readonly ISettingsService _settingsService;
     private readonly SessionWriter _sessionWriter;
-    private readonly TimeSpan _recordInterval = TimeSpan.FromMilliseconds(1000.0 / RecordHz);
+    private TimeSpan RecordInterval => TimeSpan.FromMilliseconds(1000.0 / _settingsService.RecordingRateHz);
     private DateTime _lastRecordTimestamp;
     private StreamWriter? _currentFileWriter;
 
@@ -37,11 +36,12 @@ public class SessionRepository
 
     public event EventHandler<bool>? IsRecordingChanged;
 
-    public SessionRepository(ITelemetryService telemetryService)
+    public SessionRepository(ITelemetryService telemetryService, ISettingsService settingsService)
     {
         Directory.CreateDirectory(_telemetryFolder);
         _sessionWriter = new SessionWriter(_telemetryFolder);
         _telemetryService = telemetryService;
+        _settingsService = settingsService;
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
     }
 
@@ -117,7 +117,7 @@ public class SessionRepository
         }
 
         var now = e.Telemetry.Timestamp;
-        if (now - _lastRecordTimestamp >= _recordInterval)
+        if (now - _lastRecordTimestamp >= RecordInterval)
         {
             CurrentSession.AddRecord(e.Telemetry);
             _sessionWriter.AppendRecord(_currentFileWriter!, e.Telemetry);

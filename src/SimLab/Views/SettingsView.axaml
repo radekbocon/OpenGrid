@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+    xmlns:converters="using:SimLab.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:SimLab.ViewModels"
@@ -10,6 +11,10 @@
     d:DesignWidth="800"
     x:DataType="vm:SettingsViewModel"
     mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ValueEqualsConverter x:Key="ValueEqualsConverter" />
+    </UserControl.Resources>
 
     <StackPanel
         MaxWidth="1000"
@@ -50,6 +55,49 @@
                     Classes="Body2"
                     Text="Minimize to tray" />
                 <ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTray}" />
+            </Grid>
+        </controls:Card>
+
+        <TextBlock
+            Margin="0,16,0,0"
+            Classes="Subtitle1"
+            FontWeight="SemiBold"
+            Text="Recording" />
+        <controls:Card Padding="16,8">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Body2"
+                    Text="Session recording rate" />
+                <controls:Card
+                    Grid.Column="1"
+                    Padding="0"
+                    InsideClipping="True">
+                    <controls:Card.Styles>
+                        <Style Selector="RadioButton">
+                            <Setter Property="Theme" Value="{StaticResource MaterialButtonlikeRadioButton}" />
+                        </Style>
+                    </controls:Card.Styles>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton
+                            Content="15 Hz"
+                            GroupName="RecordingRate"
+                            IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=15}" />
+                        <RadioButton
+                            Content="30 Hz"
+                            GroupName="RecordingRate"
+                            IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=30}" />
+                        <RadioButton
+                            Content="60 Hz"
+                            GroupName="RecordingRate"
+                            IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=60}" />
+                        <RadioButton
+                            Content="120 Hz"
+                            GroupName="RecordingRate"
+                            IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=120}" />
+                    </StackPanel>
+                </controls:Card>
             </Grid>
         </controls:Card>
 

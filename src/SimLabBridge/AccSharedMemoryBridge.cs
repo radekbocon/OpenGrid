@@ -16,7 +16,7 @@ public class AccSharedMemoryBridge : IDisposable
     private const string ShmGraphicsPath = "/dev/shm/acpmf_graphics";
     private const string ShmStaticPath = "/dev/shm/acpmf_static";
     
-    private const int UpdateInterval = 1000 / 60;
+    private const int UpdateInterval = 1000 / 120;
 
     private MemoryMappedFile? _physicsFile;
     private MemoryMappedFile? _graphicsFile;
