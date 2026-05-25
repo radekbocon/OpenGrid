@@ -1,30 +1,25 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml.Templates;
-using Avalonia.Media;
-using LiveChartsCore.Drawing;
-using LiveChartsCore.Painting;
-using LiveChartsCore.SkiaSharpView.Avalonia;
-using LiveChartsCore.SkiaSharpView.Painting;
+using Avalonia.Threading;
+using ScottPlot;
+using ScottPlot.Avalonia;
+using SimLab.ViewModels;
 using SkiaSharp;
 
 namespace SimLab.Controls;
 
 public partial class ChartControl : UserControl
 {
-    public CartesianChart Chart => ChartElement;
-    
-    public static readonly StyledProperty<DataTemplate?> SeriesTemplateProperty =
-        AvaloniaProperty.Register<ChartControl, DataTemplate?>(nameof(SeriesTemplate));
+    public AvaPlot Chart => ChartElement;
 
     public static readonly StyledProperty<string> TitleProperty =
         AvaloniaProperty.Register<ChartControl, string>(nameof(Title));
 
-    public static readonly StyledProperty<IEnumerable> SeriesSourceProperty =
-        AvaloniaProperty.Register<ChartControl, IEnumerable>(nameof(SeriesSource));
+    public static readonly StyledProperty<IEnumerable<ChartData>> SeriesSourceProperty =
+        AvaloniaProperty.Register<ChartControl, IEnumerable<ChartData>>(nameof(SeriesSource), []);
 
     public static readonly StyledProperty<Func<double, string>> YLabelerProperty =
         AvaloniaProperty.Register<ChartControl, Func<double, string>>(nameof(YLabeler));
@@ -35,28 +30,13 @@ public partial class ChartControl : UserControl
     public static readonly StyledProperty<double?> YMinLimitProperty =
         AvaloniaProperty.Register<ChartControl, double?>(nameof(YMinLimit));
 
-    public static readonly StyledProperty<double?> YMinStepProperty =
-        AvaloniaProperty.Register<ChartControl, double?>(nameof(YMinStep));
-
-    public static readonly StyledProperty<IBrush> CrosshairLabelsBackgroundProperty =
-        AvaloniaProperty.Register<ChartControl, IBrush>(nameof(CrosshairLabelsBackground),
-            new SolidColorBrush(Color.FromRgb(0x66, 0x66, 0x66)));
-
-    public static readonly StyledProperty<IBrush> CrosshairLabelsPaintProperty =
-        AvaloniaProperty.Register<ChartControl, IBrush>(nameof(CrosshairLabelsPaint),
-            new SolidColorBrush(Color.FromRgb(0xEE, 0xEE, 0xEE)));
-
-    public static readonly StyledProperty<IBrush> CrosshairPaintProperty =
-        AvaloniaProperty.Register<ChartControl, IBrush>(nameof(CrosshairPaint),
-            new SolidColorBrush(Color.FromRgb(0x99, 0x99, 0x99)));
-
     public string Title
     {
         get => GetValue(TitleProperty);
         set => SetValue(TitleProperty, value);
     }
 
-    public IEnumerable SeriesSource
+    public IEnumerable<ChartData> SeriesSource
     {
         get => GetValue(SeriesSourceProperty);
         set => SetValue(SeriesSourceProperty, value);
@@ -80,91 +60,97 @@ public partial class ChartControl : UserControl
         set => SetValue(YMinLimitProperty, value);
     }
 
-    public double? YMinStep
-    {
-        get => GetValue(YMinStepProperty);
-        set => SetValue(YMinStepProperty, value);
-    }
-
-    public DataTemplate? SeriesTemplate
-    {
-        get => GetValue(SeriesTemplateProperty);
-        set => SetValue(SeriesTemplateProperty, value);
-    }
-
-    public IBrush CrosshairLabelsBackground
-    {
-        get => GetValue(CrosshairLabelsBackgroundProperty);
-        set => SetValue(CrosshairLabelsBackgroundProperty, value);
-    }
-
-    public IBrush CrosshairLabelsPaint
-    {
-        get => GetValue(CrosshairLabelsPaintProperty);
-        set => SetValue(CrosshairLabelsPaintProperty, value);
-    }
-
-    public IBrush CrosshairPaint
-    {
-        get => GetValue(CrosshairPaintProperty);
-        set => SetValue(CrosshairPaintProperty, value);
-    }
-
-    static ChartControl()
-    {
-        CrosshairLabelsBackgroundProperty.Changed.AddClassHandler<ChartControl>(
-            (control, e) => control.OnCrosshairStyleChanged());
-        CrosshairLabelsPaintProperty.Changed.AddClassHandler<ChartControl>(
-            (control, e) => control.OnCrosshairStyleChanged());
-        CrosshairPaintProperty.Changed.AddClassHandler<ChartControl>(
-            (control, e) => control.OnCrosshairStyleChanged());
-    }
-
     public ChartControl()
     {
         InitializeComponent();
-        UpdateCrosshairStyles();
+        ChartElement.UserInputProcessor.IsEnabled = false;
+        
+        // give the plot a dark background with light text
+        ChartElement.Plot.FigureBackground.Color = new("#1c1c1e");
+        ChartElement.Plot.Axes.Color(new("#888888"));
+        // shade regions between major grid lines
+        ChartElement.Plot.Grid.XAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
+        ChartElement.Plot.Grid.YAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
+
+        // set grid line colors
+        ChartElement.Plot.Grid.XAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
+        ChartElement.Plot.Grid.YAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
+        ChartElement.Plot.Grid.XAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
+        ChartElement.Plot.Grid.YAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
+
+        // enable minor grid lines by defining a positive width
+        ChartElement.Plot.Grid.XAxisStyle.MinorLineStyle.Width = 1;
+        ChartElement.Plot.Grid.YAxisStyle.MinorLineStyle.Width = 1;
+        UpdatePlot();
     }
 
-    private void OnCrosshairStyleChanged()
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
-        UpdateCrosshairStyles();
-    }
+        base.OnPropertyChanged(change);
 
-    private void UpdateCrosshairStyles()
-    {
-        if (ChartElement.XAxes.FirstOrDefault() is not XamlAxis xAxis) return;
-        if (ChartElement.YAxes.FirstOrDefault() is not XamlAxis yAxis) return;
-
-        xAxis.CrosshairLabelsBackground = BrushToLvcColor(CrosshairLabelsBackground);
-        yAxis.CrosshairLabelsBackground = BrushToLvcColor(CrosshairLabelsBackground);
-
-        xAxis.CrosshairLabelsPaint = BrushToPaint(CrosshairLabelsPaint);
-        yAxis.CrosshairLabelsPaint = BrushToPaint(CrosshairLabelsPaint);
-
-        xAxis.CrosshairPaint = BrushToPaint(CrosshairPaint);
-        yAxis.CrosshairPaint = BrushToPaint(CrosshairPaint);
-    }
-
-    private static Paint? BrushToPaint(IBrush? brush)
-    {
-        if (brush is ISolidColorBrush solid)
+        if (change.Property == SeriesSourceProperty ||
+            change.Property == YMaxLimitProperty ||
+            change.Property == YMinLimitProperty ||
+            change.Property == YLabelerProperty)
         {
-            var c = solid.Color;
-            return new SolidColorPaint(new SKColor(c.R, c.G, c.B, c.A));
+            Dispatcher.UIThread.Post(UpdatePlot, DispatcherPriority.Background);
+        }
+    }
+
+    private void UpdatePlot()
+    {
+        var plot = ChartElement.Plot;
+        plot.Clear();
+
+        var series = SeriesSource;
+        if (series == null)
+        {
+            ChartElement.Refresh();
+            return;
         }
 
-        return null;
-    }
-    
-    private static LvcColor? BrushToLvcColor(IBrush? brush)
-    {
-        if (brush is ISolidColorBrush solid)
+        var chartDataList = series.ToList();
+        if (chartDataList.Count == 0)
         {
-            var c = solid.Color;
-            return new LvcColor(c.R, c.G, c.B, c.A);
+            ChartElement.Refresh();
+            return;
         }
 
-        return null;
+        foreach (var data in chartDataList)
+        {
+            var scatter = plot.Add.Scatter(data.Xs, data.Ys);
+            scatter.Color = new ScottPlot.Color(data.StrokeColor.Red, data.StrokeColor.Green, data.StrokeColor.Blue, data.StrokeColor.Alpha);
+            scatter.LineWidth = data.StrokeThickness;
+            scatter.MarkerSize = 0;
+            scatter.LegendText = data.Name;
+
+            if (data.IsStep)
+                scatter.ConnectStyle = ConnectStyle.StepHorizontal;
+            if (data.IsDashed)
+                scatter.LineStyle.Pattern = LinePattern.Dashed;
+        }
+
+        plot.Legend.IsVisible = false;
+
+        var yLabeler = YLabeler;
+        if (yLabeler != null)
+        {
+            var tickGen = new ScottPlot.TickGenerators.NumericAutomatic
+            {
+                LabelFormatter = v => yLabeler(v)
+            };
+            plot.Axes.Left.TickGenerator = tickGen;
+        }
+
+        if (YMinLimit.HasValue || YMaxLimit.HasValue)
+        {
+            var yMin = YMinLimit ?? plot.Axes.GetLimits().Bottom;
+            var yMax = YMaxLimit ?? plot.Axes.GetLimits().Top;
+            plot.Axes.SetLimitsY(yMin, yMax);
+        }
+
+
+
+        ChartElement.Refresh();
     }
 }

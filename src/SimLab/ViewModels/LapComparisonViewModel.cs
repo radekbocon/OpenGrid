@@ -3,30 +3,15 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using LiveChartsCore.Defaults;
-using LiveChartsCore.Painting;
-using LiveChartsCore.SkiaSharpView.Painting;
-using LiveChartsCore.SkiaSharpView.Painting.Effects;
 using SimLab.Models;
 using SimLab.Services;
-using SkiaSharp;
 
 namespace SimLab.ViewModels;
 
 public partial class LapComparisonViewModel : LapChartViewModelBase
 {
-    private readonly INavigationService _navigationService;
-
     [ObservableProperty]
     public partial ObservableCollection<LapComparisonItem> SelectedLaps { get; set; } = [];
-
-    private const float StrokeThickness = 2;
-    private static readonly DashEffect DashEffect = new DashEffect([3 * StrokeThickness, 2 * StrokeThickness]);
-
-    public LapComparisonViewModel(INavigationService navigationService)
-    {
-        _navigationService = navigationService;
-    }
 
     public override void SetParameters(params object[] parameters)
     {
@@ -35,15 +20,6 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
             SelectedLaps = new ObservableCollection<LapComparisonItem>(comparisonItems);
             GenerateChartData();
         }
-    }
-
-    private static Paint CreateDashedPaint(SKColor color)
-    {
-        return new SolidColorPaint(color, StrokeThickness)
-        {
-            PathEffect = DashEffect,
-            StrokeCap = SKStrokeCap.Round
-        };
     }
 
     private void GenerateChartData()
@@ -62,36 +38,31 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
         foreach (var item in SelectedLaps)
         {
             var distanceOffset = item.Lap.Records.First().Distance;
-            
-            var lapMinX = item.Lap.Records.Min(r => r.Distance - distanceOffset);
-            var lapMaxX = item.Lap.Records.Max(r => r.Distance - distanceOffset);
-            
+
+            var lapMinX = item.Lap.Records.Min(r => (double)(r.Distance - distanceOffset));
+            var lapMaxX = item.Lap.Records.Max(r => (double)(r.Distance - distanceOffset));
+
             globalMinX = Math.Min(globalMinX, lapMinX);
             globalMaxX = Math.Max(globalMaxX, lapMaxX);
 
-            inputsSeries.Add(new ChartData($"{item.ShortName} (Gas)",
-                item.Lap.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, r.Gas)),
-                item.Paint));
+            var xs = item.Lap.Records.Select(r => (double)(r.Distance - distanceOffset)).ToArray();
+            var gasYs = item.Lap.Records.Select(r => (double)r.Gas);
+            inputsSeries.Add(new ChartData($"{item.ShortName} (Gas)", xs, gasYs, item.Color));
 
-            inputsSeries.Add(new ChartData($"{item.ShortName} (Brake)",
-                item.Lap.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, r.Brake)),
-                CreateDashedPaint(item.Color)));
+            var brakeYs = item.Lap.Records.Select(r => (double)r.Brake);
+            inputsSeries.Add(new ChartData($"{item.ShortName} (Brake)", xs, brakeYs, item.Color, isDashed: true));
 
-            steeringSeries.Add(new ChartData($"{item.ShortName}",
-                item.Lap.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, r.SteerAngle)),
-                item.Paint));
+            var steerYs = item.Lap.Records.Select(r => (double)r.SteerAngle);
+            steeringSeries.Add(new ChartData($"{item.ShortName}", xs, steerYs, item.Color));
 
-            speedSeries.Add(new ChartData($"{item.ShortName}",
-                item.Lap.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, Math.Round(r.SpeedKmh, 1))),
-                item.Paint));
+            var speedYs = item.Lap.Records.Select(r => Math.Round(r.SpeedKmh, 1));
+            speedSeries.Add(new ChartData($"{item.ShortName}", xs, speedYs, item.Color));
 
-            gearSeries.Add(new ChartData($"{item.ShortName}",
-                item.Lap.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, (int)r.CurrentGear)),
-                item.Paint));
+            var gearYs = item.Lap.Records.Select(r => (double)(int)r.CurrentGear);
+            gearSeries.Add(new ChartData($"{item.ShortName}", xs, gearYs, item.Color, isStep: true));
 
-            rpmSeries.Add(new ChartData($"{item.ShortName}",
-                item.Lap.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, r.EngineRpm)),
-                item.Paint));
+            var rpmYs = item.Lap.Records.Select(r => (double)r.EngineRpm);
+            rpmSeries.Add(new ChartData($"{item.ShortName}", xs, rpmYs, item.Color));
         }
 
         DataMinX = globalMinX;
@@ -104,7 +75,5 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
         Speed = new ObservableCollection<ChartData>(speedSeries);
         Gear = new ObservableCollection<ChartData>(gearSeries);
         Rpm = new ObservableCollection<ChartData>(rpmSeries);
-
-        ResampleAllCharts();
     }
 }

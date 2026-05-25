@@ -1,10 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using LiveChartsCore.Generators;
-using LiveChartsCore.SkiaSharpView;
 using SimLab.Models;
 
 namespace SimLab.ViewModels;
@@ -38,27 +34,4 @@ public abstract partial class LapChartViewModelBase : ViewModelBase, ILapChartVi
     public Func<double, string> GearLabeler { get; set; } = value => Enum.GetName(typeof(Gear), (int)value) ?? "";
     public Func<double, string> DoubleLabeler { get; set; } = value => value.ToString("N2");
     public Func<double, string> IntegerLabeler { get; set; } = value => value.ToString("N0");
-
-    protected const int DefaultWidthPixels = 1000;
-
-    [RelayCommand]
-    private void ChangeZoom(CommandParameters<object, PropertyChangedEventArgs> e)
-    {
-        if (e.Parameter1 is not Axis axis)
-        {
-            return;
-        }
-        MaxX = axis.MaxLimit ?? MaxX;
-        MinX = axis.MinLimit ?? MinX;
-        ResampleAllCharts();
-    }
-
-    protected virtual void ResampleAllCharts()
-    {
-        foreach (var chartData in Rpm) chartData.Resample(DefaultWidthPixels, MaxX, MinX);
-        foreach (var chartData in Speed) chartData.Resample(DefaultWidthPixels, MaxX, MinX);
-        foreach (var chartData in Gear) chartData.Resample(DefaultWidthPixels, MaxX, MinX);
-        foreach (var chartData in Inputs) chartData.Resample(DefaultWidthPixels, MaxX, MinX);
-        foreach (var chartData in Steering) chartData.Resample(DefaultWidthPixels, MaxX, MinX);
-    }
 }

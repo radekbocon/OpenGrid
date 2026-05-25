@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
-using LiveChartsCore.Defaults;
-using LiveChartsCore.SkiaSharpView.Painting;
 using SimLab.Controls;
 using SimLab.Models;
 using SimLab.Services;
@@ -22,16 +20,16 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
 
     [ObservableProperty]
     public partial Lap? SelectedLap { get; set; }
-    
+
     [ObservableProperty]
-    public partial ObservableCollection<Lap>? Laps { get; set; } 
+    public partial ObservableCollection<Lap>? Laps { get; set; }
 
     [ObservableProperty]
     public partial string? LapTime { get; set; }
 
-    private static readonly SolidColorPaint GasPaint = new(SKColors.Green, 2);
-    private static readonly SolidColorPaint BrakePaint = new(SKColors.Red, 2);
-    private static readonly SolidColorPaint DefaultPaint = new(SKColors.DodgerBlue, 2);
+    private static readonly SKColor GasColor = SKColors.Green;
+    private static readonly SKColor BrakeColor = SKColors.Red;
+    private static readonly SKColor DefaultColor = SKColors.DodgerBlue;
 
     public SessionDetailsViewModel(SessionRepository sessionRepository, INavigationService navigationService)
     {
@@ -71,7 +69,7 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
             _navigationService.NavigateTo<SessionsViewModel>();
             return;
         }
-        
+
         _sessionRepository.DeleteLap(_session, SelectedLap.Number);
 
         Laps = new ObservableCollection<Lap>(_session.Laps);
@@ -97,28 +95,17 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
         }
 
         var distanceOffset = value.Records.First().Distance;
-        
-        var gasData = new ChartData("Gas", 
-            value.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, r.Gas)), 
-            GasPaint);
-        var brakeData = new ChartData("Brake", 
-            value.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, r.Brake)), 
-            BrakePaint);
-        var steeringData = new ChartData("Steering", 
-            value.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, r.SteerAngle)), 
-            DefaultPaint);
-        var speedData = new ChartData("Speed", 
-            value.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, Math.Round(r.SpeedKmh, 1))), 
-            DefaultPaint);
-        var gearData = new ChartData("Gear", 
-            value.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, (int)r.CurrentGear)), 
-            DefaultPaint);
-        var rpmData = new ChartData("RPM", 
-            value.Records.Select(r => new ObservablePoint(r.Distance - distanceOffset, r.EngineRpm)), 
-            DefaultPaint);
-        
-        DataMinX = value.Records.Min(r => r.Distance - distanceOffset);
-        DataMaxX = value.Records.Max(r => r.Distance - distanceOffset);
+        var xs = value.Records.Select(r => (double)(r.Distance - distanceOffset));
+
+        var gasData = new ChartData("Gas", xs, value.Records.Select(r => (double)r.Gas), GasColor);
+        var brakeData = new ChartData("Brake", xs, value.Records.Select(r => (double)r.Brake), BrakeColor);
+        var steeringData = new ChartData("Steering", xs, value.Records.Select(r => (double)r.SteerAngle), DefaultColor);
+        var speedData = new ChartData("Speed", xs, value.Records.Select(r => Math.Round((double)r.SpeedKmh, 1)), DefaultColor);
+        var gearData = new ChartData("Gear", xs, value.Records.Select(r => (double)(int)r.CurrentGear), DefaultColor, isStep: true);
+        var rpmData = new ChartData("RPM", xs, value.Records.Select(r => (double)r.EngineRpm), DefaultColor);
+
+        DataMinX = value.Records.Min(r => (double)(r.Distance - distanceOffset));
+        DataMaxX = value.Records.Max(r => (double)(r.Distance - distanceOffset));
         MinX = DataMinX;
         MaxX = DataMaxX;
 
@@ -127,8 +114,7 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
         Speed = [speedData];
         Gear = [gearData];
         Rpm = [rpmData];
-        
-        ResampleAllCharts();
+
         LapTime = $@"Time: {SelectedLap?.Time:mm\:ss\.fff}";
     }
 }

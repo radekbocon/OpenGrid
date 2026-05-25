@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Avalonia;
 using Avalonia.Input;
-using LiveChartsCore.SkiaSharpView.Avalonia;
+using ScottPlot.Avalonia;
 using SimLab.ViewModels;
 
 namespace SimLab.Views;
@@ -12,23 +13,34 @@ public class ChartInteractionHelper
     private double _panStartX;
     private double _panStartMinX;
     private double _panStartMaxX;
-    private CartesianChart? _panningChart;
+    private AvaPlot? _panningChart;
     private readonly Func<ILapChartViewModel?> _getViewModel;
+    private List<AvaPlot> _charts = [];
 
     public ChartInteractionHelper(Func<ILapChartViewModel?> getViewModel)
     {
         _getViewModel = getViewModel;
     }
 
-    public void AttachEvents(IEnumerable<CartesianChart> charts)
+    public void AttachEvents(IEnumerable<AvaPlot> charts)
     {
-        foreach (var chart in charts)
+        _charts = new List<AvaPlot>(charts);
+        foreach (var chart in _charts)
         {
-            chart.PointerWheelChanged += Chart_PointerWheelChanged;
-            chart.PointerPressed += Chart_PointerPressed;
-            chart.PointerMoved += Chart_PointerMoved;
-            chart.PointerReleased += Chart_PointerReleased;
-            chart.PointerCaptureLost += Chart_PointerCaptureLost;
+            chart.AddHandler(InputElement.PointerWheelChangedEvent, Chart_PointerWheelChanged, handledEventsToo: true);
+            chart.AddHandler(InputElement.PointerPressedEvent, Chart_PointerPressed, handledEventsToo: true);
+            chart.AddHandler(InputElement.PointerMovedEvent, Chart_PointerMoved, handledEventsToo: true);
+            chart.AddHandler(InputElement.PointerReleasedEvent, Chart_PointerReleased, handledEventsToo: true);
+            chart.AddHandler(InputElement.PointerCaptureLostEvent, Chart_PointerCaptureLost, handledEventsToo: true);
+        }
+    }
+
+    private void UpdateAllChartLimits(double minX, double maxX)
+    {
+        foreach (var chart in _charts)
+        {
+            chart.Plot.Axes.SetLimitsX(minX, maxX);
+            chart.Refresh();
         }
     }
 
@@ -38,10 +50,14 @@ public class ChartInteractionHelper
         if (e.GetCurrentPoint(sender as InputElement).Properties.IsLeftButtonPressed && vm != null)
         {
             _isPanning = true;
-            _panningChart = sender as CartesianChart;
-            _panStartX = e.GetPosition(_panningChart).X;
-            _panStartMinX = vm.MinX;
-            _panStartMaxX = vm.MaxX;
+            _panningChart = sender as AvaPlot;
+            if (_panningChart != null)
+            {
+                e.Pointer.Capture(_panningChart);
+                _panStartX = e.GetPosition(_panningChart).X;
+                _panStartMinX = vm.MinX;
+                _panStartMaxX = vm.MaxX;
+            }
             e.Handled = true;
         }
     }
@@ -62,12 +78,17 @@ public class ChartInteractionHelper
                 var newMaxX = _panStartMaxX + dataDelta;
                 vm.MinX = Math.Max(vm.DataMinX, newMinX);
                 vm.MaxX = Math.Min(vm.DataMaxX, newMaxX);
+                UpdateAllChartLimits(vm.MinX, vm.MaxX);
             }
         }
     }
 
     private void Chart_PointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (_panningChart != null)
+        {
+            e.Pointer.Capture(null);
+        }
         _isPanning = false;
         _panningChart = null;
     }
@@ -89,7 +110,12 @@ public class ChartInteractionHelper
             var center = (vm.MaxX + vm.MinX) / 2;
             vm.MinX = Math.Max(vm.DataMinX, center - newRange / 2);
             vm.MaxX = Math.Min(vm.DataMaxX, center + newRange / 2);
+            UpdateAllChartLimits(vm.MinX, vm.MaxX);
             e.Handled = true;
+        }
+        else
+        {
+            e.Handled = false;
         }
     }
 }

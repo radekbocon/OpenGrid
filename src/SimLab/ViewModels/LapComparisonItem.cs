@@ -1,5 +1,3 @@
-using LiveChartsCore.Painting;
-using LiveChartsCore.SkiaSharpView.Painting;
 using SimLab.Models;
 using SkiaSharp;
 
@@ -11,8 +9,7 @@ public record LapComparisonItem
     public SessionInfo SessionInfo { get; }
     public int ColorIndex { get; }
     public SKColor Color => ColorPalette.GetColor(ColorIndex);
-    public SolidColorPaint Paint => ColorPalette.GetPaint(ColorIndex);
-    
+
     public string DisplayName => $"{SessionInfo.Car} - Lap {Lap.Number} ({Lap.Time:mm\\:ss\\.fff})";
     public string ShortName => $"Lap {Lap.Number}";
 

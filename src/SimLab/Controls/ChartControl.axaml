@@ -2,35 +2,13 @@
     x:Class="SimLab.Controls.ChartControl"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
-    xmlns:vm="clr-namespace:SimLab.ViewModels"
+    xmlns:sp="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
     x:Name="Root"
     x:CompileBindings="False">
     <StackPanel Spacing="4">
         <TextBlock Classes="Subtitle1" Text="{Binding Title, ElementName=Root}" />
-        <lvc:CartesianChart
+        <sp:AvaPlot
             x:Name="ChartElement"
-            Height="250"
-            AnimationsSpeed="0"
-            DrawMargin="{lvc:Margin '70, Auto, Auto, Auto'}"
-            SeriesSource="{Binding SeriesSource, ElementName=Root}"
-            SeriesTemplate="{Binding SeriesTemplate, ElementName=Root}"
-            TooltipPosition="Hidden"
-            ZoomMode="None">
-            <lvc:CartesianChart.XAxes>
-                <lvc:XamlAxis
-                    Labeler="{Binding IntegerLabeler}"
-                    MaxLimit="{Binding MaxX, Mode=TwoWay}"
-                    MinLimit="{Binding MinX, Mode=TwoWay}"
-                    PropertyChangedCommand="{Binding ChangeZoomCommand}" />
-            </lvc:CartesianChart.XAxes>
-            <lvc:CartesianChart.YAxes>
-                <lvc:XamlAxis
-                    Labeler="{Binding YLabeler, ElementName=Root}"
-                    MaxLimit="{Binding YMaxLimit, ElementName=Root}"
-                    MinLimit="{Binding YMinLimit, ElementName=Root}"
-                    MinStep="{Binding YMinStep, ElementName=Root}" />
-            </lvc:CartesianChart.YAxes>
-        </lvc:CartesianChart>
+            Height="250" />
     </StackPanel>
 </UserControl>

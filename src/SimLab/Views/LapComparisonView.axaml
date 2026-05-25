@@ -3,7 +3,6 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
-    xmlns:avalonia1="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
     xmlns:controls="clr-namespace:SimLab.Controls"
     xmlns:converters="clr-namespace:SimLab.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -16,23 +15,6 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <converters:SkiaColorToBrushConverter x:Key="SkiaColorToBrushConverter" />
-        <DataTemplate x:Key="ChartLineSeriesTemplate" x:DataType="vm:ChartData">
-            <avalonia1:XamlLineSeries
-                Fill="{x:Null}"
-                GeometrySize="0"
-                LineSmoothness="0"
-                SeriesName="{Binding Name}"
-                Stroke="{Binding Stroke}"
-                Values="{Binding Points}" />
-        </DataTemplate>
-        <DataTemplate x:Key="StepLineSeriesTemplate" x:DataType="vm:ChartData">
-            <avalonia1:XamlStepLineSeries
-                Fill="{x:Null}"
-                GeometrySize="0"
-                SeriesName="{Binding Name}"
-                Stroke="{Binding Stroke}"
-                Values="{Binding Points}" />
-        </DataTemplate>
         <DataTemplate x:Key="LegendItemTemplate" x:DataType="vm:LapComparisonItem">
             <Grid ColumnDefinitions="Auto, *" ColumnSpacing="8">
                 <Border
@@ -51,6 +33,7 @@
     <ScrollViewer>
         <Grid
             x:Name="ChartGrid"
+            Margin="0,0,16,0"
             RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto"
             RowSpacing="4">
             <StackPanel
@@ -80,9 +63,7 @@
                 CornerRadius="4">
                 <StackPanel Spacing="4">
                     <TextBlock Classes="Subtitle2" Text="Compared Laps:" />
-                    <ItemsControl
-                        ItemsSource="{Binding SelectedLaps}"
-                        ItemTemplate="{StaticResource LegendItemTemplate}">
+                    <ItemsControl ItemTemplate="{StaticResource LegendItemTemplate}" ItemsSource="{Binding SelectedLaps}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Orientation="Vertical" Spacing="4" />
@@ -97,7 +78,6 @@
                 Title="Inputs (Gas = Solid, Brake = Dashed)"
                 Grid.Row="2"
                 SeriesSource="{Binding Inputs}"
-                SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding DoubleLabeler}"
                 YMaxLimit="1"
                 YMinLimit="0" />
@@ -106,7 +86,6 @@
                 Title="Steering"
                 Grid.Row="3"
                 SeriesSource="{Binding Steering}"
-                SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding DoubleLabeler}"
                 YMaxLimit="1"
                 YMinLimit="-1" />
@@ -115,24 +94,20 @@
                 Title="Speed"
                 Grid.Row="4"
                 SeriesSource="{Binding Speed}"
-                SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding IntegerLabeler}" />
             <controls:ChartControl
                 x:Name="GearChart"
                 Title="Gear"
                 Grid.Row="5"
                 SeriesSource="{Binding Gear}"
-                SeriesTemplate="{StaticResource StepLineSeriesTemplate}"
                 YLabeler="{Binding GearLabeler}"
                 YMaxLimit="7"
-                YMinLimit="0"
-                YMinStep="1" />
+                YMinLimit="0" />
             <controls:ChartControl
                 x:Name="RpmChart"
                 Title="RPM"
                 Grid.Row="6"
                 SeriesSource="{Binding Rpm}"
-                SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding IntegerLabeler}"
                 YMinLimit="0" />
         </Grid>
