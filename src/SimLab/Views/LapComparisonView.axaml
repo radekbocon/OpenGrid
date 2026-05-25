@@ -1,19 +1,21 @@
 <UserControl
-    x:Class="SimLab.Views.SessionDetailsView"
+    x:Class="SimLab.Views.LapComparisonView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:avalonia1="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
     xmlns:controls="clr-namespace:SimLab.Controls"
+    xmlns:converters="clr-namespace:SimLab.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:SimLab.ViewModels"
     Padding="16"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    x:DataType="vm:SessionDetailsViewModel"
+    x:DataType="vm:LapComparisonViewModel"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <converters:SkiaColorToBrushConverter x:Key="SkiaColorToBrushConverter" />
         <DataTemplate x:Key="ChartLineSeriesTemplate" x:DataType="vm:ChartData">
             <avalonia1:XamlLineSeries
                 Fill="{x:Null}"
@@ -31,11 +33,25 @@
                 Stroke="{Binding Stroke}"
                 Values="{Binding Points}" />
         </DataTemplate>
+        <DataTemplate x:Key="LegendItemTemplate" x:DataType="vm:LapComparisonItem">
+            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="8">
+                <Border
+                    Grid.Column="0"
+                    Width="24"
+                    Height="2"
+                    VerticalAlignment="Center"
+                    Background="{Binding Color, Converter={StaticResource SkiaColorToBrushConverter}}" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Text="{Binding DisplayName}" />
+            </Grid>
+        </DataTemplate>
     </UserControl.Resources>
     <ScrollViewer>
         <Grid
             x:Name="ChartGrid"
-            RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto"
+            RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto"
             RowSpacing="4">
             <StackPanel
                 Grid.Row="0"
@@ -44,37 +60,8 @@
                 Spacing="8">
                 <TextBlock
                     VerticalAlignment="Center"
-                    Classes="Subtitle1"
-                    Text="Lap#" />
-                <ComboBox
-                    DisplayMemberBinding="{Binding Number}"
-                    ItemsSource="{Binding Laps}"
-                    SelectedItem="{Binding SelectedLap}" />
-                <Button
-                    Padding="8"
-                    Classes="Flat"
-                    Command="{Binding CompareWithOtherLapsCommand}"
-                    ToolTip.Tip="Compare with other laps">
-                    <avalonia:MaterialIcon IconSize="24" Kind="Compare" />
-                </Button>
-                <Button
-                    Padding="8"
-                    Classes="Flat"
-                    Command="{Binding DeleteLapCommand}"
-                    ToolTip.Tip="Delete lap">
-                    <avalonia:MaterialIcon IconSize="24" Kind="Delete" />
-                </Button>
-                <TextBlock
-                    VerticalAlignment="Center"
-                    Classes="Subtitle1"
-                    Classes.InvalidLap="{Binding !SelectedLap?.IsValid}"
-                    Text="{Binding LapTime}">
-                    <TextBlock.Styles>
-                        <Style Selector="TextBlock.InvalidLap">
-                            <Setter Property="Foreground" Value="Red" />
-                        </Style>
-                    </TextBlock.Styles>
-                </TextBlock>
+                    Classes="H6"
+                    Text="Lap Comparison" />
                 <StackPanel Orientation="Horizontal" Spacing="4">
                     <avalonia:MaterialIcon IconSize="24" Kind="Info" />
                     <TextBlock
@@ -86,10 +73,29 @@
                 </StackPanel>
             </StackPanel>
 
+            <Border
+                Grid.Row="1"
+                Margin="8"
+                Padding="8"
+                CornerRadius="4">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="Subtitle2" Text="Compared Laps:" />
+                    <ItemsControl
+                        ItemsSource="{Binding SelectedLaps}"
+                        ItemTemplate="{StaticResource LegendItemTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Vertical" Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
             <controls:ChartControl
                 x:Name="InputsChart"
-                Title="Inputs"
-                Grid.Row="1"
+                Title="Inputs (Gas = Solid, Brake = Dashed)"
+                Grid.Row="2"
                 SeriesSource="{Binding Inputs}"
                 SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding DoubleLabeler}"
@@ -98,7 +104,7 @@
             <controls:ChartControl
                 x:Name="SteeringChart"
                 Title="Steering"
-                Grid.Row="2"
+                Grid.Row="3"
                 SeriesSource="{Binding Steering}"
                 SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding DoubleLabeler}"
@@ -107,14 +113,14 @@
             <controls:ChartControl
                 x:Name="SpeedChart"
                 Title="Speed"
-                Grid.Row="3"
+                Grid.Row="4"
                 SeriesSource="{Binding Speed}"
                 SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding IntegerLabeler}" />
             <controls:ChartControl
                 x:Name="GearChart"
                 Title="Gear"
-                Grid.Row="4"
+                Grid.Row="5"
                 SeriesSource="{Binding Gear}"
                 SeriesTemplate="{StaticResource StepLineSeriesTemplate}"
                 YLabeler="{Binding GearLabeler}"
@@ -124,7 +130,7 @@
             <controls:ChartControl
                 x:Name="RpmChart"
                 Title="RPM"
-                Grid.Row="5"
+                Grid.Row="6"
                 SeriesSource="{Binding Rpm}"
                 SeriesTemplate="{StaticResource ChartLineSeriesTemplate}"
                 YLabeler="{Binding IntegerLabeler}"

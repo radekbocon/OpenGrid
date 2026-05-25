@@ -34,6 +34,10 @@
                 Command="{Binding StopSessionCommand}"
                 Content="Stop Recording"
                 IsVisible="{Binding IsRecording}" />
+            <Button
+                Command="{Binding OpenLapComparisonCommand}"
+                Content="Compare Laps"
+                IsVisible="{Binding HasMultipleLapSessions}" />
         </StackPanel>
 
         <TextBlock

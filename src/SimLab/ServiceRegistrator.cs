@@ -32,6 +32,8 @@ public static class ServiceRegistrator
         services.AddTransient<SessionDetailsViewModel>();
         services.AddTransient<DevicesViewModel>();
         services.AddTransient<DashboardsViewModel>();
+        services.AddTransient<LapSelectionViewModel>();
+        services.AddTransient<LapComparisonViewModel>();
 
         return services;
     }

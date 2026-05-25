@@ -7,11 +7,11 @@ using SimLab.ViewModels;
 
 namespace SimLab.Views;
 
-public partial class SessionDetailsView : UserControl
+public partial class LapComparisonView : UserControl
 {
     private readonly ChartInteractionHelper _interactionHelper;
 
-    public SessionDetailsView()
+    public LapComparisonView()
     {
         InitializeComponent();
         _interactionHelper = new ChartInteractionHelper(() => DataContext as ILapChartViewModel);

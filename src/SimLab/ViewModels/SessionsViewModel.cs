@@ -1,4 +1,6 @@
+using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -19,6 +21,8 @@ public partial class SessionsViewModel : ViewModelBase
     [ObservableProperty] public partial bool CanStartRecording { get; private set; }
 
     public ObservableCollection<Session> Sessions => _sessionRepository.Sessions;
+
+    public bool HasMultipleLapSessions => Sessions.Any(s => s.Laps.Count > 0);
 
     public string CurrentSession => _sessionRepository.CurrentSession is null
         ? "No session"
@@ -49,6 +53,7 @@ public partial class SessionsViewModel : ViewModelBase
     {
         _sessionRepository.LoadSessions();
         OnPropertyChanged(nameof(Sessions));
+        OnPropertyChanged(nameof(HasMultipleLapSessions));
     }
 
     [RelayCommand(CanExecute = nameof(CanStartRecording))]
@@ -72,6 +77,12 @@ public partial class SessionsViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void OpenLapComparison()
+    {
+        _navigationService.NavigateTo<LapSelectionViewModel>();
+    }
+
+    [RelayCommand]
     private async Task DeleteSessionAsync(Session session)
     {
         var confirmDialog = new ConfirmDialog("Are you sure you want to delete this session?");
@@ -80,6 +91,7 @@ public partial class SessionsViewModel : ViewModelBase
         if (confirmDialog.Result)
         {
             _sessionRepository.DeleteSession(session);
+            OnPropertyChanged(nameof(HasMultipleLapSessions));
         }
     }
 }
