@@ -2,9 +2,6 @@
     x:Class="SimLab.Controls.LapSelectionDialog"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
-    xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
-    xmlns:converters="clr-namespace:SimLab.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:SimLab.ViewModels"
@@ -12,9 +9,6 @@
     d:DesignWidth="600"
     x:DataType="vm:LapSelectionViewModel"
     mc:Ignorable="d">
-    <UserControl.Resources>
-        <converters:ExpandedToIconConverter x:Key="ExpandedToIconConverter" />
-    </UserControl.Resources>
     <Grid
         Margin="16"
         RowDefinitions="Auto, Auto, *, Auto"
@@ -42,60 +36,38 @@
                 <ItemsControl ItemsSource="{Binding Sessions}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:SelectableSession">
-                            <controls:Card Margin="0,0,8,0">
-                                <Grid RowDefinitions="Auto, Auto">
-                                    <ToggleButton
-                                        Grid.Row="0"
-                                        Classes="Flat"
-                                        HorizontalAlignment="Stretch"
-                                        IsChecked="{Binding IsExpanded, Mode=TwoWay}">
-                                        <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="8">
-                                            <avalonia:MaterialIcon
-                                                Grid.Column="0"
-                                                VerticalAlignment="Center"
-                                                Kind="{Binding IsExpanded, Converter={StaticResource ExpandedToIconConverter}}" />
-                                            <TextBlock
-                                                Grid.Column="1"
-                                                VerticalAlignment="Center"
-                                                Text="{Binding DisplayName}" />
-                                            <TextBlock
-                                                Grid.Column="2"
-                                                VerticalAlignment="Center"
-                                                Classes="Caption"
-                                                Opacity="0.7"
-                                                Text="{Binding LapCount, StringFormat='Laps: {0}'}" />
-                                        </Grid>
-                                    </ToggleButton>
-                                    <ItemsControl
-                                        Grid.Row="1"
-                                        Margin="16,4,0,0"
-                                        IsVisible="{Binding IsExpanded}"
-                                        ItemsSource="{Binding Laps}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="vm:SelectableLap">
-                                                <CheckBox
-                                                    Margin="0,2"
-                                                    HorizontalAlignment="Stretch"
-                                                    IsChecked="{Binding IsSelected, Mode=TwoWay}">
-                                                    <Grid ColumnDefinitions="Auto, Auto, *" ColumnSpacing="8">
-                                                        <TextBlock
-                                                            Grid.Column="0"
-                                                            VerticalAlignment="Center"
-                                                            Text="{Binding DisplayName}" />
-                                                        <TextBlock
-                                                            Grid.Column="1"
-                                                            VerticalAlignment="Center"
-                                                            Classes="Caption"
-                                                            Opacity="0.7"
-                                                            Text="(invalid)"
-                                                            IsVisible="{Binding !IsValid}" />
-                                                    </Grid>
-                                                </CheckBox>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </Grid>
-                            </controls:Card>
+                            <Expander
+                                Margin="0,0,8,0"
+                                ExpandDirection="Down"
+                                Header="{Binding DisplayName}"
+                                IsExpanded="{Binding IsExpanded, Mode=TwoWay}">
+                                <ItemsControl
+                                    Margin="16,4,0,0"
+                                    ItemsSource="{Binding Laps}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SelectableLap">
+                                            <CheckBox
+                                                Margin="0,2"
+                                                HorizontalAlignment="Stretch"
+                                                IsChecked="{Binding IsSelected, Mode=TwoWay}">
+                                                <Grid ColumnDefinitions="Auto, Auto, *" ColumnSpacing="8">
+                                                    <TextBlock
+                                                        Grid.Column="0"
+                                                        VerticalAlignment="Center"
+                                                        Text="{Binding DisplayName}" />
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        VerticalAlignment="Center"
+                                                        Classes="Caption"
+                                                        Opacity="0.7"
+                                                        Text="(invalid)"
+                                                        IsVisible="{Binding !IsValid}" />
+                                                </Grid>
+                                            </CheckBox>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Expander>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
