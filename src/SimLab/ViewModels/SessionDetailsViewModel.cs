@@ -22,6 +22,7 @@ namespace SimLab.ViewModels;
 public partial class SessionDetailsViewModel : ViewModelBase
 {
     private readonly SessionRepository _sessionRepository;
+    private readonly INavigationService _navigationService;
     private Session? _session;
 
     [ObservableProperty]
@@ -59,9 +60,10 @@ public partial class SessionDetailsViewModel : ViewModelBase
     [ObservableProperty]
     public partial string? LapTime { get; set; }
 
-    public SessionDetailsViewModel(SessionRepository sessionRepository)
+    public SessionDetailsViewModel(SessionRepository sessionRepository, INavigationService navigationService)
     {
         _sessionRepository = sessionRepository;
+        _navigationService = navigationService;
     }
 
     public override void SetParameters(params object[] parameters)
@@ -90,6 +92,13 @@ public partial class SessionDetailsViewModel : ViewModelBase
             return;
         }
 
+        if (_session.Laps.Count == 1)
+        {
+            _sessionRepository.DeleteSession(_session);
+            _navigationService.NavigateTo<SessionsViewModel>();
+            return;
+        }
+        
         _sessionRepository.DeleteLap(_session, SelectedLap.Number);
 
         Laps = new ObservableCollection<Lap>(_session.Laps);
