@@ -7,7 +7,6 @@ using Avalonia.Threading;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using SimLab.ViewModels;
-using SkiaSharp;
 
 namespace SimLab.Controls;
 
@@ -113,17 +112,22 @@ public partial class ChartControl : UserControl
 
         foreach (var data in chartDataList)
         {
-            var scatter = plot.Add.Scatter(data.Xs, data.Ys);
-            scatter.Color = new ScottPlot.Color(data.StrokeColor.Red, data.StrokeColor.Green, data.StrokeColor.Blue,
+            var signalXy = plot.Add.SignalXY(data.Xs, data.Ys);
+            signalXy.Color = new Color(data.StrokeColor.Red, data.StrokeColor.Green, data.StrokeColor.Blue,
                 data.StrokeColor.Alpha);
-            scatter.LineWidth = data.StrokeThickness;
-            scatter.MarkerSize = 0;
-            scatter.LegendText = data.Name;
+            signalXy.LineWidth = data.StrokeThickness;
+            signalXy.MarkerSize = 0;
+            signalXy.LegendText = data.Name;
 
             if (data.IsStep)
-                scatter.ConnectStyle = ConnectStyle.StepHorizontal;
+            {
+                signalXy.ConnectStyle = ConnectStyle.StepHorizontal;
+            }
+
             if (data.IsDashed)
-                scatter.LineStyle.Pattern = LinePattern.Dashed;
+            {
+                signalXy.LineStyle.Pattern = LinePattern.Dashed;
+            }
         }
 
         plot.Legend.IsVisible = false;
