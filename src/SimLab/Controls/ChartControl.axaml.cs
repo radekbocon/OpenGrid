@@ -1,21 +1,18 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using ScottPlot;
-using ScottPlot.Avalonia;
 using ScottPlot.Interactivity;
 using ScottPlot.Interactivity.UserActionResponses;
 using ScottPlot.Interactivity.UserActions;
-using SimLab.ViewModels;
 
 namespace SimLab.Controls;
 
 public partial class ChartControl : UserControl
 {
-    private const int SubplotHeight = 200;
+    private const int SubplotHeight = 250;
 
     public static readonly StyledProperty<IEnumerable<SubplotDefinition>> SubplotsProperty =
         AvaloniaProperty.Register<ChartControl, IEnumerable<SubplotDefinition>>(nameof(Subplots), []);
@@ -47,6 +44,8 @@ public partial class ChartControl : UserControl
     private void UpdatePlots()
     {
         var definitions = Subplots?.ToList() ?? [];
+        
+        ChartElement.MinHeight = definitions.Count * SubplotHeight;
 
         if (definitions.Count == 0)
         {
