@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
@@ -29,6 +30,7 @@ public partial class ChartControl : UserControl
         ChartElement.UserInputProcessor.RemoveAll<IUserActionResponse>();
         ChartElement.UserInputProcessor.UserActionResponses.Add(new MouseDragPan(StandardMouseButtons.Left) { LockY = true });
         ChartElement.UserInputProcessor.UserActionResponses.Add(new XOnlyMouseWheelZoom());
+        ChartElement.UserInputProcessor.UserActionResponses.Add(new KeyboardAutoscale(new Key("")));
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -43,8 +45,8 @@ public partial class ChartControl : UserControl
 
     private void UpdatePlots()
     {
-        var definitions = Subplots?.ToList() ?? [];
-        
+        var definitions = Subplots.ToList();
+
         ChartElement.MinHeight = definitions.Count * SubplotHeight;
 
         if (definitions.Count == 0)
@@ -62,8 +64,8 @@ public partial class ChartControl : UserControl
         {
             multiplot.Subplots.RemoveAt(0);
         }
-
-        var plots = new List<Plot>();
+        var maxX = 0.0;
+        var minX = 0.0;
 
         foreach (var def in definitions)
         {
@@ -71,28 +73,27 @@ public partial class ChartControl : UserControl
             Styling.ApplySubplotStyle(plot);
             plot.Title(def.Title);
 
-            if (def.Series is not null)
+            foreach (var data in def.Series)
             {
-                foreach (var data in def.Series)
+                var signalXy = plot.Add.SignalXY(data.Xs, data.Ys);
+                maxX = Math.Max(maxX, data.Xs.Max());
+                minX = Math.Min(minX, data.Xs.Min());
+                signalXy.Color = new Color(data.StrokeColor.Red, data.StrokeColor.Green, data.StrokeColor.Blue, data.StrokeColor.Alpha);
+                signalXy.LineWidth = data.StrokeThickness;
+                signalXy.MarkerSize = 0;
+                signalXy.LegendText = data.Name;
+
+                if (data.IsStep)
                 {
-                    var signalXy = plot.Add.SignalXY(data.Xs, data.Ys);
-                    signalXy.Color = new Color(data.StrokeColor.Red, data.StrokeColor.Green, data.StrokeColor.Blue,
-                        data.StrokeColor.Alpha);
-                    signalXy.LineWidth = data.StrokeThickness;
-                    signalXy.MarkerSize = 0;
-                    signalXy.LegendText = data.Name;
+                    signalXy.ConnectStyle = ConnectStyle.StepHorizontal;
+                }
 
-                    if (data.IsStep)
-                    {
-                        signalXy.ConnectStyle = ConnectStyle.StepHorizontal;
-                    }
-
-                    if (data.IsDashed)
-                    {
-                        signalXy.LineStyle.Pattern = LinePattern.Dashed;
-                    }
+                if (data.IsDashed)
+                {
+                    signalXy.LineStyle.Pattern = LinePattern.Dashed;
                 }
             }
+
 
             plot.Legend.IsVisible = false;
 
@@ -114,10 +115,12 @@ public partial class ChartControl : UserControl
             }
 
             multiplot.Subplots.Add(plot);
-            plots.Add(plot);
         }
 
-        multiplot.SharedAxes.ShareX(plots);
+        foreach (var subplot in multiplot.Subplots.GetPlots())
+        {
+            subplot.Axes.SetLimitsX(minX, maxX);
+        }
 
         ChartElement.Multiplot = multiplot;
         ChartElement.Refresh();
@@ -125,9 +128,12 @@ public partial class ChartControl : UserControl
 
     private class XOnlyMouseWheelZoom : IUserActionResponse
     {
+
         public double ZoomFraction { get; set; } = 0.15;
 
-        public void ResetState(IPlotControl plotControl) { }
+        public void ResetState(IPlotControl plotControl)
+        {
+        }
 
         public ResponseInfo Execute(IPlotControl plotControl, IUserAction userInput, KeyboardState keys)
         {
@@ -174,6 +180,8 @@ public partial class ChartControl : UserControl
 
             plot.Grid.XAxisStyle.MinorLineStyle.Width = 1;
             plot.Grid.YAxisStyle.MinorLineStyle.Width = 1;
+            
+            plot.Layout.Fixed(new PixelPadding(50, 16, 32, 32));
         }
     }
 }
