@@ -14,6 +14,9 @@ namespace SimLab.Controls;
 public partial class ChartControl : UserControl
 {
     private const int SubplotHeight = 250;
+    
+    private double _minX;
+    private double _maxX;
 
     public static readonly StyledProperty<IEnumerable<SubplotDefinition>> SubplotsProperty =
         AvaloniaProperty.Register<ChartControl, IEnumerable<SubplotDefinition>>(nameof(Subplots), []);
@@ -29,7 +32,7 @@ public partial class ChartControl : UserControl
         InitializeComponent();
         ChartElement.UserInputProcessor.RemoveAll<IUserActionResponse>();
         ChartElement.UserInputProcessor.UserActionResponses.Add(new MouseDragPan(StandardMouseButtons.Left) { LockY = true });
-        ChartElement.UserInputProcessor.UserActionResponses.Add(new XOnlyMouseWheelZoom());
+        ChartElement.UserInputProcessor.UserActionResponses.Add(new XOnlyMouseWheelZoom(this));
         ChartElement.UserInputProcessor.UserActionResponses.Add(new KeyboardAutoscale(new Key("")));
     }
 
@@ -66,6 +69,7 @@ public partial class ChartControl : UserControl
         }
         var maxX = 0.0;
         var minX = 0.0;
+        var plots = new List<Plot>();
 
         foreach (var def in definitions)
         {
@@ -114,21 +118,24 @@ public partial class ChartControl : UserControl
                 plot.Axes.SetLimitsY(yMin, yMax);
             }
 
+            plots.Add(plot);
             multiplot.Subplots.Add(plot);
         }
 
-        foreach (var subplot in multiplot.Subplots.GetPlots())
+        _minX = minX;
+        _maxX = maxX;
+        foreach (var subplot in plots)
         {
             subplot.Axes.SetLimitsX(minX, maxX);
         }
 
+        multiplot.SharedAxes.ShareX(plots);
         ChartElement.Multiplot = multiplot;
         ChartElement.Refresh();
     }
 
-    private class XOnlyMouseWheelZoom : IUserActionResponse
+    private class XOnlyMouseWheelZoom(ChartControl control) : IUserActionResponse
     {
-
         public double ZoomFraction { get; set; } = 0.15;
 
         public void ResetState(IPlotControl plotControl)
@@ -145,6 +152,7 @@ public partial class ChartControl : UserControl
 
                 double zoomIn = 1 + ZoomFraction;
                 MouseAxisManipulation.MouseWheelZoom(plot, zoomIn, 1, up.Pixel, false);
+                ClampXLimits(plot);
                 return new ResponseInfo { RefreshNeeded = true };
             }
 
@@ -156,10 +164,19 @@ public partial class ChartControl : UserControl
 
                 double zoomOut = 1 / (1 + ZoomFraction);
                 MouseAxisManipulation.MouseWheelZoom(plot, zoomOut, 1, down.Pixel, false);
+                ClampXLimits(plot);
                 return new ResponseInfo { RefreshNeeded = true };
             }
 
             return ResponseInfo.NoActionRequired;
+        }
+        
+        private void ClampXLimits(Plot plot)
+        {
+            var limits = plot.Axes.GetLimits();
+            var left = Math.Max(limits.Left, control._minX);
+            var right = Math.Min(limits.Right, control._maxX);
+            plot.Axes.SetLimitsX(left, right);
         }
     }
 
@@ -181,7 +198,7 @@ public partial class ChartControl : UserControl
             plot.Grid.XAxisStyle.MinorLineStyle.Width = 1;
             plot.Grid.YAxisStyle.MinorLineStyle.Width = 1;
             
-            plot.Layout.Fixed(new PixelPadding(50, 16, 32, 32));
+            plot.Layout.Fixed(new PixelPadding(50, 16, 32, 50));
         }
     }
 }
