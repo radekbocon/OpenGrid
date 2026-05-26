@@ -64,10 +64,11 @@ public partial class ChartControl : UserControl
     {
         InitializeComponent();
         ChartElement.UserInputProcessor.IsEnabled = false;
-        
+
         // give the plot a dark background with light text
-        ChartElement.Plot.FigureBackground.Color = new("#1c1c1e");
-        ChartElement.Plot.Axes.Color(new("#888888"));
+        ChartElement.Plot.FigureBackground.Color = new Color("#1c1c1e");
+        ChartElement.Plot.Axes.Color(new Color("#888888"));
+        
         // shade regions between major grid lines
         ChartElement.Plot.Grid.XAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
         ChartElement.Plot.Grid.YAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
@@ -103,12 +104,6 @@ public partial class ChartControl : UserControl
         plot.Clear();
 
         var series = SeriesSource;
-        if (series == null)
-        {
-            ChartElement.Refresh();
-            return;
-        }
-
         var chartDataList = series.ToList();
         if (chartDataList.Count == 0)
         {
@@ -119,7 +114,8 @@ public partial class ChartControl : UserControl
         foreach (var data in chartDataList)
         {
             var scatter = plot.Add.Scatter(data.Xs, data.Ys);
-            scatter.Color = new ScottPlot.Color(data.StrokeColor.Red, data.StrokeColor.Green, data.StrokeColor.Blue, data.StrokeColor.Alpha);
+            scatter.Color = new ScottPlot.Color(data.StrokeColor.Red, data.StrokeColor.Green, data.StrokeColor.Blue,
+                data.StrokeColor.Alpha);
             scatter.LineWidth = data.StrokeThickness;
             scatter.MarkerSize = 0;
             scatter.LegendText = data.Name;
@@ -133,14 +129,12 @@ public partial class ChartControl : UserControl
         plot.Legend.IsVisible = false;
 
         var yLabeler = YLabeler;
-        if (yLabeler != null)
+        var tickGen = new ScottPlot.TickGenerators.NumericAutomatic
         {
-            var tickGen = new ScottPlot.TickGenerators.NumericAutomatic
-            {
-                LabelFormatter = v => yLabeler(v)
-            };
-            plot.Axes.Left.TickGenerator = tickGen;
-        }
+            LabelFormatter = yLabeler
+        };
+        plot.Axes.Left.TickGenerator = tickGen;
+
 
         if (YMinLimit.HasValue || YMaxLimit.HasValue)
         {
@@ -148,8 +142,6 @@ public partial class ChartControl : UserControl
             var yMax = YMaxLimit ?? plot.Axes.GetLimits().Top;
             plot.Axes.SetLimitsY(yMin, yMax);
         }
-
-
 
         ChartElement.Refresh();
     }

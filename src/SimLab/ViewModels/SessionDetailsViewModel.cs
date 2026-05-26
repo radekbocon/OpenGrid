@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -94,27 +95,42 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
             return;
         }
 
-        var distanceOffset = value.Records.First().Distance;
-        var xs = value.Records.Select(r => (double)(r.Distance - distanceOffset));
+        Task.Run(() =>
+        {
+            var distanceOffset = value.Records.First().Distance;
+            var xs = value.Records.Select(r => (double)(r.Distance - distanceOffset)).ToArray();
 
-        var gasData = new ChartData("Gas", xs, value.Records.Select(r => (double)r.Gas), GasColor);
-        var brakeData = new ChartData("Brake", xs, value.Records.Select(r => (double)r.Brake), BrakeColor);
-        var steeringData = new ChartData("Steering", xs, value.Records.Select(r => (double)r.SteerAngle), DefaultColor);
-        var speedData = new ChartData("Speed", xs, value.Records.Select(r => Math.Round((double)r.SpeedKmh, 1)), DefaultColor);
-        var gearData = new ChartData("Gear", xs, value.Records.Select(r => (double)(int)r.CurrentGear), DefaultColor, isStep: true);
-        var rpmData = new ChartData("RPM", xs, value.Records.Select(r => (double)r.EngineRpm), DefaultColor);
+            var gasData = CreateDownsampledChartData("Gas", xs, value.Records.Select(r => (double)r.Gas), GasColor);
+            var brakeData =
+                CreateDownsampledChartData("Brake", xs, value.Records.Select(r => (double)r.Brake), BrakeColor);
+            var steeringData = CreateDownsampledChartData("Steering", xs,
+                value.Records.Select(r => (double)r.SteerAngle), DefaultColor);
+            var speedData = CreateDownsampledChartData("Speed", xs,
+                value.Records.Select(r => Math.Round((double)r.SpeedKmh, 1)), DefaultColor);
+            var gearData = CreateDownsampledChartData("Gear", xs, value.Records.Select(r => (double)(int)r.CurrentGear),
+                DefaultColor, isStep: true);
+            var rpmData = CreateDownsampledChartData("RPM", xs, value.Records.Select(r => (double)r.EngineRpm),
+                DefaultColor);
+            
+            DataMinX = xs[0];
+            DataMaxX = xs[^1];
+            MinX = DataMinX;
+            MaxX = DataMaxX;
 
-        DataMinX = value.Records.Min(r => (double)(r.Distance - distanceOffset));
-        DataMaxX = value.Records.Max(r => (double)(r.Distance - distanceOffset));
-        MinX = DataMinX;
-        MaxX = DataMaxX;
-
-        Inputs = [gasData, brakeData];
-        Steering = [steeringData];
-        Speed = [speedData];
-        Gear = [gearData];
-        Rpm = [rpmData];
+            Inputs = [gasData, brakeData];
+            Steering = [steeringData];
+            Speed = [speedData];
+            Gear = [gearData];
+            Rpm = [rpmData];
+        });
 
         LapTime = $@"Time: {SelectedLap?.Time:mm\:ss\.fff}";
+    }
+
+    private static ChartData CreateDownsampledChartData(string name, double[] xs, IEnumerable<double> ysEnumerable, SKColor color, float strokeThickness = 2, bool isStep = false, bool isDashed = false)
+    {
+        var ys = ysEnumerable.ToArray();
+        var (downsampledXs, downsampledYs) = DataDownsampler.Decimate(xs, ys);
+        return new ChartData(name, downsampledXs, downsampledYs, color, strokeThickness, isStep, isDashed);
     }
 }
