@@ -6,147 +6,175 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using ScottPlot;
 using ScottPlot.Avalonia;
+using ScottPlot.Interactivity;
+using ScottPlot.Interactivity.UserActionResponses;
+using ScottPlot.Interactivity.UserActions;
 using SimLab.ViewModels;
 
 namespace SimLab.Controls;
 
 public partial class ChartControl : UserControl
 {
-    public AvaPlot Chart => ChartElement;
+    private const int SubplotHeight = 200;
 
-    public static readonly StyledProperty<string> TitleProperty =
-        AvaloniaProperty.Register<ChartControl, string>(nameof(Title));
+    public static readonly StyledProperty<IEnumerable<SubplotDefinition>> SubplotsProperty =
+        AvaloniaProperty.Register<ChartControl, IEnumerable<SubplotDefinition>>(nameof(Subplots), []);
 
-    public static readonly StyledProperty<IEnumerable<ChartData>> SeriesSourceProperty =
-        AvaloniaProperty.Register<ChartControl, IEnumerable<ChartData>>(nameof(SeriesSource), []);
-
-    public static readonly StyledProperty<Func<double, string>> YLabelerProperty =
-        AvaloniaProperty.Register<ChartControl, Func<double, string>>(nameof(YLabeler));
-
-    public static readonly StyledProperty<double?> YMaxLimitProperty =
-        AvaloniaProperty.Register<ChartControl, double?>(nameof(YMaxLimit));
-
-    public static readonly StyledProperty<double?> YMinLimitProperty =
-        AvaloniaProperty.Register<ChartControl, double?>(nameof(YMinLimit));
-
-    public string Title
+    public IEnumerable<SubplotDefinition> Subplots
     {
-        get => GetValue(TitleProperty);
-        set => SetValue(TitleProperty, value);
-    }
-
-    public IEnumerable<ChartData> SeriesSource
-    {
-        get => GetValue(SeriesSourceProperty);
-        set => SetValue(SeriesSourceProperty, value);
-    }
-
-    public Func<double, string> YLabeler
-    {
-        get => GetValue(YLabelerProperty);
-        set => SetValue(YLabelerProperty, value);
-    }
-
-    public double? YMaxLimit
-    {
-        get => GetValue(YMaxLimitProperty);
-        set => SetValue(YMaxLimitProperty, value);
-    }
-
-    public double? YMinLimit
-    {
-        get => GetValue(YMinLimitProperty);
-        set => SetValue(YMinLimitProperty, value);
+        get => GetValue(SubplotsProperty);
+        set => SetValue(SubplotsProperty, value);
     }
 
     public ChartControl()
     {
         InitializeComponent();
-        ChartElement.UserInputProcessor.IsEnabled = false;
-
-        // give the plot a dark background with light text
-        ChartElement.Plot.FigureBackground.Color = new Color("#1c1c1e");
-        ChartElement.Plot.Axes.Color(new Color("#888888"));
-        
-        // shade regions between major grid lines
-        ChartElement.Plot.Grid.XAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
-        ChartElement.Plot.Grid.YAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
-
-        // set grid line colors
-        ChartElement.Plot.Grid.XAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
-        ChartElement.Plot.Grid.YAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
-        ChartElement.Plot.Grid.XAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
-        ChartElement.Plot.Grid.YAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
-
-        // enable minor grid lines by defining a positive width
-        ChartElement.Plot.Grid.XAxisStyle.MinorLineStyle.Width = 1;
-        ChartElement.Plot.Grid.YAxisStyle.MinorLineStyle.Width = 1;
-        UpdatePlot();
+        ChartElement.UserInputProcessor.RemoveAll<IUserActionResponse>();
+        ChartElement.UserInputProcessor.UserActionResponses.Add(new MouseDragPan(StandardMouseButtons.Left) { LockY = true });
+        ChartElement.UserInputProcessor.UserActionResponses.Add(new XOnlyMouseWheelZoom());
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
 
-        if (change.Property == SeriesSourceProperty ||
-            change.Property == YMaxLimitProperty ||
-            change.Property == YMinLimitProperty ||
-            change.Property == YLabelerProperty)
+        if (change.Property == SubplotsProperty)
         {
-            Dispatcher.UIThread.Post(UpdatePlot, DispatcherPriority.Background);
+            Dispatcher.UIThread.Post(UpdatePlots, DispatcherPriority.Background);
         }
     }
 
-    private void UpdatePlot()
+    private void UpdatePlots()
     {
-        var plot = ChartElement.Plot;
-        plot.Clear();
+        var definitions = Subplots?.ToList() ?? [];
 
-        var series = SeriesSource;
-        var chartDataList = series.ToList();
-        if (chartDataList.Count == 0)
+        if (definitions.Count == 0)
         {
-            ChartElement.Refresh();
+            ChartElement.Reset();
             return;
         }
 
-        foreach (var data in chartDataList)
+        var multiplot = new Multiplot
         {
-            var signalXy = plot.Add.SignalXY(data.Xs, data.Ys);
-            signalXy.Color = new Color(data.StrokeColor.Red, data.StrokeColor.Green, data.StrokeColor.Blue,
-                data.StrokeColor.Alpha);
-            signalXy.LineWidth = data.StrokeThickness;
-            signalXy.MarkerSize = 0;
-            signalXy.LegendText = data.Name;
-
-            if (data.IsStep)
-            {
-                signalXy.ConnectStyle = ConnectStyle.StepHorizontal;
-            }
-
-            if (data.IsDashed)
-            {
-                signalXy.LineStyle.Pattern = LinePattern.Dashed;
-            }
-        }
-
-        plot.Legend.IsVisible = false;
-
-        var yLabeler = YLabeler;
-        var tickGen = new ScottPlot.TickGenerators.NumericAutomatic
-        {
-            LabelFormatter = yLabeler
+            Layout = new ScottPlot.MultiplotLayouts.Grid(definitions.Count, 1)
         };
-        plot.Axes.Left.TickGenerator = tickGen;
 
-
-        if (YMinLimit.HasValue || YMaxLimit.HasValue)
+        while (multiplot.Subplots.Count > 0)
         {
-            var yMin = YMinLimit ?? plot.Axes.GetLimits().Bottom;
-            var yMax = YMaxLimit ?? plot.Axes.GetLimits().Top;
-            plot.Axes.SetLimitsY(yMin, yMax);
+            multiplot.Subplots.RemoveAt(0);
         }
 
+        var plots = new List<Plot>();
+
+        foreach (var def in definitions)
+        {
+            var plot = new Plot();
+            Styling.ApplySubplotStyle(plot);
+            plot.Title(def.Title);
+
+            if (def.Series is not null)
+            {
+                foreach (var data in def.Series)
+                {
+                    var signalXy = plot.Add.SignalXY(data.Xs, data.Ys);
+                    signalXy.Color = new Color(data.StrokeColor.Red, data.StrokeColor.Green, data.StrokeColor.Blue,
+                        data.StrokeColor.Alpha);
+                    signalXy.LineWidth = data.StrokeThickness;
+                    signalXy.MarkerSize = 0;
+                    signalXy.LegendText = data.Name;
+
+                    if (data.IsStep)
+                    {
+                        signalXy.ConnectStyle = ConnectStyle.StepHorizontal;
+                    }
+
+                    if (data.IsDashed)
+                    {
+                        signalXy.LineStyle.Pattern = LinePattern.Dashed;
+                    }
+                }
+            }
+
+            plot.Legend.IsVisible = false;
+
+            if (def.YLabeler is not null)
+            {
+                var tickGen = new ScottPlot.TickGenerators.NumericAutomatic
+                {
+                    LabelFormatter = def.YLabeler
+                };
+                plot.Axes.Left.TickGenerator = tickGen;
+            }
+
+            if (def.YMinLimit.HasValue || def.YMaxLimit.HasValue)
+            {
+                var limits = plot.Axes.GetLimits();
+                var yMin = def.YMinLimit ?? limits.Bottom;
+                var yMax = def.YMaxLimit ?? limits.Top;
+                plot.Axes.SetLimitsY(yMin, yMax);
+            }
+
+            multiplot.Subplots.Add(plot);
+            plots.Add(plot);
+        }
+
+        multiplot.SharedAxes.ShareX(plots);
+
+        ChartElement.Multiplot = multiplot;
         ChartElement.Refresh();
+    }
+
+    private class XOnlyMouseWheelZoom : IUserActionResponse
+    {
+        public double ZoomFraction { get; set; } = 0.15;
+
+        public void ResetState(IPlotControl plotControl) { }
+
+        public ResponseInfo Execute(IPlotControl plotControl, IUserAction userInput, KeyboardState keys)
+        {
+            if (userInput is MouseWheelUp up)
+            {
+                Plot? plot = plotControl.GetPlotAtPixel(up.Pixel);
+                if (plot is null)
+                    return ResponseInfo.NoActionRequired;
+
+                double zoomIn = 1 + ZoomFraction;
+                MouseAxisManipulation.MouseWheelZoom(plot, zoomIn, 1, up.Pixel, false);
+                return new ResponseInfo { RefreshNeeded = true };
+            }
+
+            if (userInput is MouseWheelDown down)
+            {
+                Plot? plot = plotControl.GetPlotAtPixel(down.Pixel);
+                if (plot is null)
+                    return ResponseInfo.NoActionRequired;
+
+                double zoomOut = 1 / (1 + ZoomFraction);
+                MouseAxisManipulation.MouseWheelZoom(plot, zoomOut, 1, down.Pixel, false);
+                return new ResponseInfo { RefreshNeeded = true };
+            }
+
+            return ResponseInfo.NoActionRequired;
+        }
+    }
+
+    private static class Styling
+    {
+        public static void ApplySubplotStyle(Plot plot)
+        {
+            plot.FigureBackground.Color = new Color("#1c1c1e");
+            plot.Axes.Color(new Color("#888888"));
+
+            plot.Grid.XAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
+            plot.Grid.YAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
+
+            plot.Grid.XAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
+            plot.Grid.YAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
+            plot.Grid.XAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
+            plot.Grid.YAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
+
+            plot.Grid.XAxisStyle.MinorLineStyle.Width = 1;
+            plot.Grid.YAxisStyle.MinorLineStyle.Width = 1;
+        }
     }
 }

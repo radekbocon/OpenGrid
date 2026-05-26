@@ -5,10 +5,6 @@
     xmlns:sp="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
     x:Name="Root"
     x:CompileBindings="False">
-    <StackPanel Spacing="4">
-        <TextBlock Classes="Subtitle1" Text="{Binding Title, ElementName=Root}" />
-        <sp:AvaPlot
-            x:Name="ChartElement"
-            Height="250" />
-    </StackPanel>
+    <sp:AvaPlot
+        x:Name="ChartElement" />
 </UserControl>

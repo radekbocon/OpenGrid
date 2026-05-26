@@ -32,9 +32,8 @@
     </UserControl.Resources>
     <ScrollViewer>
         <Grid
-            x:Name="ChartGrid"
             Margin="0,0,16,0"
-            RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto"
+            RowDefinitions="Auto, Auto, *"
             RowSpacing="4">
             <StackPanel
                 Grid.Row="0"
@@ -45,15 +44,6 @@
                     VerticalAlignment="Center"
                     Classes="H6"
                     Text="Lap Comparison" />
-                <StackPanel Orientation="Horizontal" Spacing="4">
-                    <avalonia:MaterialIcon IconSize="24" Kind="Info" />
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        Classes="Caption"
-                        Opacity="0.6"
-                        Text="Ctrl+Scroll to zoom, drag to pan the charts"
-                        TextAlignment="Center" />
-                </StackPanel>
             </StackPanel>
 
             <Border
@@ -74,50 +64,8 @@
             </Border>
 
             <controls:ChartControl
-                x:Name="GasChart"
-                Title="Gas"
                 Grid.Row="2"
-                SeriesSource="{Binding Gas}"
-                YLabeler="{Binding DoubleLabeler}"
-                YMaxLimit="1"
-                YMinLimit="0" />
-            <controls:ChartControl
-                x:Name="BrakeChart"
-                Title="Brake"
-                Grid.Row="3"
-                SeriesSource="{Binding Brake}"
-                YLabeler="{Binding DoubleLabeler}"
-                YMaxLimit="1"
-                YMinLimit="0" />
-            <controls:ChartControl
-                x:Name="SteeringChart"
-                Title="Steering"
-                Grid.Row="4"
-                SeriesSource="{Binding Steering}"
-                YLabeler="{Binding DoubleLabeler}"
-                YMaxLimit="1"
-                YMinLimit="-1" />
-            <controls:ChartControl
-                x:Name="SpeedChart"
-                Title="Speed"
-                Grid.Row="5"
-                SeriesSource="{Binding Speed}"
-                YLabeler="{Binding IntegerLabeler}" />
-            <controls:ChartControl
-                x:Name="GearChart"
-                Title="Gear"
-                Grid.Row="6"
-                SeriesSource="{Binding Gear}"
-                YLabeler="{Binding GearLabeler}"
-                YMaxLimit="7"
-                YMinLimit="0" />
-            <controls:ChartControl
-                x:Name="RpmChart"
-                Title="RPM"
-                Grid.Row="7"
-                SeriesSource="{Binding Rpm}"
-                YLabeler="{Binding IntegerLabeler}"
-                YMinLimit="0" />
+                Subplots="{Binding Subplots}" />
         </Grid>
     </ScrollViewer>
 </UserControl>

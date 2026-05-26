@@ -1,18 +1,9 @@
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using SimLab.Controls;
 
 namespace SimLab.ViewModels;
 
 public interface ILapChartViewModel
 {
-    ObservableCollection<ChartData> Gas { get; }
-    ObservableCollection<ChartData> Brake { get; }
-    ObservableCollection<ChartData> Steering { get; }
-    ObservableCollection<ChartData> Speed { get; }
-    ObservableCollection<ChartData> Gear { get; }
-    ObservableCollection<ChartData> Rpm { get; }
-    
-    double DataMinX { get; }
-    double DataMaxX { get; }
-    double MinX { get; set; }
-    double MaxX { get; set; }
+    List<SubplotDefinition> Subplots { get; }
 }
