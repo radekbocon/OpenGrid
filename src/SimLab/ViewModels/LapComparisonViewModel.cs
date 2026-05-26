@@ -50,8 +50,8 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
 
             Subplots =
             [
-                new SubplotDefinition { Title = "Gas", Series = [.. gasSeries], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1 },
-                new SubplotDefinition { Title = "Brake", Series = [.. brakeSeries], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1 },
+                new SubplotDefinition { Title = "Gas", Series = [.. gasSeries], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
+                new SubplotDefinition { Title = "Brake", Series = [.. brakeSeries], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
                 new SubplotDefinition { Title = "Steering", Series = [.. steeringSeries], YLabeler = DoubleLabeler, YMinLimit = -1, YMaxLimit = 1 },
                 new SubplotDefinition { Title = "Speed", Series = [.. speedSeries], YLabeler = IntegerLabeler },
                 new SubplotDefinition { Title = "Gear", Series = [.. gearSeries], YLabeler = GearLabeler, YMinLimit = 0, YMaxLimit = 7 },

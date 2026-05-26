@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using ScottPlot;
 using ScottPlot.Interactivity;
 using ScottPlot.Interactivity.UserActionResponses;
@@ -30,10 +33,31 @@ public partial class ChartControl : UserControl
     public ChartControl()
     {
         InitializeComponent();
+        ChartElement.AddHandler(PointerWheelChangedEvent, PointerWheelHandler, RoutingStrategies.Tunnel);
         ChartElement.UserInputProcessor.RemoveAll<IUserActionResponse>();
         ChartElement.UserInputProcessor.UserActionResponses.Add(new MouseDragPan(StandardMouseButtons.Left) { LockY = true });
         ChartElement.UserInputProcessor.UserActionResponses.Add(new XOnlyMouseWheelZoom(this));
-        ChartElement.UserInputProcessor.UserActionResponses.Add(new KeyboardAutoscale(new Key("")));
+    }
+
+    private void PointerWheelHandler(object? sender, PointerWheelEventArgs e)
+    {
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            return;
+        }
+
+        var scrollViewer = ChartElement.FindAncestorOfType<ScrollViewer>();
+        var up = e.Delta.Y > 0;
+
+        if (up)
+        {
+            scrollViewer?.LineUp();
+        }
+        else
+        {
+            scrollViewer?.LineDown();
+        }
+        e.Handled = true;
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

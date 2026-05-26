@@ -113,8 +113,8 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
 
             Subplots =
             [
-                new SubplotDefinition { Title = "Gas", Series = [gasData], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1 },
-                new SubplotDefinition { Title = "Brake", Series = [brakeData], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1 },
+                new SubplotDefinition { Title = "Gas", Series = [gasData], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
+                new SubplotDefinition { Title = "Brake", Series = [brakeData], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
                 new SubplotDefinition { Title = "Steering", Series = [steeringData], YLabeler = DoubleLabeler, YMinLimit = -1, YMaxLimit = 1 },
                 new SubplotDefinition { Title = "Speed", Series = [speedData], YLabeler = IntegerLabeler },
                 new SubplotDefinition { Title = "Gear", Series = [gearData], YLabeler = GearLabeler, YMinLimit = 0, YMaxLimit = 7 },
