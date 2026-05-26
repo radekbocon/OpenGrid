@@ -4,7 +4,8 @@ namespace SimLab.ViewModels;
 
 public interface ILapChartViewModel
 {
-    ObservableCollection<ChartData> Inputs { get; }
+    ObservableCollection<ChartData> Gas { get; }
+    ObservableCollection<ChartData> Brake { get; }
     ObservableCollection<ChartData> Steering { get; }
     ObservableCollection<ChartData> Speed { get; }
     ObservableCollection<ChartData> Gear { get; }

@@ -16,7 +16,7 @@
         <Grid
             x:Name="ChartGrid"
             Margin="0,0,16,0"
-            RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto"
+            RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto"
             RowSpacing="4">
             <StackPanel
                 Grid.Row="0"
@@ -68,17 +68,25 @@
             </StackPanel>
 
             <controls:ChartControl
-                x:Name="InputsChart"
-                Title="Inputs"
+                x:Name="GasChart"
+                Title="Gas"
                 Grid.Row="1"
-                SeriesSource="{Binding Inputs}"
+                SeriesSource="{Binding Gas}"
+                YLabeler="{Binding DoubleLabeler}"
+                YMaxLimit="1"
+                YMinLimit="0" />
+            <controls:ChartControl
+                x:Name="BrakeChart"
+                Title="Brake"
+                Grid.Row="2"
+                SeriesSource="{Binding Brake}"
                 YLabeler="{Binding DoubleLabeler}"
                 YMaxLimit="1"
                 YMinLimit="0" />
             <controls:ChartControl
                 x:Name="SteeringChart"
                 Title="Steering"
-                Grid.Row="2"
+                Grid.Row="3"
                 SeriesSource="{Binding Steering}"
                 YLabeler="{Binding DoubleLabeler}"
                 YMaxLimit="1"
@@ -86,13 +94,13 @@
             <controls:ChartControl
                 x:Name="SpeedChart"
                 Title="Speed"
-                Grid.Row="3"
+                Grid.Row="4"
                 SeriesSource="{Binding Speed}"
                 YLabeler="{Binding IntegerLabeler}" />
             <controls:ChartControl
                 x:Name="GearChart"
                 Title="Gear"
-                Grid.Row="4"
+                Grid.Row="5"
                 SeriesSource="{Binding Gear}"
                 YLabeler="{Binding GearLabeler}"
                 YMaxLimit="7"
@@ -100,7 +108,7 @@
             <controls:ChartControl
                 x:Name="RpmChart"
                 Title="RPM"
-                Grid.Row="5"
+                Grid.Row="6"
                 SeriesSource="{Binding Rpm}"
                 YLabeler="{Binding IntegerLabeler}"
                 YMinLimit="0" />

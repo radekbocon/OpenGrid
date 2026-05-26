@@ -4,8 +4,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using SimLab.Models;
-using SimLab.Services;
 
 namespace SimLab.ViewModels;
 
@@ -26,7 +24,8 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
     {
         if (SelectedLaps.Count == 0) return;
 
-        var inputsSeries = new List<ChartData>();
+        var gasSeries = new List<ChartData>();
+        var brakeSeries = new List<ChartData>();
         var steeringSeries = new List<ChartData>();
         var speedSeries = new List<ChartData>();
         var gearSeries = new List<ChartData>();
@@ -51,28 +50,22 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
                 var color = item.Color;
 
                 var gasYs = item.Lap.Records.Select(r => (double)r.Gas).ToArray();
-                var (dsXs, dsGasYs) = DataDownsampler.Decimate(xs, gasYs);
-                inputsSeries.Add(new ChartData($"{item.ShortName} (Gas)", dsXs, dsGasYs, color));
+                gasSeries.Add(CreateDownsampledChartData($"{item.ShortName}", xs, gasYs, color));
 
                 var brakeYs = item.Lap.Records.Select(r => (double)r.Brake).ToArray();
-                var (dsXs2, dsBrakeYs) = DataDownsampler.Decimate(xs, brakeYs);
-                inputsSeries.Add(new ChartData($"{item.ShortName} (Brake)", dsXs2, dsBrakeYs, color, isDashed: true));
+                brakeSeries.Add(CreateDownsampledChartData($"{item.ShortName}", xs, brakeYs, color));
 
                 var steerYs = item.Lap.Records.Select(r => (double)r.SteerAngle).ToArray();
-                var (dsXs3, dsSteerYs) = DataDownsampler.Decimate(xs, steerYs);
-                steeringSeries.Add(new ChartData($"{item.ShortName}", dsXs3, dsSteerYs, color));
+                steeringSeries.Add(CreateDownsampledChartData($"{item.ShortName}", xs, steerYs, color));
 
                 var speedYs = item.Lap.Records.Select(r => Math.Round(r.SpeedKmh, 1)).ToArray();
-                var (dsXs4, dsSpeedYs) = DataDownsampler.Decimate(xs, speedYs);
-                speedSeries.Add(new ChartData($"{item.ShortName}", dsXs4, dsSpeedYs, color));
+                speedSeries.Add(CreateDownsampledChartData($"{item.ShortName}", xs, speedYs, color));
 
                 var gearYs = item.Lap.Records.Select(r => (double)(int)r.CurrentGear).ToArray();
-                var (dsXs5, dsGearYs) = DataDownsampler.Decimate(xs, gearYs);
-                gearSeries.Add(new ChartData($"{item.ShortName}", dsXs5, dsGearYs, color, isStep: true));
+                gearSeries.Add(CreateDownsampledChartData($"{item.ShortName}", xs, gearYs, color, isStep: true));
 
                 var rpmYs = item.Lap.Records.Select(r => (double)r.EngineRpm).ToArray();
-                var (dsXs6, dsRpmYs) = DataDownsampler.Decimate(xs, rpmYs);
-                rpmSeries.Add(new ChartData($"{item.ShortName}", dsXs6, dsRpmYs, color));
+                rpmSeries.Add(CreateDownsampledChartData($"{item.ShortName}", xs, rpmYs, color));
             }
 
             DataMinX = globalMinX;
@@ -80,7 +73,8 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
             MinX = DataMinX;
             MaxX = DataMaxX;
 
-            Inputs = new ObservableCollection<ChartData>(inputsSeries);
+            Gas = new ObservableCollection<ChartData>(gasSeries);
+            Brake = new ObservableCollection<ChartData>(brakeSeries);
             Steering = new ObservableCollection<ChartData>(steeringSeries);
             Speed = new ObservableCollection<ChartData>(speedSeries);
             Gear = new ObservableCollection<ChartData>(gearSeries);

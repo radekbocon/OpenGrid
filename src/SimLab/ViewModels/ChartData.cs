@@ -11,7 +11,7 @@ public class ChartData
     public double[] Xs { get; set; }
     public double[] Ys { get; set; }
     public SKColor StrokeColor { get; set; }
-    public float StrokeThickness { get; set; } = 2;
+    public float StrokeThickness { get; set; }
     public bool IsStep { get; set; }
     public bool IsDashed { get; set; }
 

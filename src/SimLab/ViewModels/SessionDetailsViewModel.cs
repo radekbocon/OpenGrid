@@ -15,6 +15,8 @@ namespace SimLab.ViewModels;
 
 public partial class SessionDetailsViewModel : LapChartViewModelBase
 {
+    private static readonly SKColor DefaultColor = SKColors.DodgerBlue;
+    
     private readonly SessionRepository _sessionRepository;
     private readonly INavigationService _navigationService;
     private Session? _session;
@@ -27,10 +29,6 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
 
     [ObservableProperty]
     public partial string? LapTime { get; set; }
-
-    private static readonly SKColor GasColor = SKColors.Green;
-    private static readonly SKColor BrakeColor = SKColors.Red;
-    private static readonly SKColor DefaultColor = SKColors.DodgerBlue;
 
     public SessionDetailsViewModel(SessionRepository sessionRepository, INavigationService navigationService)
     {
@@ -95,21 +93,28 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
             return;
         }
 
+        SetCharts(value);
+
+        LapTime = $@"Time: {SelectedLap?.Time:mm\:ss\.fff}";
+    }
+    
+    private void SetCharts(Lap lap)
+    {
         Task.Run(() =>
         {
-            var distanceOffset = value.Records.First().Distance;
-            var xs = value.Records.Select(r => (double)(r.Distance - distanceOffset)).ToArray();
+            var distanceOffset = lap.Records.First().Distance;
+            var xs = lap.Records.Select(r => (double)(r.Distance - distanceOffset)).ToArray();  
 
-            var gasData = CreateDownsampledChartData("Gas", xs, value.Records.Select(r => (double)r.Gas), GasColor);
+            var gasData = CreateDownsampledChartData("Gas", xs, lap.Records.Select(r => (double)r.Gas), DefaultColor);
             var brakeData =
-                CreateDownsampledChartData("Brake", xs, value.Records.Select(r => (double)r.Brake), BrakeColor);
+                CreateDownsampledChartData("Brake", xs, lap.Records.Select(r => (double)r.Brake), DefaultColor);
             var steeringData = CreateDownsampledChartData("Steering", xs,
-                value.Records.Select(r => (double)r.SteerAngle), DefaultColor);
+                lap.Records.Select(r => (double)r.SteerAngle), DefaultColor);
             var speedData = CreateDownsampledChartData("Speed", xs,
-                value.Records.Select(r => Math.Round((double)r.SpeedKmh, 1)), DefaultColor);
-            var gearData = CreateDownsampledChartData("Gear", xs, value.Records.Select(r => (double)(int)r.CurrentGear),
+                lap.Records.Select(r => Math.Round(r.SpeedKmh, 1)), DefaultColor);
+            var gearData = CreateDownsampledChartData("Gear", xs, lap.Records.Select(r => (double)r.CurrentGear),
                 DefaultColor, isStep: true);
-            var rpmData = CreateDownsampledChartData("RPM", xs, value.Records.Select(r => (double)r.EngineRpm),
+            var rpmData = CreateDownsampledChartData("RPM", xs, lap.Records.Select(r => (double)r.EngineRpm),
                 DefaultColor);
             
             DataMinX = xs[0];
@@ -117,20 +122,12 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
             MinX = DataMinX;
             MaxX = DataMaxX;
 
-            Inputs = [gasData, brakeData];
+            Gas = [gasData];
+            Brake = [brakeData];
             Steering = [steeringData];
             Speed = [speedData];
             Gear = [gearData];
             Rpm = [rpmData];
         });
-
-        LapTime = $@"Time: {SelectedLap?.Time:mm\:ss\.fff}";
-    }
-
-    private static ChartData CreateDownsampledChartData(string name, double[] xs, IEnumerable<double> ysEnumerable, SKColor color, float strokeThickness = 2, bool isStep = false, bool isDashed = false)
-    {
-        var ys = ysEnumerable.ToArray();
-        var (downsampledXs, downsampledYs) = DataDownsampler.Decimate(xs, ys);
-        return new ChartData(name, downsampledXs, downsampledYs, color, strokeThickness, isStep, isDashed);
     }
 }

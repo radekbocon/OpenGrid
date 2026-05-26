@@ -16,7 +16,7 @@ public partial class SessionDetailsView : UserControl
         InitializeComponent();
         _interactionHelper = new ChartInteractionHelper(() => DataContext as ILapChartViewModel);
 
-        List<AvaPlot> charts = [InputsChart.Chart, SteeringChart.Chart, SpeedChart.Chart, GearChart.Chart, RpmChart.Chart];
+        List<AvaPlot> charts = [GasChart.Chart, BrakeChart.Chart, SteeringChart.Chart, SpeedChart.Chart, GearChart.Chart, RpmChart.Chart];
         _interactionHelper.AttachEvents(charts);
     }
 }
