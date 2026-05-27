@@ -5,6 +5,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
+using SimLab.Converters;
 using SimLab.Models;
 using SimLab.Services;
 
@@ -107,7 +108,7 @@ public partial class SelectableLap : ObservableObject
 {
     public Lap Lap { get; }
     public Session Session { get; }
-    public string DisplayName => $"Lap {Lap.Number} ({Lap.Time:mm\\:ss\\.fff})";
+    public string DisplayName => $"Lap {Lap.Number} ({LapTimeConverter.Format(Lap.Time)})";
     public bool IsValid => Lap.IsValid;
 
     [ObservableProperty]

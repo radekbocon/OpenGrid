@@ -10,8 +10,6 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly ISettingsService _settingsService;
     private readonly IThemeService _themeService;
 
-    public static readonly IReadOnlyList<int> AvailableRecordingRates = new List<int> { 15, 30, 60, 120 };
-
     public IReadOnlyList<ThemeInfo> Themes => _themeService.Themes;
 
     [ObservableProperty]

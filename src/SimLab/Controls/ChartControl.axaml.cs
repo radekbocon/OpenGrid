@@ -33,6 +33,7 @@ public partial class ChartControl : UserControl
     public ChartControl()
     {
         InitializeComponent();
+        IsVisible = false;
         ChartElement.AddHandler(PointerWheelChangedEvent, PointerWheelHandler, RoutingStrategies.Tunnel);
         ChartElement.UserInputProcessor.RemoveAll<IUserActionResponse>();
         ChartElement.UserInputProcessor.UserActionResponses.Add(new MouseDragPan(StandardMouseButtons.Left) { LockY = true });
@@ -98,7 +99,7 @@ public partial class ChartControl : UserControl
         foreach (var def in definitions)
         {
             var plot = new Plot();
-            Styling.ApplySubplotStyle(plot);
+            ApplySubplotStyle(plot);
             plot.Title(def.Title);
 
             foreach (var data in def.Series)
@@ -155,6 +156,7 @@ public partial class ChartControl : UserControl
 
         multiplot.SharedAxes.ShareX(plots);
         ChartElement.Multiplot = multiplot;
+        IsVisible = true;
         ChartElement.Refresh();
     }
 
@@ -203,26 +205,24 @@ public partial class ChartControl : UserControl
             plot.Axes.SetLimitsX(left, right);
         }
     }
-
-    private static class Styling
+    
+    public static void ApplySubplotStyle(Plot plot)
     {
-        public static void ApplySubplotStyle(Plot plot)
-        {
-            plot.FigureBackground.Color = new Color("#1c1c1e");
-            plot.Axes.Color(new Color("#888888"));
+        plot.FigureBackground.Color = new Color("#1c1c1e");
+        plot.Axes.Color(new Color("#888888"));
 
-            plot.Grid.XAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
-            plot.Grid.YAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
+        plot.Grid.XAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
+        plot.Grid.YAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
 
-            plot.Grid.XAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
-            plot.Grid.YAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
-            plot.Grid.XAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
-            plot.Grid.YAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
+        plot.Grid.XAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
+        plot.Grid.YAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
+        plot.Grid.XAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
+        plot.Grid.YAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
 
-            plot.Grid.XAxisStyle.MinorLineStyle.Width = 1;
-            plot.Grid.YAxisStyle.MinorLineStyle.Width = 1;
+        plot.Grid.XAxisStyle.MinorLineStyle.Width = 1;
+        plot.Grid.YAxisStyle.MinorLineStyle.Width = 1;
             
-            plot.Layout.Fixed(new PixelPadding(50, 16, 32, 50));
-        }
+        plot.Layout.Fixed(new PixelPadding(50, 16, 32, 50));
     }
+
 }

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SimLab.Converters;
+
 // ReSharper disable UnusedMember.Global
 // ReSharper disable NotAccessedPositionalProperty.Global
 
@@ -76,5 +78,6 @@ public class Lap
     public int Number { get; }
     public TimeSpan Time => Records.MaxBy(x => x.LapTime)?.LapTime ?? TimeSpan.Zero;
     public bool IsValid => Records.All(x => x.IsValidLap);
+    public string DisplayName => $"Lap {Number} ({LapTimeConverter.Format(Time)})";
     public List<TelemetryRecord> Records { get; }
 }

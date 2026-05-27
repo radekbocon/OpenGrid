@@ -1,3 +1,4 @@
+using SimLab.Converters;
 using SimLab.Models;
 using SkiaSharp;
 
@@ -10,7 +11,7 @@ public record LapComparisonItem
     public int ColorIndex { get; }
     public SKColor Color => ColorPalette.GetColor(ColorIndex);
 
-    public string DisplayName => $"{SessionInfo.Car} - Lap {Lap.Number} ({Lap.Time:mm\\:ss\\.fff})";
+    public string DisplayName => $"{SessionInfo.Car} - Lap {Lap.Number} ({LapTimeConverter.Format(Lap.Time)})";
     public string ShortName => $"Lap {Lap.Number}";
 
     public LapComparisonItem(Lap lap, SessionInfo sessionInfo, int colorIndex)

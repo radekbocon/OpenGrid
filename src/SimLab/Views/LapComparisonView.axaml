@@ -26,6 +26,7 @@
                 <TextBlock
                     Grid.Column="1"
                     VerticalAlignment="Center"
+                    Classes.InvalidLap="{Binding !Lap.IsValid}"
                     Text="{Binding DisplayName}" />
             </Grid>
         </DataTemplate>
@@ -63,9 +64,7 @@
                 </StackPanel>
             </Border>
 
-            <controls:ChartControl
-                Grid.Row="2"
-                Subplots="{Binding Subplots}" />
+            <controls:ChartControl Grid.Row="2" Subplots="{Binding Subplots}" />
         </Grid>
     </ScrollViewer>
 </UserControl>

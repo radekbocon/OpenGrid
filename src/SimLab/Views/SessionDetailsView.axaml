@@ -6,6 +6,7 @@
     xmlns:controls="clr-namespace:SimLab.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:SimLab.Models"
     xmlns:vm="clr-namespace:SimLab.ViewModels"
     Padding="16"
     d:DesignHeight="450"
@@ -25,11 +26,14 @@
                 <TextBlock
                     VerticalAlignment="Center"
                     Classes="Subtitle1"
-                    Text="Lap#" />
-                <ComboBox
-                    DisplayMemberBinding="{Binding Number}"
-                    ItemsSource="{Binding Laps}"
-                    SelectedItem="{Binding SelectedLap}" />
+                    Text="{Binding Title}" />
+                <ComboBox ItemsSource="{Binding Laps}" SelectedItem="{Binding SelectedLap}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="models:Lap">
+                            <TextBlock Classes.InvalidLap="{Binding !IsValid}" Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
                 <Button
                     Padding="8"
                     Classes="Flat"
@@ -44,22 +48,9 @@
                     ToolTip.Tip="Delete lap">
                     <avalonia:MaterialIcon IconSize="24" Kind="Delete" />
                 </Button>
-                <TextBlock
-                    VerticalAlignment="Center"
-                    Classes="Subtitle1"
-                    Classes.InvalidLap="{Binding !SelectedLap?.IsValid}"
-                    Text="{Binding LapTime}">
-                    <TextBlock.Styles>
-                        <Style Selector="TextBlock.InvalidLap">
-                            <Setter Property="Foreground" Value="Red" />
-                        </Style>
-                    </TextBlock.Styles>
-                </TextBlock>
             </StackPanel>
 
-            <controls:ChartControl
-                Grid.Row="1"
-                Subplots="{Binding Subplots}" />
+            <controls:ChartControl Grid.Row="1" Subplots="{Binding Subplots}" />
         </Grid>
     </ScrollViewer>
 </UserControl>

@@ -92,10 +92,6 @@
                             Content="60 Hz"
                             GroupName="RecordingRate"
                             IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=60}" />
-                        <RadioButton
-                            Content="120 Hz"
-                            GroupName="RecordingRate"
-                            IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=120}" />
                     </StackPanel>
                 </controls:Card>
             </Grid>

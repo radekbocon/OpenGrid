@@ -20,6 +20,8 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
     private readonly INavigationService _navigationService;
     private Session? _session;
 
+    public string Title => $"{_session?.Info.Game.Name} - {_session?.Info.Car} - {_session?.Info.Track}";
+    
     [ObservableProperty]
     public partial Lap? SelectedLap { get; set; }
 
@@ -27,7 +29,7 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
     public partial IReadOnlyList<Lap>? Laps { get; set; }
 
     [ObservableProperty]
-    public partial string? LapTime { get; set; }
+    public partial TimeSpan LapTime { get; set; }
 
     public SessionDetailsViewModel(SessionRepository sessionRepository, INavigationService navigationService)
     {
@@ -40,6 +42,7 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
         if (parameters.Length > 0 && parameters[0] is Session { Laps.Count: > 0 } session)
         {
             _session = session;
+            OnPropertyChanged(nameof(Title));
             Laps = session.Laps;
             SelectedLap = Laps.First();
         }
@@ -94,7 +97,7 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
 
         SetCharts(value);
 
-        LapTime = $@"Time: {SelectedLap?.Time:mm\:ss\.fff}";
+        LapTime = SelectedLap?.Time ?? TimeSpan.Zero;
     }
 
     private void SetCharts(Lap lap)
