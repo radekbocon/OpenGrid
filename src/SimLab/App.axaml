@@ -22,5 +22,8 @@
         <Style Selector="TextBlock.InvalidLap">
             <Setter Property="Foreground" Value="Red" />
         </Style>
+        <Style Selector="TextBlock.FastestLap">
+            <Setter Property="Foreground" Value="Green" />
+        </Style>
     </Application.Styles>
 </Application>

@@ -26,6 +26,7 @@
                 <TextBlock
                     Grid.Column="1"
                     VerticalAlignment="Center"
+                    Classes.FastestLap="{Binding Lap.IsFastest}"
                     Classes.InvalidLap="{Binding !Lap.IsValid}"
                     Text="{Binding DisplayName}" />
             </Grid>

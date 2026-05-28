@@ -110,6 +110,7 @@ public partial class SelectableLap : ObservableObject
     public Session Session { get; }
     public string DisplayName => $"Lap {Lap.Number} ({LapTimeConverter.Format(Lap.Time)})";
     public bool IsValid => Lap.IsValid;
+    public bool IsFastest => Lap.IsFastest;
 
     [ObservableProperty]
     public partial bool IsSelected { get; set; }

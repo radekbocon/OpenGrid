@@ -15,8 +15,28 @@ public class Session
     public SessionInfo Info { get; }
     public List<TelemetryRecord> Records { get; } = [];
 
-    public List<Lap> Laps => Records.GroupBy(x => x.CurrentLap).Select(x => new Lap(x.Key, x.ToList())).ToList();
-    
+    public List<Lap> Laps
+    {
+        get
+        {
+            if (field is not null)
+            {
+                return field;
+            }
+
+            var laps = Records
+                .GroupBy(x => x.CurrentLap)
+                .Select(x => new Lap(x.Key, x.ToList()))
+                .OrderBy(x => x.Number)
+                .ToList();
+            
+            laps.MinBy(x => x.Time)?.IsFastest = true;
+            
+            field = laps;
+            return field;
+        }
+    }
+
     public Session(SteamGame game, TelemetryRecord record)
     {
         Info = new SessionInfo(game, record);
@@ -80,4 +100,5 @@ public class Lap
     public bool IsValid => Records.All(x => x.IsValidLap);
     public string DisplayName => $"Lap {Number} ({LapTimeConverter.Format(Time)})";
     public List<TelemetryRecord> Records { get; }
+    public bool IsFastest { get; set; }
 }

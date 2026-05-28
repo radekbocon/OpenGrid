@@ -56,7 +56,10 @@
                 <ComboBox ItemsSource="{Binding Laps}" SelectedItem="{Binding SelectedLap}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate DataType="models:Lap">
-                            <TextBlock Classes.InvalidLap="{Binding !IsValid}" Text="{Binding DisplayName}" />
+                            <TextBlock
+                                Classes.FastestLap="{Binding IsFastest}"
+                                Classes.InvalidLap="{Binding !IsValid}"
+                                Text="{Binding DisplayName}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>

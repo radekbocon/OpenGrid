@@ -50,6 +50,7 @@
                                                     <TextBlock
                                                         Grid.Column="0"
                                                         VerticalAlignment="Center"
+                                                        Classes.FastestLap="{Binding IsFastest}"
                                                         Classes.InvalidLap="{Binding !IsValid}"
                                                         Text="{Binding DisplayName}" />
                                                 </Grid>
