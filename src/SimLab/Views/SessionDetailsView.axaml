@@ -16,17 +16,43 @@
     <ScrollViewer>
         <Grid
             Margin="0,0,16,0"
-            RowDefinitions="Auto, *"
+            RowDefinitions="Auto, Auto, *"
             RowSpacing="4">
-            <StackPanel
+            <Grid
                 Grid.Row="0"
-                Margin="8"
-                Orientation="Horizontal"
-                Spacing="8">
+                ColumnDefinitions="Auto, *"
+                ColumnSpacing="8">
                 <TextBlock
+                    Grid.Column="1"
                     VerticalAlignment="Center"
                     Classes="Subtitle1"
                     Text="{Binding Title}" />
+                <StackPanel
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <Button
+                        Padding="8"
+                        Classes="Flat"
+                        Command="{Binding CompareWithOtherLapsCommand}"
+                        ToolTip.Tip="Compare with other laps">
+                        <avalonia:MaterialIcon IconSize="24" Kind="Compare" />
+                    </Button>
+                    <Button
+                        Padding="8"
+                        Classes="Flat"
+                        Command="{Binding DeleteLapCommand}"
+                        ToolTip.Tip="Delete lap">
+                        <avalonia:MaterialIcon IconSize="24" Kind="Delete" />
+                    </Button>
+                </StackPanel>
+
+            </Grid>
+
+            <StackPanel
+                Grid.Row="1"
+                Orientation="Horizontal"
+                Spacing="8">
                 <ComboBox ItemsSource="{Binding Laps}" SelectedItem="{Binding SelectedLap}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate DataType="models:Lap">
@@ -34,23 +60,9 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <Button
-                    Padding="8"
-                    Classes="Flat"
-                    Command="{Binding CompareWithOtherLapsCommand}"
-                    ToolTip.Tip="Compare with other laps">
-                    <avalonia:MaterialIcon IconSize="24" Kind="Compare" />
-                </Button>
-                <Button
-                    Padding="8"
-                    Classes="Flat"
-                    Command="{Binding DeleteLapCommand}"
-                    ToolTip.Tip="Delete lap">
-                    <avalonia:MaterialIcon IconSize="24" Kind="Delete" />
-                </Button>
             </StackPanel>
 
-            <controls:ChartControl Grid.Row="1" Subplots="{Binding Subplots}" />
+            <controls:ChartControl Grid.Row="2" Subplots="{Binding Subplots}" />
         </Grid>
     </ScrollViewer>
 </UserControl>

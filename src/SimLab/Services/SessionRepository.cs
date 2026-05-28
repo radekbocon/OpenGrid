@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using SimLab.Models;
@@ -66,7 +67,7 @@ public class SessionRepository
             }
         }
 
-        Sessions = new ObservableCollection<Session>(sessions);
+        Sessions = new ObservableCollection<Session>(sessions.OrderByDescending(x => x.Info.StartTime));
     }
 
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
