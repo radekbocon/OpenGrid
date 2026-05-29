@@ -2,6 +2,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DialogHostAvalonia;
+using SimLab.Controls;
 using SimLab.Models;
 using SimLab.Services;
 using SimLab.Services.Telemetry;
@@ -44,6 +46,8 @@ public partial class GameItemViewModel : ViewModelBase
     public bool ShowLaunchAndConnectButton => !IsRunning && TelemetryStatus == TelemetryConnectionStatus.Disconnected;
     public bool ShowDisconnectButton => TelemetryStatus == TelemetryConnectionStatus.Connected;
     public bool ShowCancelButton => TelemetryStatus == TelemetryConnectionStatus.Connecting;
+
+    public bool ShowSetupButton => TelemetrySetupHelper.AdditionalSetupNeeded(_game?.SteamGame);
     
     public GameItemViewModel(SteamGameManager gameManager, ITelemetryService telemetryService)
     {
@@ -127,5 +131,11 @@ public partial class GameItemViewModel : ViewModelBase
         _cts?.Cancel();
         _cts?.Dispose();
         _cts = null;
+    }
+
+    [RelayCommand]
+    private async Task ShowTelemetrySetupAsync()
+    {
+        await TelemetrySetupHelper.HandleTelemetrySetupAsync(_game?.SteamGame);
     }
 }

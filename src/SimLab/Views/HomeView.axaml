@@ -3,10 +3,10 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="using:SimLab.Models"
     xmlns:vm="using:SimLab.ViewModels"
     Padding="16,16,4,16"
     d:DesignHeight="450"
@@ -54,7 +54,7 @@
                                     Background="{DynamicResource MaterialCardBackgroundBrush}"
                                     BorderBrush="{DynamicResource MaterialDividerBrush}"
                                     BorderThickness="0,0,0,1">
-                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto">
                                         <Image Height="64" asyncImageLoader:ImageLoader.Source="{Binding ImagePath}" />
                                         <StackPanel
                                             Grid.Column="1"
@@ -71,6 +71,16 @@
                                         <Button
                                             Grid.Column="2"
                                             Margin="8"
+                                            Padding="8"
+                                            Classes="Flat"
+                                            Command="{Binding ShowTelemetrySetupCommand}"
+                                            Content="{avalonia:MaterialIconExt Kind=Info,
+                                                                               IconSize=24}"
+                                            IsVisible="{Binding ShowSetupButton}" />
+
+                                        <Button
+                                            Grid.Column="3"
+                                            Margin="8"
                                             Command="{Binding ConnectCommand}"
                                             CommandParameter="{Binding}"
                                             Content="Connect"
@@ -85,18 +95,19 @@
                                             IsVisible="{Binding ShowLaunchAndConnectButton}" />
 
                                         <Button
-                                            Grid.Column="4"
+                                            Grid.Column="5"
                                             Margin="8"
                                             Command="{Binding DisconnectCommand}"
                                             Content="Disconnect"
                                             IsVisible="{Binding ShowDisconnectButton}" />
 
                                         <Button
-                                            Grid.Column="4"
+                                            Grid.Column="5"
                                             Margin="8"
                                             Command="{Binding CancelCommand}"
                                             Content="Cancel"
                                             IsVisible="{Binding ShowCancelButton}" />
+
                                     </Grid>
                                 </Border>
                             </DataTemplate>

@@ -1,0 +1,65 @@
+<UserControl
+    x:Class="SimLab.Controls.DirtTelemetrySetupDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:controls="using:SimLab.Controls"
+    MinWidth="500"
+    MaxHeight="650"
+    x:DataType="controls:DirtTelemetrySetupDialog">
+    <Grid RowDefinitions="Auto,*">
+        <Border Grid.Row="0" Padding="4">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Text="UDP Telemetry Setup" />
+                <Button
+                    Grid.Column="1"
+                    Padding="8"
+                    Classes="Flat"
+                    Click="CloseClick"
+                    Content="{avalonia:MaterialIconExt Kind=Close,
+                                                       IconSize=24}" />
+            </Grid>
+        </Border>
+        <ScrollViewer Grid.Row="1" Margin="16,8">
+            <StackPanel Spacing="16">
+                <TextBlock
+                    FontSize="15"
+                    FontWeight="SemiBold"
+                    Text="Enable UDP telemetry to use SimLab."
+                    TextWrapping="Wrap" />
+
+                <StackPanel Spacing="8">
+                    <TextBlock TextWrapping="Wrap">1. Navigate to hardware_settings_config.xml:</TextBlock>
+                    <TextBlock
+                        Margin="16,0,0,0"
+                        IsVisible="{Binding IsWindows}"
+                        TextWrapping="Wrap"
+                        Text="{Binding WindowsPath}" />
+                    <TextBlock
+                        Margin="16,0,0,0"
+                        IsVisible="{Binding IsLinux}"
+                        TextWrapping="Wrap"
+                        Text="{Binding LinuxPath}" />
+                    <TextBlock TextWrapping="Wrap">2. Find the &lt;udp&gt; section in the file</TextBlock>
+                    <TextBlock TextWrapping="Wrap">3. Set enabled="true"</TextBlock>
+                    <TextBlock TextWrapping="Wrap">4. Set ip="127.0.0.1"</TextBlock>
+                    <TextBlock TextWrapping="Wrap">5. Set port="20777"</TextBlock>
+                    <TextBlock TextWrapping="Wrap">6. Save the file and restart the game</TextBlock>
+                </StackPanel>
+
+                <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+                <TextBlock
+                    FontSize="13"
+                    Foreground="{DynamicResource MaterialBodyBrush}"
+                    TextWrapping="Wrap">
+                    The UDP telemetry must be enabled in the game files before SimLab can receive data.
+                </TextBlock>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
