@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using SimLab.Models.Telemetry;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -94,7 +95,7 @@ public struct TyreStat
     public float RearLeft;
     public float RearRight;
     
-    public float[] ToArray() => new[] {FrontLeft, FrontRight, RearLeft, RearRight};
+    public float[] ToArray() => [FrontLeft, FrontRight, RearLeft, RearRight];
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 4)]

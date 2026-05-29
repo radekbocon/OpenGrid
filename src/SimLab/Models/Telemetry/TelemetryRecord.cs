@@ -1,8 +1,7 @@
 using System;
 using System.Numerics;
-using SimLab.Models.Telemetry;
 
-namespace SimLab.Models;
+namespace SimLab.Models.Telemetry;
 
 public record TelemetryRecord
 {

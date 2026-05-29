@@ -8,7 +8,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:SimLab.ViewModels"
-    Padding="16"
+    Padding="16,16,4,16"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vm:LapComparisonViewModel"
@@ -34,7 +34,7 @@
     </UserControl.Resources>
     <ScrollViewer>
         <Grid
-            Margin="0,0,16,0"
+            Margin="0,0,12,0"
             RowDefinitions="Auto, Auto, Auto, *"
             RowSpacing="4">
             <StackPanel
@@ -70,9 +70,7 @@
                 Height="300"
                 Series="{Binding TrackData}" />
 
-            <controls:ChartControl
-                Grid.Row="3"
-                Subplots="{Binding Subplots}" />
+            <controls:ChartControl Grid.Row="3" Subplots="{Binding Subplots}" />
         </Grid>
     </ScrollViewer>
 </UserControl>

@@ -4,6 +4,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using SimLab.Controls;
 using SimLab.Models;
+using SimLab.Models.Telemetry;
 using SkiaSharp;
 
 namespace SimLab.ViewModels;

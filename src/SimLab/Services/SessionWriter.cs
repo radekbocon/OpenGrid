@@ -99,10 +99,11 @@ public class SessionWriter
 
         writer.WriteLine($"# Id: {session.Info.Id}");
         writer.WriteLine($"# Game: {session.Info.Game.AppId}");
-        writer.WriteLine($"# Car: {session.Info.Car}");
+        writer.WriteLine($"# Car: {session.Info.Car?.Key}");
         writer.WriteLine($"# Track: {session.Info.Track?.Key}");
         writer.WriteLine($"# Type: {(int)session.Info.Type}");
         writer.WriteLine($"# StartTime: {ToUnixSeconds(session.Info.StartTime).ToString(CultureInfo.InvariantCulture)}");
+        writer.WriteLine("Timestamp,CurrentLap,SpeedKmh,Gas,Brake,Clutch,SteerAngle,Fuel,CurrentGear,EngineRpm,TireTemperatureFL,TireTemperatureFR,TireTemperatureRL,TireTemperatureRR,LapTime,Distance,MaxRpm,TirePressureFL,TirePressureFR,TirePressureRL,TirePressureRR,LastLapTime,BestLapTime,AbsSetting,Tc1Setting,Tc2Setting,DeltaLapTime,Position,EngineMap,BrakeBias,IsDeltaPositive,IsValidLap,PosX,PosY,PosZ");
         WriteLapHeaders(writer, session);
 
         foreach (var r in session.Records)
@@ -121,7 +122,7 @@ public class SessionWriter
         }
     }
 
-    public Session? LoadMetadata(string filePath)
+    public SessionInfo? LoadMetadata(string filePath)
     {
         var lines = File.ReadAllLines(filePath);
         if (lines.Length == 0)
@@ -204,7 +205,7 @@ public class SessionWriter
             Track.Create(track),
             startTime ?? DateTime.MinValue)
         {
-            LapHeaders = lapHeaders
+            LapInfo = lapHeaders
         };
 
         if (!hasLapCount)
@@ -212,10 +213,10 @@ public class SessionWriter
             return null;
         }
 
-        return new Session(sessionInfo);
+        return sessionInfo;
     }
 
-    public SessionDetails LoadDetails(string filePath, Session session)
+    public SessionDetails LoadDetails(string filePath, SessionInfo session)
     {
         var lines = File.ReadAllLines(filePath);
         var records = new List<TelemetryRecord>();

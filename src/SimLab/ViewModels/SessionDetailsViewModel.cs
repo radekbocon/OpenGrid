@@ -44,7 +44,7 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
 
     public override void SetParameters(params object[] parameters)
     {
-        if (parameters.Length > 0 && parameters[0] is Session session && session.Laps.Count > 0)
+        if (parameters.Length > 0 && parameters[0] is SessionInfo { LapInfo.Count: > 0 } session)
         {
             _details = _sessionRepository.LoadSessionDetails(session);
             OnPropertyChanged(nameof(Title));
@@ -71,7 +71,7 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
 
         if (_details.Laps.Count == 1)
         {
-            _sessionRepository.DeleteSession(_details.Session);
+            _sessionRepository.DeleteSession(_details.Info.FileName);
             _navigationService.NavigateTo<SessionsViewModel>();
             return;
         }
@@ -87,7 +87,7 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
     {
         if (_details is not null)
         {
-            var viewModel = new LapSelectionViewModel(_sessionRepository, _navigationService, _details.Session);
+            var viewModel = new LapSelectionViewModel(_sessionRepository, _navigationService, _details);
             var dialog = new LapSelectionDialog { DataContext = viewModel };
             DialogHost.Show(dialog);
         }

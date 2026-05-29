@@ -5,7 +5,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using SimLab.Controls;
-using SimLab.Models;
 using SimLab.Models.Telemetry;
 using SimLab.Services;
 using SimLab.Services.Telemetry;
@@ -20,9 +19,9 @@ public partial class SessionsViewModel : ViewModelBase
 
     [ObservableProperty] public partial bool CanStartRecording { get; private set; }
 
-    public ObservableCollection<Session> Sessions => _sessionRepository.Sessions;
+    public ObservableCollection<SessionInfo> Sessions { get; private set; } = [];
 
-    public bool HasMultipleLapSessions => Sessions.Any(s => s.Laps.Count > 0);
+    public bool HasMultipleLapSessions => Sessions.Any(s => s.LapInfo.Count > 0);
 
     public bool IsRecording => _sessionRepository.IsRecording;
 
@@ -32,11 +31,17 @@ public partial class SessionsViewModel : ViewModelBase
         _sessionRepository = sessionRepository;
         _telemetryService = telemetryService;
         _navigationService = navigationService;
-        _sessionRepository.IsRecordingChanged += (_, _) => OnPropertyChanged(nameof(IsRecording));
+        _sessionRepository.IsRecordingChanged += SessionRepositoryOnIsRecordingChanged;
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
 
         CanStartRecording = _telemetryService.ConnectionStatus == TelemetryConnectionStatus.Connected;
         IsMenuItem = true;
+    }
+
+    private void SessionRepositoryOnIsRecordingChanged(object? sender, bool e)
+    {
+        OnPropertyChanged(nameof(IsRecording));
+        LoadedAsync().FireAndForgetSafe();
     }
 
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
@@ -47,7 +52,8 @@ public partial class SessionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task LoadedAsync()
     {
-        await _sessionRepository.LoadSessionsAsync();
+        var sessions = await _sessionRepository.LoadSessionsAsync();
+        Sessions = new ObservableCollection<SessionInfo>(sessions);
         OnPropertyChanged(nameof(Sessions));
         OnPropertyChanged(nameof(HasMultipleLapSessions));
     }
@@ -67,7 +73,7 @@ public partial class SessionsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void SessionSelected(Session session)
+    private void SessionSelected(SessionInfo session)
     {
         _navigationService.NavigateTo<SessionDetailsViewModel>(session);
     }
@@ -81,15 +87,16 @@ public partial class SessionsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task DeleteSessionAsync(Session session)
+    private async Task DeleteSessionAsync(SessionInfo session)
     {
         var confirmDialog = new ConfirmDialog("Are you sure you want to delete this session?");
         await DialogHost.Show(confirmDialog);
 
         if (confirmDialog.Result)
         {
-            _sessionRepository.DeleteSession(session);
+            _sessionRepository.DeleteSession(session.FileName);
             OnPropertyChanged(nameof(HasMultipleLapSessions));
+            Sessions.Remove(session);
         }
     }
 }

@@ -28,10 +28,10 @@ public class SessionInfo
     public Guid Id { get; init; }
     public SteamGame Game { get; init; }
     public SessionType Type { get; }
-    public Car Car { get; }
+    public Car? Car { get; }
     public Track? Track { get;  }
     public DateTime StartTime { get; set; }
-    public List<LapInfo> LapHeaders { get; set; } = [];
+    public List<LapInfo> LapInfo { get; set; } = [];
 
     public string FileName => $"{Car}-{Track}-{Type}-{Id}.csv";
 }

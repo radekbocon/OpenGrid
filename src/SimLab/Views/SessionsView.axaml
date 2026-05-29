@@ -6,11 +6,10 @@
     xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="clr-namespace:SimLab.Models"
     xmlns:telemetry="clr-namespace:SimLab.Models.Telemetry"
     xmlns:views="clr-namespace:SimLab.Views"
     xmlns:vm="using:SimLab.ViewModels"
-    Padding="16"
+    Padding="16,16,4,16"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vm:SessionsViewModel"
@@ -22,94 +21,95 @@
         </EventTriggerBehavior>
     </Interaction.Behaviors>
 
-    <Grid RowDefinitions="Auto, Auto, Auto">
-        <StackPanel
-            Grid.Row="0"
-            Orientation="Horizontal"
-            Spacing="8">
-            <Button
-                Command="{Binding StartSessionCommand}"
-                Content="Start Recording"
-                IsVisible="{Binding !IsRecording}" />
-            <Button
-                Command="{Binding StopSessionCommand}"
-                Content="Stop Recording"
-                IsVisible="{Binding IsRecording}" />
-            <Button
-                Command="{Binding OpenLapComparisonCommand}"
-                Content="Compare Laps"
-                IsVisible="{Binding HasMultipleLapSessions}" />
-        </StackPanel>
+    <ScrollViewer Padding="0,0,12,0">
+        <Grid RowDefinitions="Auto, Auto, Auto">
+            <StackPanel
+                Grid.Row="0"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button
+                    Command="{Binding StartSessionCommand}"
+                    Content="Start Recording"
+                    IsVisible="{Binding !IsRecording}" />
+                <Button
+                    Command="{Binding StopSessionCommand}"
+                    Content="Stop Recording"
+                    IsVisible="{Binding IsRecording}" />
+                <Button
+                    Command="{Binding OpenLapComparisonCommand}"
+                    Content="Compare Laps"
+                    IsVisible="{Binding HasMultipleLapSessions}" />
+            </StackPanel>
 
-        <TextBlock
-            Grid.Row="1"
-            Margin="0,8,0,8"
-            Text="Sessions:" />
+            <TextBlock
+                Grid.Row="1"
+                Margin="0,8,0,8"
+                Text="Sessions:" />
 
-        <ListBox
-            Name="SessionsList"
-            Grid.Row="2"
-            MaxWidth="1000"
-            ItemsSource="{Binding Sessions}">
-            <Interaction.Behaviors>
-                <EventTriggerBehavior EventName="SelectionChanged">
-                    <InvokeCommandAction Command="{Binding SessionSelectedCommand}" CommandParameter="{Binding #SessionsList.SelectedItem}" />
-                </EventTriggerBehavior>
-            </Interaction.Behaviors>
-            <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="telemetry:Session">
-                    <controls:Card>
-                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto, Auto, Auto">
-                            <TextBlock
-                                Grid.Row="0"
-                                Grid.Column="0"
-                                Margin="4"
-                                Classes="Body2"
-                                Opacity="0.6"
-                                Text="{Binding Info.StartTime}" />
-                            <StackPanel
-                                Grid.Row="1"
-                                Grid.Column="0"
-                                Margin="4"
-                                Orientation="Horizontal"
-                                Spacing="4">
-                                <TextBlock Classes="Subtitle1" Text="{Binding Info.Game.Name}" />
-                                <TextBlock Classes="Subtitle1" Text="|" />
-                                <TextBlock Classes="Subtitle1" Text="{Binding Info.Type}" />
-                                <TextBlock Classes="Subtitle1" Text="|" />
-                                <TextBlock Classes="Subtitle1" Text="{Binding Laps.Count, StringFormat='Laps: {0}'}" />
-                            </StackPanel>
-                            <StackPanel
-                                Grid.Row="2"
-                                Grid.Column="0"
-                                Margin="4"
-                                Orientation="Horizontal"
-                                Spacing="4">
-                                <TextBlock Classes="Subtitle2" Text="{Binding Info.Car}" />
-                                <TextBlock Classes="Subtitle2" Text="|" />
-                                <TextBlock Classes="Subtitle2" Text="{Binding Info.Track}" />
-                            </StackPanel>
+            <ListBox
+                Name="SessionsList"
+                Grid.Row="2"
+                MaxWidth="1000"
+                ItemsSource="{Binding Sessions}">
+                <Interaction.Behaviors>
+                    <EventTriggerBehavior EventName="SelectionChanged">
+                        <InvokeCommandAction Command="{Binding SessionSelectedCommand}" CommandParameter="{Binding #SessionsList.SelectedItem}" />
+                    </EventTriggerBehavior>
+                </Interaction.Behaviors>
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="telemetry:SessionInfo">
+                        <controls:Card>
+                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto, Auto, Auto">
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="4"
+                                    Classes="Body2"
+                                    Opacity="0.6"
+                                    Text="{Binding StartTime}" />
+                                <StackPanel
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Margin="4"
+                                    Orientation="Horizontal"
+                                    Spacing="4">
+                                    <TextBlock Classes="Subtitle1" Text="{Binding Game.Name}" />
+                                    <TextBlock Classes="Subtitle1" Text="|" />
+                                    <TextBlock Classes="Subtitle1" Text="{Binding Type}" />
+                                    <TextBlock Classes="Subtitle1" Text="|" />
+                                    <TextBlock Classes="Subtitle1" Text="{Binding LapInfo.Count, StringFormat='Laps: {0}'}" />
+                                </StackPanel>
+                                <StackPanel
+                                    Grid.Row="2"
+                                    Grid.Column="0"
+                                    Margin="4"
+                                    Orientation="Horizontal"
+                                    Spacing="4">
+                                    <TextBlock Classes="Subtitle2" Text="{Binding Car}" />
+                                    <TextBlock Classes="Subtitle2" Text="|" />
+                                    <TextBlock Classes="Subtitle2" Text="{Binding Track}" />
+                                </StackPanel>
 
-                            <Button
-                                Grid.Row="0"
-                                Grid.RowSpan="3"
-                                Grid.Column="1"
-                                Margin="4"
-                                Padding="8"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Classes="flat"
-                                Command="{Binding $parent[views:SessionsView].((vm:SessionsViewModel)DataContext)?.DeleteSessionCommand}"
-                                CommandParameter="{Binding}"
-                                Content="{avalonia:MaterialIconExt Kind=Trash,
-                                                                   IconSize=24}"
-                                ToolTip.Tip="Delete session" />
-                        </Grid>
-                    </controls:Card>
+                                <Button
+                                    Grid.Row="0"
+                                    Grid.RowSpan="3"
+                                    Grid.Column="1"
+                                    Margin="4"
+                                    Padding="8"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Classes="flat"
+                                    Command="{Binding $parent[views:SessionsView].((vm:SessionsViewModel)DataContext)?.DeleteSessionCommand}"
+                                    CommandParameter="{Binding}"
+                                    Content="{avalonia:MaterialIconExt Kind=Trash,
+                                                                       IconSize=24}"
+                                    ToolTip.Tip="Delete session" />
+                            </Grid>
+                        </controls:Card>
 
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-    </Grid>
-
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </ScrollViewer>
 </UserControl>

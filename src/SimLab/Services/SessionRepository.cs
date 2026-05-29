@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
-using SimLab.Models;
 using SimLab.Models.Telemetry;
 using SimLab.Services.Telemetry;
 
@@ -23,8 +21,6 @@ public class SessionRepository
     private StreamWriter? _currentFileWriter;
 
     public SessionDetails? CurrentSession { get; private set; }
-
-    public ObservableCollection<Session> Sessions { get; private set; } = [];
 
     public bool IsRecording
     {
@@ -47,9 +43,9 @@ public class SessionRepository
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
     }
 
-    public async Task LoadSessionsAsync()
+    public async Task<List<SessionInfo>> LoadSessionsAsync()
     {
-        var sessions = new List<Session>();
+        var sessions = new List<SessionInfo>();
 
         await Task.Run(() =>
         {
@@ -59,6 +55,7 @@ public class SessionRepository
                 try
                 {
                     var session = _sessionWriter.LoadMetadata(file);
+                    session?.LapInfo.MinBy(x => x.Time)?.IsFastest = true;
                     if (session is not null)
                     {
                         sessions.Add(session);
@@ -72,13 +69,14 @@ public class SessionRepository
         });
 
 
-        Sessions = new ObservableCollection<Session>(sessions.OrderByDescending(x => x.Info.StartTime));
+        return sessions.OrderByDescending(x => x.StartTime).ToList();
     }
 
-    public SessionDetails LoadSessionDetails(Session session)
+    public SessionDetails LoadSessionDetails(SessionInfo session)
     {
-        var filePath = Path.Combine(_telemetryFolder, session.Info.FileName);
-        return _sessionWriter.LoadDetails(filePath, session);
+        var filePath = Path.Combine(_telemetryFolder, session.FileName);
+        var details = _sessionWriter.LoadDetails(filePath, session);
+        return details;
     }
 
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
@@ -103,7 +101,6 @@ public class SessionRepository
         if (CurrentSession is not null)
         {
             FinalizeCurrentSession();
-            Sessions.Add(CurrentSession.Session);
             CurrentSession = null;
         }
     }
@@ -121,7 +118,6 @@ public class SessionRepository
         if (IsNewSession(e.Telemetry))
         {
             FinalizeCurrentSession();
-            Sessions.Add(CurrentSession.Session);
             CurrentSession = new SessionDetails(e.Game, e.Telemetry);
             _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
             _lastRecordTimestamp = e.Telemetry.Timestamp;
@@ -156,20 +152,17 @@ public class SessionRepository
 
     public void DeleteLap(SessionDetails details, int lapNumber)
     {
-        details.Records.RemoveAll(r => r.CurrentLap == lapNumber);
+        details.DeleteLap(lapNumber);
         _sessionWriter.WriteFull(details);
-
-        details.Session.Laps.RemoveAll(l => l.Number == lapNumber);
     }
 
-    public void DeleteSession(Session session)
+    public void DeleteSession(string fileName)
     {
-        var filePath = Path.Combine(_telemetryFolder, session.Info.FileName);
+        var filePath = Path.Combine(_telemetryFolder, fileName);
         if (File.Exists(filePath))
         {
             File.Delete(filePath);
         }
-        Sessions.Remove(session);
     }
 
     private bool IsNewSession(TelemetryRecord record)

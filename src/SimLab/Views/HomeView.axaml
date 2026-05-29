@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:SimLab.Models"
     xmlns:vm="using:SimLab.ViewModels"
+    Padding="16,16,4,16"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vm:HomeViewModel"
@@ -23,12 +24,12 @@
     </Interaction.Behaviors>
 
     <DockPanel>
-        <Border Padding="24,16" DockPanel.Dock="Top">
+        <Border Margin="0,0,0,8" DockPanel.Dock="Top">
             <TextBlock Classes="Headline4" Text="SimLab" />
         </Border>
 
-        <ScrollViewer Margin="0">
-            <StackPanel Margin="24,0,24,16" Spacing="12">
+        <ScrollViewer>
+            <StackPanel Margin="0,0,12,0" Spacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <TextBlock
                         Margin="0,0,0,4"
