@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:SimLab.Models"
+    xmlns:telemetry="clr-namespace:SimLab.Models.Telemetry"
     xmlns:views="clr-namespace:SimLab.Views"
     xmlns:vm="using:SimLab.ViewModels"
     Padding="16"
@@ -56,7 +57,7 @@
                 </EventTriggerBehavior>
             </Interaction.Behaviors>
             <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="models:Session">
+                <DataTemplate x:DataType="telemetry:Session">
                     <controls:Card>
                         <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto, Auto, Auto">
                             <TextBlock

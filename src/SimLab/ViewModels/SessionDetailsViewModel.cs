@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using SimLab.Controls;
 using SimLab.Models;
+using SimLab.Models.Telemetry;
 using SimLab.Services;
 using SkiaSharp;
 
@@ -19,9 +20,9 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
 
     private readonly SessionRepository _sessionRepository;
     private readonly INavigationService _navigationService;
-    private Session? _session;
+    private SessionDetails? _details;
 
-    public string Title => $"{_session?.Info.Game.Name} - {_session?.Info.Car} - {_session?.Info.Track}";
+    public string Title => $"{_details?.Info.Game.Name} - {_details?.Info.Car} - {_details?.Info.Track}";
     
     [ObservableProperty]
     public partial Lap? SelectedLap { get; set; }
@@ -43,11 +44,11 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
 
     public override void SetParameters(params object[] parameters)
     {
-        if (parameters.Length > 0 && parameters[0] is Session { Laps.Count: > 0 } session)
+        if (parameters.Length > 0 && parameters[0] is Session session && session.Laps.Count > 0)
         {
-            _session = session;
+            _details = _sessionRepository.LoadSessionDetails(session);
             OnPropertyChanged(nameof(Title));
-            Laps = session.Laps;
+            Laps = _details.Laps;
             SelectedLap = Laps.First();
         }
     }
@@ -55,7 +56,7 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
     [RelayCommand]
     private async Task DeleteLapAsync()
     {
-        if (_session is null || SelectedLap is null)
+        if (_details is null || SelectedLap is null)
         {
             return;
         }
@@ -68,25 +69,25 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
             return;
         }
 
-        if (_session.Laps.Count == 1)
+        if (_details.Laps.Count == 1)
         {
-            _sessionRepository.DeleteSession(_session);
+            _sessionRepository.DeleteSession(_details.Session);
             _navigationService.NavigateTo<SessionsViewModel>();
             return;
         }
 
-        _sessionRepository.DeleteLap(_session, SelectedLap.Number);
+        _sessionRepository.DeleteLap(_details, SelectedLap.Number);
 
-        Laps = _session.Laps;
+        Laps = _details.Laps;
         SelectedLap = Laps.FirstOrDefault();
     }
 
     [RelayCommand]
     private void CompareWithOtherLaps()
     {
-        if (_session is not null)
+        if (_details is not null)
         {
-            var viewModel = new LapSelectionViewModel(_sessionRepository, _navigationService, _session);
+            var viewModel = new LapSelectionViewModel(_sessionRepository, _navigationService, _details.Session);
             var dialog = new LapSelectionDialog { DataContext = viewModel };
             DialogHost.Show(dialog);
         }
@@ -107,7 +108,7 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
 
     private void SetTrackData(Lap lap)
     {
-        if (lap.Records.All(x => x.CarPosition == Vector3.Zero))
+        if (lap.Records is null || lap.Records.All(x => x.CarPosition == Vector3.Zero))
         {
             TrackData = [];
             return;
@@ -131,6 +132,8 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
 
     private void SetCharts(Lap lap)
     {
+        if (lap.Records is null) return;
+
         Task.Run(() =>
         {
             var distanceOffset = lap.Records.First().Distance;

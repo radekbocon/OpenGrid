@@ -41,16 +41,19 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
 
             foreach (var item in SelectedLaps)
             {
-                var distanceOffset = item.Lap.Records.First().Distance;
-                var xs = item.Lap.Records.Select(r => (double)(r.Distance - distanceOffset)).ToArray();
+                var records = item.Lap.Records;
+                if (records is null) continue;
+
+                var distanceOffset = records.First().Distance;
+                var xs = records.Select(r => (double)(r.Distance - distanceOffset)).ToArray();
                 var color = item.Color;
 
-                gasSeries.Add(CreateChartData(item.ShortName, xs, item.Lap.Records.Select(r => (double)r.Gas), color));
-                brakeSeries.Add(CreateChartData(item.ShortName, xs, item.Lap.Records.Select(r => (double)r.Brake), color));
-                steeringSeries.Add(CreateChartData(item.ShortName, xs, item.Lap.Records.Select(r => (double)r.SteerAngle), color));
-                speedSeries.Add(CreateChartData(item.ShortName, xs, item.Lap.Records.Select(r => Math.Round(r.SpeedKmh, 1)), color));
-                gearSeries.Add(CreateChartData(item.ShortName, xs, item.Lap.Records.Select(r => (double)(int)r.CurrentGear), color, isStep: true));
-                rpmSeries.Add(CreateChartData(item.ShortName, xs, item.Lap.Records.Select(r => (double)r.EngineRpm), color));
+                gasSeries.Add(CreateChartData(item.ShortName, xs, records.Select(r => (double)r.Gas), color));
+                brakeSeries.Add(CreateChartData(item.ShortName, xs, records.Select(r => (double)r.Brake), color));
+                steeringSeries.Add(CreateChartData(item.ShortName, xs, records.Select(r => (double)r.SteerAngle), color));
+                speedSeries.Add(CreateChartData(item.ShortName, xs, records.Select(r => Math.Round(r.SpeedKmh, 1)), color));
+                gearSeries.Add(CreateChartData(item.ShortName, xs, records.Select(r => (double)(int)r.CurrentGear), color, isStep: true));
+                rpmSeries.Add(CreateChartData(item.ShortName, xs, records.Select(r => (double)r.EngineRpm), color));
             }
 
             Subplots =
@@ -66,14 +69,15 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
             var trackSeries = new List<TrackMapSeries>();
             foreach (var item in SelectedLaps)
             {
-                if (item.Lap.Records.All(x => x.CarPosition == Vector3.Zero))
+                var records = item.Lap.Records;
+                if (records is null || records.All(x => x.CarPosition == Vector3.Zero))
                 {
                     continue;
                 }
                 
-                var firstPos = item.Lap.Records.First().CarPosition;
-                var trackXs = item.Lap.Records.Select(r => (double)(r.CarPosition.X - firstPos.X)).ToArray();
-                var trackYs = item.Lap.Records.Select(r => (double)(r.CarPosition.Z - firstPos.Z)).ToArray();
+                var firstPos = records.First().CarPosition;
+                var trackXs = records.Select(r => (double)(r.CarPosition.X - firstPos.X)).ToArray();
+                var trackYs = records.Select(r => (double)(r.CarPosition.Z - firstPos.Z)).ToArray();
                 trackSeries.Add(new TrackMapSeries
                 {
                     Name = item.ShortName,

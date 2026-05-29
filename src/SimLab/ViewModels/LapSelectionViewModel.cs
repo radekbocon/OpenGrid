@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using SimLab.Converters;
 using SimLab.Models;
+using SimLab.Models.Telemetry;
 using SimLab.Services;
 
 namespace SimLab.ViewModels;
@@ -83,15 +84,29 @@ public partial class LapSelectionViewModel : ObservableObject
     {
         var selectedLaps = Sessions
             .SelectMany(s => s.Laps.Where(l => l.IsSelected)
-                .Select(l => (l.Lap, l.Session.Info)))
+                .Select(l => (Lap: l.Lap, Session: l.Session)))
             .OrderBy(x => x.Lap.Time)
             .ToList();
 
-        var comparisonItems = new List<LapComparisonItem>();
-        for (var i = 0; i < selectedLaps.Count; i++)
+        var unsortedItems = new List<(Models.Telemetry.Lap Lap, SessionInfo Info)>();
+        var detailsCache = new Dictionary<Session, SessionDetails>();
+
+        foreach (var (lap, session) in selectedLaps)
         {
-            comparisonItems.Add(new LapComparisonItem(selectedLaps[i].Lap, selectedLaps[i].Info, i));
+            if (!detailsCache.TryGetValue(session, out var details))
+            {
+                details = _sessionRepository.LoadSessionDetails(session);
+                detailsCache[session] = details;
+            }
+
+            var freshLap = details.Laps.FirstOrDefault(l => l.Number == lap.Number) ?? lap;
+            unsortedItems.Add((freshLap, session.Info));
         }
+
+        var sortedItems = unsortedItems.OrderBy(x => x.Lap.Time).ToList();
+        var comparisonItems = sortedItems
+            .Select((item, i) => new LapComparisonItem(item.Lap, item.Info, i))
+            .ToList();
 
         _navigationService.NavigateTo<LapComparisonViewModel>(comparisonItems);
         DialogHost.Close(null);

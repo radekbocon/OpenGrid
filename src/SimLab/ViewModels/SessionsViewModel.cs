@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using SimLab.Controls;
 using SimLab.Models;
+using SimLab.Models.Telemetry;
 using SimLab.Services;
 using SimLab.Services.Telemetry;
 
@@ -44,9 +45,9 @@ public partial class SessionsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Loaded()
+    private async Task LoadedAsync()
     {
-        _sessionRepository.LoadSessions();
+        await _sessionRepository.LoadSessionsAsync();
         OnPropertyChanged(nameof(Sessions));
         OnPropertyChanged(nameof(HasMultipleLapSessions));
     }

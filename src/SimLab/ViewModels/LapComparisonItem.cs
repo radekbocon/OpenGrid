@@ -1,5 +1,6 @@
 using SimLab.Converters;
 using SimLab.Models;
+using SimLab.Models.Telemetry;
 using SkiaSharp;
 
 namespace SimLab.ViewModels;

@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-namespace SimLab.Models;
+namespace SimLab.Models.Telemetry;
 
 public readonly record struct Track
 {

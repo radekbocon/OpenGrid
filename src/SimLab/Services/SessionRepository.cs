@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using SimLab.Models;
+using SimLab.Models.Telemetry;
 using SimLab.Services.Telemetry;
 
 namespace SimLab.Services;
@@ -21,7 +22,7 @@ public class SessionRepository
     private DateTime _lastRecordTimestamp;
     private StreamWriter? _currentFileWriter;
 
-    public Session? CurrentSession { get; private set; }
+    public SessionDetails? CurrentSession { get; private set; }
 
     public ObservableCollection<Session> Sessions { get; private set; } = [];
 
@@ -46,28 +47,38 @@ public class SessionRepository
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
     }
 
-    public void LoadSessions()
+    public async Task LoadSessionsAsync()
     {
         var sessions = new List<Session>();
-        var files = Directory.GetFiles(_telemetryFolder, "*.csv");
 
-        foreach (var file in files)
+        await Task.Run(() =>
         {
-            try
+            var files = Directory.GetFiles(_telemetryFolder, "*.csv");
+            foreach (var file in files)
             {
-                var session = _sessionWriter.LoadFile(file);
-                if (session is not null)
+                try
                 {
-                    sessions.Add(session);
+                    var session = _sessionWriter.LoadMetadata(file);
+                    if (session is not null)
+                    {
+                        sessions.Add(session);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Failed to load session from {File}", file);
                 }
             }
-            catch (Exception e)
-            {
-                Log.Error(e, "Failed to load session from {File}", file);
-            }
-        }
+        });
+
 
         Sessions = new ObservableCollection<Session>(sessions.OrderByDescending(x => x.Info.StartTime));
+    }
+
+    public SessionDetails LoadSessionDetails(Session session)
+    {
+        var filePath = Path.Combine(_telemetryFolder, session.Info.FileName);
+        return _sessionWriter.LoadDetails(filePath, session);
     }
 
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
@@ -91,8 +102,8 @@ public class SessionRepository
 
         if (CurrentSession is not null)
         {
-            CloseCurrentFile();
-            Sessions.Add(CurrentSession);
+            FinalizeCurrentSession();
+            Sessions.Add(CurrentSession.Session);
             CurrentSession = null;
         }
     }
@@ -101,7 +112,7 @@ public class SessionRepository
     {
         if (CurrentSession is null)
         {
-            CurrentSession = new Session(e.Game, e.Telemetry);
+            CurrentSession = new SessionDetails(e.Game, e.Telemetry);
             _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
             _lastRecordTimestamp = e.Telemetry.Timestamp;
             return;
@@ -109,9 +120,9 @@ public class SessionRepository
 
         if (IsNewSession(e.Telemetry))
         {
-            CloseCurrentFile();
-            Sessions.Add(CurrentSession);
-            CurrentSession = new Session(e.Game, e.Telemetry);
+            FinalizeCurrentSession();
+            Sessions.Add(CurrentSession.Session);
+            CurrentSession = new SessionDetails(e.Game, e.Telemetry);
             _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
             _lastRecordTimestamp = e.Telemetry.Timestamp;
             return;
@@ -137,11 +148,18 @@ public class SessionRepository
         _currentFileWriter = null;
     }
 
-    public void DeleteLap(Session session, int lapNumber)
+    private void FinalizeCurrentSession()
     {
-        session.Records.RemoveAll(r => r.CurrentLap == lapNumber);
-        session.Laps.RemoveAll(l => l.Number == lapNumber);
-        _sessionWriter.WriteFull(session);
+        CloseCurrentFile();
+        _sessionWriter.WriteFull(CurrentSession!);
+    }
+
+    public void DeleteLap(SessionDetails details, int lapNumber)
+    {
+        details.Records.RemoveAll(r => r.CurrentLap == lapNumber);
+        _sessionWriter.WriteFull(details);
+
+        details.Session.Laps.RemoveAll(l => l.Number == lapNumber);
     }
 
     public void DeleteSession(Session session)

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using SimLab.Models;
+using SimLab.Models.Telemetry;
 
 namespace SimLab.Services;
 
@@ -30,7 +31,7 @@ public class SessionWriter
 
     public static DateTime FromUnixSeconds(double seconds) => UnixEpoch.AddSeconds(seconds);
 
-    public StreamWriter CreateFile(Session session)
+    public StreamWriter CreateFile(SessionDetails session)
     {
         var filePath = Path.Combine(_telemetryFolder, session.Info.FileName);
         var writer = new StreamWriter(filePath);
@@ -91,7 +92,7 @@ public class SessionWriter
         writer.Flush();
     }
 
-    public void WriteFull(Session session)
+    public void WriteFull(SessionDetails session)
     {
         var filePath = Path.Combine(_telemetryFolder, session.Info.FileName);
         using var writer = new StreamWriter(filePath);
@@ -102,6 +103,7 @@ public class SessionWriter
         writer.WriteLine($"# Track: {session.Info.Track?.Key}");
         writer.WriteLine($"# Type: {(int)session.Info.Type}");
         writer.WriteLine($"# StartTime: {ToUnixSeconds(session.Info.StartTime).ToString(CultureInfo.InvariantCulture)}");
+        WriteLapHeaders(writer, session);
 
         foreach (var r in session.Records)
         {
@@ -109,7 +111,17 @@ public class SessionWriter
         }
     }
 
-    public Session? LoadFile(string filePath)
+    private static void WriteLapHeaders(StreamWriter writer, SessionDetails session)
+    {
+        var laps = session.Laps;
+        writer.WriteLine($"# LapCount: {laps.Count}");
+        foreach (var lap in laps)
+        {
+            writer.WriteLine($"# Lap: {lap.Number},{lap.Time.TotalSeconds.ToString(CultureInfo.InvariantCulture)},{(lap.IsValid ? 1 : 0)}");
+        }
+    }
+
+    public Session? LoadMetadata(string filePath)
     {
         var lines = File.ReadAllLines(filePath);
         if (lines.Length == 0)
@@ -123,9 +135,91 @@ public class SessionWriter
         string? car = null;
         string? track = null;
         DateTime? startTime = null;
+        var lapHeaders = new List<LapInfo>();
+        var hasLapCount = false;
 
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine.Trim();
+            if (line.Length == 0 || line[0] != '#')
+            {
+                continue;
+            }
+
+            var colonIndex = line.IndexOf(':');
+            if (colonIndex < 0)
+            {
+                continue;
+            }
+
+            var key = line[1..colonIndex].Trim();
+            var value = line[(colonIndex + 1)..].Trim();
+
+            switch (key)
+            {
+                case "Id":
+                    id = Guid.Parse(value);
+                    break;
+                case "Game":
+                    gameAppId = int.Parse(value, CultureInfo.InvariantCulture);
+                    break;
+                case "Type":
+                    type = (SessionType)int.Parse(value, CultureInfo.InvariantCulture);
+                    break;
+                case "Car":
+                    car = value;
+                    break;
+                case "Track":
+                    track = value;
+                    break;
+                case "StartTime":
+                    startTime = FromUnixSeconds(double.Parse(value, CultureInfo.InvariantCulture));
+                    break;
+                case "LapCount":
+                    hasLapCount = true;
+                    break;
+                case "Lap":
+                    var parts = value.Split(',');
+                    if (parts.Length >= 3 &&
+                        int.TryParse(parts[0], out var lapNum) &&
+                        double.TryParse(parts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var lapTimeSecs))
+                    {
+                        lapHeaders.Add(new LapInfo(lapNum, TimeSpan.FromSeconds(lapTimeSecs), parts[2] == "1"));
+                    }
+                    break;
+            }
+        }
+
+        var game = SteamGame.GetByAppId(gameAppId ?? 0);
+        if (game is null || id is null)
+        {
+            return null;
+        }
+
+        var sessionInfo = new SessionInfo(
+            id.Value,
+            game,
+            type ?? SessionType.Unknown,
+            Car.Create(car),
+            Track.Create(track),
+            startTime ?? DateTime.MinValue)
+        {
+            LapHeaders = lapHeaders
+        };
+
+        if (!hasLapCount)
+        {
+            return null;
+        }
+
+        return new Session(sessionInfo);
+    }
+
+    public SessionDetails LoadDetails(string filePath, Session session)
+    {
+        var lines = File.ReadAllLines(filePath);
         var records = new List<TelemetryRecord>();
-        var headerFound = false;
+        var dataStarted = false;
 
         foreach (var rawLine in lines)
         {
@@ -137,43 +231,12 @@ public class SessionWriter
 
             if (line[0] == '#')
             {
-                var colonIndex = line.IndexOf(':');
-                if (colonIndex < 0)
-                {
-                    continue;
-                }
-
-                var key = line[1..colonIndex].Trim();
-                var value = line[(colonIndex + 1)..].Trim();
-
-                switch (key)
-                {
-                    case "Id":
-                        id = Guid.Parse(value);
-                        break;
-                    case "Game":
-                        gameAppId = int.Parse(value, CultureInfo.InvariantCulture);
-                        break;
-                    case "Type":
-                        type = (SessionType)int.Parse(value, CultureInfo.InvariantCulture);
-                        break;
-                    case "Car":
-                        car = value;
-                        break;
-                    case "Track":
-                        track = value;
-                        break;
-                    case "StartTime":
-                        startTime = FromUnixSeconds(double.Parse(value, CultureInfo.InvariantCulture));
-                        break;
-                }
-
                 continue;
             }
 
-            if (!headerFound)
+            if (!dataStarted)
             {
-                headerFound = true;
+                dataStarted = true;
                 continue;
             }
 
@@ -233,25 +296,6 @@ public class SessionWriter
             records.Add(record);
         }
 
-        if (!headerFound || records.Count == 0)
-        {
-            return null;
-        }
-
-        var game = SteamGame.GetByAppId(gameAppId ?? 0);
-        if (game is null)
-        {
-            return null;
-        }
-
-        return new Session(
-            new SessionInfo(
-                id ?? Guid.NewGuid(),
-                game,
-                type ?? SessionType.Unknown,
-                Car.Create(car),
-                Track.Create(track),
-                startTime ?? DateTime.MinValue),
-            records);
+        return new SessionDetails(session, records);
     }
 }
