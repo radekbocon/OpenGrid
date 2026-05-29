@@ -1,4 +1,3 @@
-using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,10 +22,6 @@ public partial class SessionsViewModel : ViewModelBase
     public ObservableCollection<Session> Sessions => _sessionRepository.Sessions;
 
     public bool HasMultipleLapSessions => Sessions.Any(s => s.Laps.Count > 0);
-
-    public string CurrentSession => _sessionRepository.CurrentSession is null
-        ? "No session"
-        : $"{_sessionRepository.CurrentSession.Info.Type} | {_sessionRepository.CurrentSession.Info.Car} at {_sessionRepository.CurrentSession.Info.Track}";
 
     public bool IsRecording => _sessionRepository.IsRecording;
 
