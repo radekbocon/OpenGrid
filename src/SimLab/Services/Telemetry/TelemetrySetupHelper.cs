@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using DialogHostAvalonia;
@@ -8,8 +9,6 @@ namespace SimLab.Services.Telemetry;
 
 public static class TelemetrySetupHelper
 {
-    private static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-
     public static bool AdditionalSetupNeeded(SteamGame? game)
     {
         if (IsDirtRallyGame(game))
@@ -17,7 +16,7 @@ public static class TelemetrySetupHelper
             return true;
         }
 
-        if (IsLinux() && IsAcGame(game))
+        if (OperatingSystem.IsLinux() && IsAcGame(game))
         {
             return true;
         }
@@ -32,7 +31,7 @@ public static class TelemetrySetupHelper
             var dialog = new DirtTelemetrySetupDialog(steamGame!);
             await DialogHost.Show(dialog);
         }
-        else if (IsLinux() && IsAcGame(steamGame))
+        else if (OperatingSystem.IsLinux() && IsAcGame(steamGame))
         {
             var dialog = new AcTelemetrySetupDialog();
             await DialogHost.Show(dialog);
