@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 
 namespace SimLab.Models;
 
@@ -33,6 +34,7 @@ public record TelemetryRecord
     public float BrakeBias { get; set; }
     public bool IsDeltaPositive { get; set; }
     public bool IsValidLap { get; set; }
+    public Vector3 CarPosition { get; set; }
 }
 
 public enum SessionType

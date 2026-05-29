@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -111,7 +112,11 @@ public class AcTelemetryClient : ITelemetryClient
                 EngineMap = graphicsData.Value.EngineMap + 1,
                 BrakeBias = physicsData.Value.BrakeBias,
                 IsDeltaPositive = graphicsData.Value.IsDeltaPositive == 1,
-                IsValidLap = graphicsData.Value.IsValidLap == 1
+                IsValidLap = graphicsData.Value.IsValidLap == 1,
+                CarPosition = new Vector3(
+                    graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID].X,
+                    graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID].Y,
+                    graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID].Z)
             };
             
             return snapshot;

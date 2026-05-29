@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using SimLab.Models;
 
 namespace SimLab.Services;
@@ -40,7 +41,7 @@ public class SessionWriter
         writer.WriteLine($"# Track: {session.Info.Track}");
         writer.WriteLine($"# Type: {(int)session.Info.Type}");
         writer.WriteLine($"# StartTime: {ToUnixSeconds(session.Info.StartTime).ToString(CultureInfo.InvariantCulture)}");
-        writer.WriteLine("Timestamp,CurrentLap,SpeedKmh,Gas,Brake,Clutch,SteerAngle,Fuel,CurrentGear,EngineRpm,TireTemperatureFL,TireTemperatureFR,TireTemperatureRL,TireTemperatureRR,LapTime,Distance,MaxRpm,TirePressureFL,TirePressureFR,TirePressureRL,TirePressureRR,LastLapTime,BestLapTime,AbsSetting,Tc1Setting,Tc2Setting,DeltaLapTime,Position,EngineMap,BrakeBias,IsDeltaPositive,IsValidLap");
+        writer.WriteLine("Timestamp,CurrentLap,SpeedKmh,Gas,Brake,Clutch,SteerAngle,Fuel,CurrentGear,EngineRpm,TireTemperatureFL,TireTemperatureFR,TireTemperatureRL,TireTemperatureRR,LapTime,Distance,MaxRpm,TirePressureFL,TirePressureFR,TirePressureRL,TirePressureRR,LastLapTime,BestLapTime,AbsSetting,Tc1Setting,Tc2Setting,DeltaLapTime,Position,EngineMap,BrakeBias,IsDeltaPositive,IsValidLap,PosX,PosY,PosZ");
         writer.Flush();
         return writer;
     }
@@ -83,7 +84,10 @@ public class SessionWriter
         writer.Write($"{r.EngineMap},");
         writer.Write($"{r.BrakeBias.ToString(CultureInfo.InvariantCulture)},");
         writer.Write($"{r.IsDeltaPositive},");
-        writer.WriteLine($"{r.IsValidLap}");
+        writer.Write($"{r.IsValidLap},");
+        writer.Write($"{r.CarPosition.X.ToString(CultureInfo.InvariantCulture)},");
+        writer.Write($"{r.CarPosition.Y.ToString(CultureInfo.InvariantCulture)},");
+        writer.WriteLine($"{r.CarPosition.Z.ToString(CultureInfo.InvariantCulture)}");
         writer.Flush();
     }
 
@@ -217,6 +221,14 @@ public class SessionWriter
                 IsDeltaPositive = bool.Parse(values[idx++]),
                 IsValidLap = bool.Parse(values[idx++]),
             };
+
+            if (values.Length >= 35)
+            {
+                record.CarPosition = new Vector3(
+                    float.Parse(values[idx++], CultureInfo.InvariantCulture),
+                    float.Parse(values[idx++], CultureInfo.InvariantCulture),
+                    float.Parse(values[idx++], CultureInfo.InvariantCulture));
+            }
 
             records.Add(record);
         }

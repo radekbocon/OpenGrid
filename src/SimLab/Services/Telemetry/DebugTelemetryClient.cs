@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using SimLab.Models;
@@ -84,7 +85,11 @@ public class DebugTelemetryClient : ITelemetryClient
             Distance = (float)(_tick * 1.5),
             MaxRpm = 12000f,
             TirePressures = TireValues.FromArray(pressures),
-            IsValidLap = true
+            IsValidLap = true,
+            CarPosition = new Vector3(
+                100f + (float)Math.Sin(_tick * 0.05f) * 50f,
+                50f + (float)Math.Cos(_tick * 0.03f) * 30f,
+                0f)
         };
 
         return snapshot;
