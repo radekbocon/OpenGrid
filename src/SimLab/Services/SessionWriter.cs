@@ -99,7 +99,7 @@ public class SessionWriter
         writer.WriteLine($"# Id: {session.Info.Id}");
         writer.WriteLine($"# Game: {session.Info.Game.AppId}");
         writer.WriteLine($"# Car: {session.Info.Car}");
-        writer.WriteLine($"# Track: {session.Info.Track}");
+        writer.WriteLine($"# Track: {session.Info.Track?.Key}");
         writer.WriteLine($"# Type: {(int)session.Info.Type}");
         writer.WriteLine($"# StartTime: {ToUnixSeconds(session.Info.StartTime).ToString(CultureInfo.InvariantCulture)}");
 
@@ -249,8 +249,8 @@ public class SessionWriter
                 id ?? Guid.NewGuid(),
                 game,
                 type ?? SessionType.Unknown,
-                car,
-                track,
+                Car.Create(car),
+                Track.Create(track),
                 startTime ?? DateTime.MinValue),
             records);
     }

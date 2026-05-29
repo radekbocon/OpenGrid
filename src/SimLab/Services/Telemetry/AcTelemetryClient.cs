@@ -85,8 +85,8 @@ public class AcTelemetryClient : ITelemetryClient
             var snapshot = new TelemetryRecord
             {
                 Timestamp = DateTime.UtcNow,
-                Track = staticData.Value.Track,
-                Car = staticData.Value.CarModel,
+                Track = Track.Create(staticData.Value.Track),
+                Car = Car.Create(staticData.Value.CarModel),
                 SessionType = graphicsData.Value.Session,
                 CurrentLap = graphicsData.Value.CompletedLaps,
                 SpeedKmh = physicsData.Value.SpeedKmh,

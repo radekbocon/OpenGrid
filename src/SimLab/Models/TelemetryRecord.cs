@@ -6,8 +6,8 @@ namespace SimLab.Models;
 public record TelemetryRecord
 {
     public DateTime Timestamp { get; set; }
-    public string? Car { get; set; }
-    public string? Track { get; set; }
+    public Car Car { get; set; }
+    public Track Track { get; set; }
     public SessionType SessionType { get; set; }
     public int CurrentLap { get; set; }
     public float SpeedKmh { get; set; }

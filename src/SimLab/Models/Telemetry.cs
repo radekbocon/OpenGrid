@@ -67,7 +67,7 @@ public class SessionInfo
         StartTime = record.Timestamp;
     }
 
-    public SessionInfo(Guid id, SteamGame game, SessionType type, string? car, string? track, DateTime startTime)
+    public SessionInfo(Guid id, SteamGame game, SessionType type, Car car, Track track, DateTime startTime)
     {
         Id = id;
         Game = game;
@@ -80,8 +80,8 @@ public class SessionInfo
     public Guid Id { get; init; }
     public SteamGame Game { get; init; }
     public SessionType Type { get; }
-    public string? Car { get; }
-    public string? Track { get;  }
+    public Car Car { get; }
+    public Track? Track { get;  }
     public DateTime StartTime { get; set; }
 
     public string FileName => $"{Car}-{Track}-{Type}-{Id}.csv";
