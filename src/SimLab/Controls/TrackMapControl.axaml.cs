@@ -29,6 +29,11 @@ public partial class TrackMapControl : UserControl
     {
         InitializeComponent();
         IsVisible = false;
+        SizeChanged += (_, _) =>
+        {
+            PlotElement.Plot.Axes.AutoScale();
+            ApplySquareLimits();
+        }; 
         PlotElement.AddHandler(PointerWheelChangedEvent, PointerWheelHandler, RoutingStrategies.Tunnel);
         PlotElement.UserInputProcessor.RemoveAll<IUserActionResponse>();
         PlotElement.UserInputProcessor.UserActionResponses.Add(new MouseDragPan(StandardMouseButtons.Left));
@@ -101,8 +106,8 @@ public partial class TrackMapControl : UserControl
 
         foreach (var s in seriesList)
         {
-            var xs = s.Xs.Select(x => (double)x).ToArray();
-            var ys = s.Ys.Select(y => (double)y).ToArray();
+            var xs = s.Xs.ToArray();
+            var ys = s.Ys.ToArray();
             var scatter = plot.Add.Scatter(xs, ys);
             scatter.Color = new Color(s.Color.Red, s.Color.Green, s.Color.Blue, s.Color.Alpha);
             scatter.LineWidth = 2;

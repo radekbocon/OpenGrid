@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using SimLab.Controls;
 using SimLab.Models;
-using SkiaSharp;
 
 namespace SimLab.ViewModels;
 
@@ -66,6 +66,11 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
             var trackSeries = new List<TrackMapSeries>();
             foreach (var item in SelectedLaps)
             {
+                if (item.Lap.Records.All(x => x.CarPosition == Vector3.Zero))
+                {
+                    continue;
+                }
+                
                 var firstPos = item.Lap.Records.First().CarPosition;
                 var trackXs = item.Lap.Records.Select(r => (double)(r.CarPosition.X - firstPos.X)).ToArray();
                 var trackYs = item.Lap.Records.Select(r => (double)(r.CarPosition.Z - firstPos.Z)).ToArray();

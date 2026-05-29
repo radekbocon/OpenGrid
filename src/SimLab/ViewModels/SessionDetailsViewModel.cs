@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -106,6 +107,12 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
 
     private void SetTrackData(Lap lap)
     {
+        if (lap.Records.All(x => x.CarPosition == Vector3.Zero))
+        {
+            TrackData = [];
+            return;
+        }
+        
         var firstPos = lap.Records.First().CarPosition;
         var xs = lap.Records.Select(r => (double)(r.CarPosition.X - firstPos.X)).ToArray();
         var ys = lap.Records.Select(r => (double)(r.CarPosition.Z - firstPos.Z)).ToArray();
