@@ -89,7 +89,7 @@ public class DebugTelemetryClient : ITelemetryClient
             CarPosition = new Vector3(
                 100f + (float)Math.Sin(_tick * 0.05f) * 50f,
                 50f + (float)Math.Cos(_tick * 0.03f) * 30f,
-                0f)
+                100f + (float)Math.Cos(_tick * 0.05f) * 50f)
         };
 
         return snapshot;

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using SimLab.Controls;
+using SimLab.Models;
+using SkiaSharp;
 
 namespace SimLab.ViewModels;
 
@@ -11,6 +13,9 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
 {
     [ObservableProperty]
     public partial IReadOnlyList<LapComparisonItem> SelectedLaps { get; set; } = [];
+
+    [ObservableProperty]
+    public partial IReadOnlyList<TrackMapSeries>? TrackData { get; set; }
 
     public override void SetParameters(params object[] parameters)
     {
@@ -57,6 +62,22 @@ public partial class LapComparisonViewModel : LapChartViewModelBase
                 new SubplotDefinition { Title = "Gear", Series = [.. gearSeries], YLabeler = GearLabeler, YMinLimit = 0, YMaxLimit = 7 },
                 new SubplotDefinition { Title = "RPM", Series = [.. rpmSeries], YLabeler = IntegerLabeler, YMinLimit = 0 },
             ];
+
+            var trackSeries = new List<TrackMapSeries>();
+            foreach (var item in SelectedLaps)
+            {
+                var firstPos = item.Lap.Records.First().CarPosition;
+                var trackXs = item.Lap.Records.Select(r => (double)(r.CarPosition.X - firstPos.X)).ToArray();
+                var trackYs = item.Lap.Records.Select(r => (double)(r.CarPosition.Z - firstPos.Z)).ToArray();
+                trackSeries.Add(new TrackMapSeries
+                {
+                    Name = item.ShortName,
+                    Xs = trackXs,
+                    Ys = trackYs,
+                    Color = item.Color
+                });
+            }
+            TrackData = trackSeries;
         });
     }
 }

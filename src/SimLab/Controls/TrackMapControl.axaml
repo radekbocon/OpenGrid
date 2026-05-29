@@ -1,0 +1,10 @@
+<UserControl
+    x:Class="SimLab.Controls.TrackMapControl"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sp="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
+    x:Name="Root"
+    x:CompileBindings="False">
+    <sp:AvaPlot
+        x:Name="PlotElement" />
+</UserControl>

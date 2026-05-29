@@ -31,6 +31,9 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
     [ObservableProperty]
     public partial TimeSpan LapTime { get; set; }
 
+    [ObservableProperty]
+    public partial IReadOnlyList<TrackMapSeries>? TrackData { get; set; }
+
     public SessionDetailsViewModel(SessionRepository sessionRepository, INavigationService navigationService)
     {
         _sessionRepository = sessionRepository;
@@ -96,8 +99,27 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
         }
 
         SetCharts(value);
+        SetTrackData(value);
 
         LapTime = SelectedLap?.Time ?? TimeSpan.Zero;
+    }
+
+    private void SetTrackData(Lap lap)
+    {
+        var firstPos = lap.Records.First().CarPosition;
+        var xs = lap.Records.Select(r => (double)(r.CarPosition.X - firstPos.X)).ToArray();
+        var ys = lap.Records.Select(r => (double)(r.CarPosition.Z - firstPos.Z)).ToArray();
+
+        TrackData = new List<TrackMapSeries>
+        {
+            new()
+            {
+                Name = "Track",
+                Xs = xs,
+                Ys = ys,
+                Color = SKColors.DodgerBlue
+            }
+        };
     }
 
     private void SetCharts(Lap lap)

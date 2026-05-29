@@ -35,7 +35,7 @@
     <ScrollViewer>
         <Grid
             Margin="0,0,16,0"
-            RowDefinitions="Auto, Auto, *"
+            RowDefinitions="Auto, Auto, Auto, *"
             RowSpacing="4">
             <StackPanel
                 Grid.Row="0"
@@ -65,7 +65,14 @@
                 </StackPanel>
             </Border>
 
-            <controls:ChartControl Grid.Row="2" Subplots="{Binding Subplots}" />
+            <controls:TrackMapControl
+                Grid.Row="2"
+                Height="300"
+                Series="{Binding TrackData}" />
+
+            <controls:ChartControl
+                Grid.Row="3"
+                Subplots="{Binding Subplots}" />
         </Grid>
     </ScrollViewer>
 </UserControl>
