@@ -1,4 +1,7 @@
+using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -143,5 +146,19 @@ public partial class MainWindowViewModel : ViewModelBase
     private void ProjectPage()
     {
         UriLauncher.Open("https://github.com/radekbocon/SimLab");
+    }
+
+    [RelayCommand]
+    private void ShowLogsFolder()
+    {
+        var logsFolder = Path.Combine(Program.AppDataDirectory, "logs");
+        if (Directory.Exists(logsFolder))
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = logsFolder,
+                UseShellExecute = true
+            });
+        }
     }
 }

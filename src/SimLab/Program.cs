@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -19,6 +20,16 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Background thread exceptions
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            Log.Fatal(e.ExceptionObject as Exception, "Unhandled domain exception");
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            Log.Error(e.Exception, "Unobserved task exception");
+            e.SetObserved();
+        };
+        
         var services = new ServiceCollection();
         services.AddSimLabServices();
         ServiceProvider = services.BuildServiceProvider();
@@ -34,7 +45,18 @@ sealed class Program
                 rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
-        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        try
+        {
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        }
+        catch (Exception e)
+        {
+            Log.Fatal(e, "Application crashed");
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+        }
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.

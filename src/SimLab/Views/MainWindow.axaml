@@ -72,6 +72,14 @@
                                     <MenuItem Header="-" />
                                     <MenuItem
                                         Padding="4"
+                                        Command="{Binding ShowLogsFolderCommand}"
+                                        Header="Open Logs Folder">
+                                        <MenuItem.Icon>
+                                            <avalonia:MaterialIcon Kind="FolderOpen" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Padding="4"
                                         Command="{Binding ProjectPageCommand}"
                                         Header="Project Page">
                                         <MenuItem.Icon>
