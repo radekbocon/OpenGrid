@@ -52,21 +52,30 @@ public class TelemetryService : ITelemetryService
 
     public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
     {
-        _disposed = false;
-        CurrentGame = game;
-        ConnectionStatus = TelemetryConnectionStatus.Connecting;
-
-        _telemetryClient = _telemetryClients.First(x => x.GetType() == game.TelemetryClientType);
-
-        if (game.RequiresSharedMemoryBridge)
+        try
         {
-            await _sharedMemoryBridgeLauncher.LaunchBridgeAsync(game, cancellationToken);
+            _disposed = false;
+            CurrentGame = game;
+            ConnectionStatus = TelemetryConnectionStatus.Connecting;
+
+            _telemetryClient = _telemetryClients.First(x => x.GetType() == game.TelemetryClientType);
+
+            if (game.RequiresSharedMemoryBridge)
+            {
+                await _sharedMemoryBridgeLauncher.LaunchBridgeAsync(game, cancellationToken);
+            }
+
+            var result = await _telemetryClient.ConnectAsync(cancellationToken);
+            ConnectionStatus = result ? TelemetryConnectionStatus.Connected : TelemetryConnectionStatus.Disconnected;
+
+            return result;
         }
-
-        var result = await _telemetryClient.ConnectAsync(cancellationToken);
-        ConnectionStatus = result ? TelemetryConnectionStatus.Connected : TelemetryConnectionStatus.Disconnected;
-
-        return result;
+        catch (Exception e)
+        {
+            ConnectionStatus = TelemetryConnectionStatus.Error;
+            Log.Error(e, "Error connecting to telemetry: {0}", e.Message);
+            return false;
+        }
     }
 
     public void StartReading()
@@ -151,5 +160,6 @@ public enum TelemetryConnectionStatus
 {
     Disconnected,
     Connecting,
-    Connected
+    Connected,
+    Error
 }

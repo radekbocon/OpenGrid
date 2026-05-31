@@ -39,11 +39,20 @@ public partial class GameItemViewModel : ViewModelBase
         (true, TelemetryConnectionStatus.Connected) => "Connected",
         (true, TelemetryConnectionStatus.Connecting) => "Connecting...",
         (true, TelemetryConnectionStatus.Disconnected) => "Running, Disconnected",
+        (true, TelemetryConnectionStatus.Error) => GetErrorMessage(),
         (false, _) => "Not running",
         _ => ""
     };
-    public bool ShowConnectButton => IsRunning && TelemetryStatus == TelemetryConnectionStatus.Disconnected;
-    public bool ShowLaunchAndConnectButton => !IsRunning && TelemetryStatus == TelemetryConnectionStatus.Disconnected;
+
+    private string GetErrorMessage()
+    {
+        return TelemetrySetupHelper.AdditionalSetupNeeded(_game?.SteamGame)
+            ? "Telemetry setup required. Click info button for details."
+            : "Error connecting";
+    }
+
+    public bool ShowConnectButton => IsRunning && TelemetryStatus is TelemetryConnectionStatus.Disconnected or TelemetryConnectionStatus.Error;
+    public bool ShowLaunchAndConnectButton => !IsRunning && TelemetryStatus is TelemetryConnectionStatus.Disconnected or TelemetryConnectionStatus.Error;
     public bool ShowDisconnectButton => TelemetryStatus == TelemetryConnectionStatus.Connected;
     public bool ShowCancelButton => TelemetryStatus == TelemetryConnectionStatus.Connecting;
 

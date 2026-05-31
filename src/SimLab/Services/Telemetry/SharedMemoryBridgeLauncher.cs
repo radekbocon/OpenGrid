@@ -54,6 +54,7 @@ public class SharedMemoryBridgeLauncher
         catch (Exception exception)
         {
             Log.Error(exception, "Error launching bridge: {0}", exception.Message);
+            throw;
         }
     }
 
