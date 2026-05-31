@@ -4,6 +4,7 @@
     <option name="projectPerEditor">
       <map>
         <entry key="SimLab/App.axaml" value="SimLab/SimLab.csproj" />
+        <entry key="SimLab/Controls/AboutDialog.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Controls/AcTelemetrySetupDialog.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Controls/AllSupportedGamesDialog.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Controls/ChartControl.axaml" value="SimLab/SimLab.csproj" />

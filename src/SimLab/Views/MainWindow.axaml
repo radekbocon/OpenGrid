@@ -28,19 +28,67 @@
                 BorderThickness="0,0,0,2"
                 DockPanel.Dock="Top">
                 <Grid ColumnDefinitions="220, *">
-                    <Grid Grid.Column="0" ColumnDefinitions="Auto, *">
-                        <Button
-                            Margin="4"
-                            Classes="Flat"
-                            Click="ToggleSideBar"
-                            Content="{avalonia:MaterialIconExt Menu,
-                                                               IconSize=24}" />
+                    <Grid
+                        Grid.Column="0"
+                        ColumnDefinitions="Auto, Auto, *"
+                        ColumnSpacing="8">
+                        <Image
+                            Grid.Column="0"
+                            Width="32"
+                            Height="32"
+                            Margin="8,0,0,0"
+                            Source="../Assets/simlab_icon.ico" />
                         <TextBlock
                             Grid.Column="1"
-                            Margin="8,0,0,0"
                             VerticalAlignment="Center"
-                            Classes="Headline6"
+                            Classes="Subtitle1"
                             Text="SimLab" />
+                        <Button
+                            Grid.Column="2"
+                            HorizontalAlignment="Right"
+                            Classes="Flat"
+                            Content="{avalonia:MaterialIconExt Menu,
+                                                               IconSize=24}">
+                            <Button.Flyout>
+                                <MenuFlyout>
+                                    <MenuItem
+                                        Padding="4"
+                                        Command="{Binding StartRecordingCommand}"
+                                        Header="Start Recording Session"
+                                        IsEnabled="{Binding CanStartRecording}">
+                                        <MenuItem.Icon>
+                                            <avalonia:MaterialIcon Kind="Record" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Padding="4"
+                                        Command="{Binding StopRecordingCommand}"
+                                        Header="Stop Recording Session"
+                                        IsEnabled="{Binding CanStopRecording}">
+                                        <MenuItem.Icon>
+                                            <avalonia:MaterialIcon Kind="Stop" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Header="-" />
+                                    <MenuItem
+                                        Padding="4"
+                                        Command="{Binding ProjectPageCommand}"
+                                        Header="Project Page">
+                                        <MenuItem.Icon>
+                                            <avalonia:MaterialIcon Kind="Github" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem
+                                        Padding="4"
+                                        Command="{Binding AboutCommand}"
+                                        Header="About SimLab">
+                                        <MenuItem.Icon>
+                                            <avalonia:MaterialIcon Kind="InformationOutline" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
                     </Grid>
 
                     <StackPanel
@@ -53,18 +101,9 @@
                             Classes="Flat"
                             Command="{Binding GoBackCommand}"
                             Content="{avalonia:MaterialIconExt Kind=ChevronLeft,
-                                                               IconSize=24}" />
+                                                               IconSize=24}"
+                            ToolTip.Tip="Navigate Back" />
                         <TextBlock VerticalAlignment="Center" Text="{Binding TelemetryStatusText}" />
-                        <Button
-                            Classes="outline"
-                            Command="{Binding StartRecordingCommand}"
-                            Content="Start Recording"
-                            IsVisible="{Binding CanStartRecording}" />
-                        <Button
-                            Classes="outline"
-                            Command="{Binding StopRecordingCommand}"
-                            Content="Stop Recording"
-                            IsVisible="{Binding CanStopRecording}" />
                     </StackPanel>
                 </Grid>
             </Border>

@@ -9,12 +9,4 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
     }
-
-    private void ToggleSideBar(object? sender, RoutedEventArgs e)
-    {
-        const double open = 220;
-        const double closed = 48;
-
-        SideBar.Width = SideBar.Width < open ? open : closed;
-    }
 }

@@ -22,11 +22,15 @@ sealed class Program
         var services = new ServiceCollection();
         services.AddSimLabServices();
         ServiceProvider = services.BuildServiceProvider();
-        
+
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
+#if DEBUG
             .WriteTo.Debug()
-            .WriteTo.File(Path.Combine(AppDataDirectory, "logs", "simlab.log"), 
+#else
+            .WriteTo.Console()
+#endif
+            .WriteTo.File(Path.Combine(AppDataDirectory, "logs", "simlab.log"),
                 rollingInterval: RollingInterval.Day)
             .CreateLogger();
 

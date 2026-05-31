@@ -103,7 +103,7 @@
                                     CommandParameter="{Binding}"
                                     Content="{avalonia:MaterialIconExt Kind=Trash,
                                                                        IconSize=24}"
-                                    ToolTip.Tip="Delete session" />
+                                    ToolTip.Tip="Delete Session" />
                             </Grid>
                         </controls:Card>
 

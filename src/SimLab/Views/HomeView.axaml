@@ -42,7 +42,7 @@
                         HorizontalAlignment="Right"
                         Classes="Outline"
                         Command="{Binding ShowAllSupportedGamesCommand}"
-                        Content="Show All Supported Games" />
+                        Content="View All Supported Games" />
                 </StackPanel>
 
                 <controls:Card MaxWidth="1000" Padding="1">
@@ -74,9 +74,10 @@
                                             Padding="8"
                                             Classes="Flat"
                                             Command="{Binding ShowTelemetrySetupCommand}"
-                                            Content="{avalonia:MaterialIconExt Kind=Info,
+                                            Content="{avalonia:MaterialIconExt Kind=InformationOutline,
                                                                                IconSize=24}"
-                                            IsVisible="{Binding ShowSetupButton}" />
+                                            IsVisible="{Binding ShowSetupButton}"
+                                            ToolTip.Tip="Setup Info" />
 
                                         <Button
                                             Grid.Column="3"

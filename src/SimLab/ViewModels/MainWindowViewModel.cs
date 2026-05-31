@@ -3,7 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DialogHostAvalonia;
 using Material.Icons;
+using SimLab.Controls;
 using SimLab.Models;
 using SimLab.Services;
 using SimLab.Services.Telemetry;
@@ -128,5 +130,18 @@ public partial class MainWindowViewModel : ViewModelBase
             IsRecording = false;
         }
         _telemetryService.StopReading();
+    }
+    
+    [RelayCommand]
+    private void About()
+    {
+        var dialog = new AboutDialog();
+        DialogHost.Show(dialog);
+    }
+    
+    [RelayCommand]
+    private void ProjectPage()
+    {
+        UriLauncher.Open("https://github.com/radekbocon/SimLab");
     }
 }
