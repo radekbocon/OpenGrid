@@ -8,7 +8,6 @@ using Avalonia.Platform;
 using SimLab.ViewModels;
 using SimLab.Views;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
 using SimLab.Services;
 using SimLab.Services.Telemetry;
 

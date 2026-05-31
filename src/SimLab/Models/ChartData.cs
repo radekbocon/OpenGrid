@@ -1,9 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using SkiaSharp;
 
-namespace SimLab.ViewModels;
+namespace SimLab.Models;
 
 public class ChartData
 {

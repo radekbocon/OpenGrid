@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogHostAvalonia="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:SimLab.Models"
     xmlns:vm="using:SimLab.ViewModels"
     Title="SimLab"
     d:DesignHeight="700"
@@ -135,7 +136,7 @@
                         </EventTriggerBehavior>
                     </Interaction.Behaviors>
                     <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="vm:MenuItem">
+                        <DataTemplate x:DataType="models:MenuItem">
                             <Grid Margin="4" ColumnDefinitions="Auto,*">
                                 <avalonia:MaterialIcon
                                     Width="24"

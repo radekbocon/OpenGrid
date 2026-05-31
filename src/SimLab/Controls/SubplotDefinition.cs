@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using SimLab.Models;
 using SimLab.ViewModels;
 
 namespace SimLab.Controls;

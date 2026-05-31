@@ -1,7 +1,7 @@
 using System;
 using Material.Icons;
 
-namespace SimLab.ViewModels;
+namespace SimLab.Models;
 
 public class MenuItem
 {
