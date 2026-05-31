@@ -26,13 +26,13 @@ public class DashboardService : IDashboardService
     private readonly ISettingsService _settingsService;
     private TcpListener? _listener;
     private CancellationTokenSource? _cts;
-    private DashboardInfo? _activeDashboard;
     private readonly ConcurrentDictionary<WebSocket, byte> _connectedSockets = [];
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _deviceSockets = new(StringComparer.OrdinalIgnoreCase);
 
     public bool IsRunning => _listener is not null;
     public int Port { get; private set; }
-    public DashboardInfo? ActiveDashboard => _activeDashboard;
+    public DashboardInfo? ActiveDashboard { get; private set; }
+
     public event EventHandler<bool>? IsRunningChanged;
 
     private string LocalUrl => $"http://127.0.0.1:{Port}";
@@ -43,7 +43,7 @@ public class DashboardService : IDashboardService
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public DashboardService(IDashboardRepository repository, ITelemetryService telemetryService, ISettingsService settingsService)
+    public DashboardService(ITelemetryService telemetryService, ISettingsService settingsService)
     {
         _telemetryService = telemetryService;
         _settingsService = settingsService;
@@ -51,7 +51,7 @@ public class DashboardService : IDashboardService
 
     public void Start(DashboardInfo dashboard)
     {
-        _activeDashboard = dashboard;
+        ActiveDashboard = dashboard;
         EnsureRunning();
     }
 
@@ -62,7 +62,7 @@ public class DashboardService : IDashboardService
 
     public void OpenInBrowser()
     {
-        if (_activeDashboard is null) return;
+        if (ActiveDashboard is null) return;
         var url = GetUrl(useNetwork: false);
         try
         {
@@ -76,11 +76,6 @@ public class DashboardService : IDashboardService
         {
             Log.Error(ex, "Failed to open dashboard in browser");
         }
-    }
-
-    public void OpenInWebView()
-    {
-        OpenInBrowser();
     }
 
     public void Stop()
@@ -352,7 +347,7 @@ public class DashboardService : IDashboardService
 
     private async Task ServeFile(NetworkStream stream, string path, CancellationToken ct)
     {
-        if (_activeDashboard is null)
+        if (ActiveDashboard is null)
         {
             await WriteResponse(stream, 503, "Service Unavailable", "text/plain", "No active dashboard", ct);
             return;
@@ -372,7 +367,7 @@ public class DashboardService : IDashboardService
             return;
         }
 
-        var fullPath = Path.Combine(_activeDashboard.DirectoryPath, relativePath);
+        var fullPath = Path.Combine(ActiveDashboard.DirectoryPath, relativePath);
         await ServeFileContent(stream, fullPath, ct);
     }
 
@@ -393,7 +388,7 @@ public class DashboardService : IDashboardService
         }
 
         var pageContent = _frameworkTemplate;
-        var dashboardPath = Path.Combine(_activeDashboard!.DirectoryPath, "dashboard.html");
+        var dashboardPath = Path.Combine(ActiveDashboard!.DirectoryPath, "dashboard.html");
 
         if (File.Exists(dashboardPath))
         {
@@ -424,7 +419,7 @@ public class DashboardService : IDashboardService
     private async Task ServeFileContent(NetworkStream stream, string fullPath, CancellationToken ct)
     {
         var fullFile = Path.GetFullPath(fullPath);
-        var dashboardDir = Path.GetFullPath(_activeDashboard!.DirectoryPath);
+        var dashboardDir = Path.GetFullPath(ActiveDashboard!.DirectoryPath);
 
         if (!fullFile.StartsWith(dashboardDir, StringComparison.Ordinal))
         {

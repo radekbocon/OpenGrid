@@ -82,6 +82,11 @@
                     <StackPanel Orientation="Horizontal">
                         <RadioButton
                             Classes="light"
+                            Content="8 Hz"
+                            GroupName="RecordingRate"
+                            IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=8}" />
+                        <RadioButton
+                            Classes="light"
                             Content="15 Hz"
                             GroupName="RecordingRate"
                             IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=15}" />

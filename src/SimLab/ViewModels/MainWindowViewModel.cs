@@ -143,22 +143,18 @@ public partial class MainWindowViewModel : ViewModelBase
     }
     
     [RelayCommand]
-    private void ProjectPage()
+    private async Task ProjectPageAsync()
     {
-        UriLauncher.Open("https://github.com/radekbocon/SimLab");
+        await Launcher.LaunchUriAsync("https://github.com/radekbocon/SimLab");
     }
 
     [RelayCommand]
-    private void ShowLogsFolder()
+    private async Task ShowLogsFolderAsync()
     {
         var logsFolder = Path.Combine(Program.AppDataDirectory, "logs");
         if (Directory.Exists(logsFolder))
         {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = logsFolder,
-                UseShellExecute = true
-            });
+            await Launcher.LaunchDirectoryAsync(logsFolder);
         }
     }
 }

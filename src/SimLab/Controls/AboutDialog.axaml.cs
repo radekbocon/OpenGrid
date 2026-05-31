@@ -11,10 +11,10 @@ public partial class AboutDialog : UserControl
     public AboutDialog()
     {
         InitializeComponent();
-        var version = Assembly.GetEntryAssembly()?.GetName()?.Version;
+        var version = Assembly.GetEntryAssembly()?.GetName().Version;
         if (version != null)
         {
-            VersionText.Text = $"Version {version.Major}.{version.Minor}.{version.Build}";
+            VersionText.Text = version.ToString();
         }
     }
 
@@ -25,10 +25,6 @@ public partial class AboutDialog : UserControl
 
     private void ReportIssueClick(object? sender, RoutedEventArgs e)
     {
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = "https://github.com/radekbocon/SimLab/issues",
-            UseShellExecute = true
-        });
+        Launcher.LaunchUriAsync("https://github.com/radekbocon/SimLab/issues").FireAndForgetSafe();
     }
 }

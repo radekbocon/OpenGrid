@@ -102,16 +102,6 @@
                                         <Button
                                             Padding="8,4"
                                             Classes="Flat"
-                                            Command="{Binding $parent[views:DashboardsView].((vm:DashboardsViewModel)DataContext)?.OpenOnThisMachineCommand}"
-                                            CommandParameter="{Binding}">
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <icons:MaterialIconExt IconSize="16" Kind="Monitor" />
-                                                <TextBlock FontSize="12" Text="This PC" />
-                                            </StackPanel>
-                                        </Button>
-                                        <Button
-                                            Padding="8,4"
-                                            Classes="Flat"
                                             Command="{Binding $parent[views:DashboardsView].((vm:DashboardsViewModel)DataContext)?.OpenInBrowserCommand}"
                                             CommandParameter="{Binding}">
                                             <StackPanel Orientation="Horizontal" Spacing="4">

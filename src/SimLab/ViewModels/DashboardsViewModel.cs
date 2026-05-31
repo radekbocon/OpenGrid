@@ -40,13 +40,6 @@ public partial class DashboardsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void OpenOnThisMachine(DashboardInfo dashboard)
-    {
-        _dashboardService.Start(dashboard);
-        _dashboardService.OpenInBrowser();
-    }
-
-    [RelayCommand]
     private void OpenOnDevice(DashboardInfo dashboard)
     {
         _dashboardService.Start(dashboard);

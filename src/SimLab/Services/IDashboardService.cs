@@ -12,6 +12,5 @@ public interface IDashboardService
     void Start(DashboardInfo dashboard);
     string GetUrl(bool useNetwork);
     void OpenInBrowser();
-    void OpenInWebView();
     void Stop();
 }
