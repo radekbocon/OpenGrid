@@ -41,6 +41,7 @@ public class App : Application
                 DataContext = mainVewModel
             };
             desktop.MainWindow = mainWindow;
+            Program.ActivateWindowRequested = () => ShowMainWindow(desktop);
             Launcher.Initialize(TopLevel.GetTopLevel(mainWindow)!.Launcher);
 
             mainWindow.Closing += MainWindowOnClosing;
