@@ -24,6 +24,7 @@ public class DashboardService : IDashboardService
 {
     private readonly ITelemetryService _telemetryService;
     private readonly ISettingsService _settingsService;
+    private readonly IDashboardRepository _repository;
     private TcpListener? _listener;
     private CancellationTokenSource? _cts;
     private readonly ConcurrentDictionary<WebSocket, byte> _connectedSockets = [];
@@ -43,10 +44,11 @@ public class DashboardService : IDashboardService
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public DashboardService(ITelemetryService telemetryService, ISettingsService settingsService)
+    public DashboardService(ITelemetryService telemetryService, ISettingsService settingsService, IDashboardRepository repository)
     {
         _telemetryService = telemetryService;
         _settingsService = settingsService;
+        _repository = repository;
     }
 
     public void Start(DashboardInfo dashboard)
@@ -255,7 +257,22 @@ public class DashboardService : IDashboardService
 
             if (method == "GET")
             {
-                await ServeFile(stream, path, ct);
+                var queryIdx = path.IndexOf('?');
+                var pathOnly = queryIdx >= 0 ? path[..queryIdx] : path;
+
+                if (pathOnly == "/api/dashboards")
+                {
+                    await ServeDashboardList(stream, ct);
+                    return;
+                }
+
+                if (pathOnly.StartsWith("/api/dashboard/"))
+                {
+                    await ServeDashboardApi(stream, pathOnly, ct);
+                    return;
+                }
+
+                await ServeFile(stream, pathOnly, ct);
             }
             else
             {
@@ -345,14 +362,117 @@ public class DashboardService : IDashboardService
 
     private static string? _frameworkTemplate;
 
-    private async Task ServeFile(NetworkStream stream, string path, CancellationToken ct)
+    private async Task ServeDashboardList(NetworkStream stream, CancellationToken ct)
     {
-        if (ActiveDashboard is null)
+        var dashboards = _repository.GetAllDashboards();
+        var list = dashboards.Select(d => new
         {
-            await WriteResponse(stream, 503, "Service Unavailable", "text/plain", "No active dashboard", ct);
+            id = d.Id,
+            name = d.Name,
+            description = d.Description,
+            image = File.Exists(Path.Combine(d.DirectoryPath, "image.png"))
+                ? $"/api/dashboard/{d.Id}/image"
+                : null,
+        }).ToList();
+
+        var json = JsonSerializer.Serialize(list, JsonOptions);
+        var bytes = Encoding.UTF8.GetBytes(json);
+        var header = $"HTTP/1.1 200 OK\r\n" +
+                     $"Content-Type: application/json\r\n" +
+                     $"Content-Length: {bytes.Length}\r\n" +
+                     $"Access-Control-Allow-Origin: *\r\n" +
+                     $"Connection: close\r\n\r\n";
+        var headerBytes = Encoding.UTF8.GetBytes(header);
+        await stream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
+        await stream.WriteAsync(bytes, 0, bytes.Length, ct);
+        await stream.FlushAsync(ct);
+    }
+
+    private async Task ServeDashboardApi(NetworkStream stream, string path, CancellationToken ct)
+    {
+        var segments = path.Split('/');
+        if (segments.Length < 4)
+        {
+            await WriteResponse(stream, 400, "Bad Request", "text/plain", "Invalid path", ct);
             return;
         }
 
+        var id = segments[3];
+        var dashboard = _repository.GetById(id);
+        if (dashboard is null)
+        {
+            await WriteResponse(stream, 404, "Not Found", "text/plain", "Dashboard not found", ct);
+            return;
+        }
+
+        var action = segments.Length > 4 ? segments[4] : "";
+
+        if (action == "html")
+        {
+            var htmlPath = Path.Combine(dashboard.DirectoryPath, "dashboard.html");
+            if (!File.Exists(htmlPath))
+            {
+                await WriteResponse(stream, 404, "Not Found", "text/plain", "Dashboard HTML not found", ct);
+                return;
+            }
+
+            var html = await File.ReadAllTextAsync(htmlPath, ct);
+            var bodyStart = html.IndexOf("<body>", StringComparison.OrdinalIgnoreCase);
+            var bodyEnd = html.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);
+            var bodyContent = bodyStart >= 0 && bodyEnd > bodyStart
+                ? html[(bodyStart + 6)..bodyEnd]
+                : html;
+
+            var result = new
+            {
+                id = dashboard.Id,
+                name = dashboard.Name,
+                description = dashboard.Description,
+                html = bodyContent
+            };
+
+            var json = JsonSerializer.Serialize(result, JsonOptions);
+            var bytes = Encoding.UTF8.GetBytes(json);
+            var header = $"HTTP/1.1 200 OK\r\n" +
+                         $"Content-Type: application/json\r\n" +
+                         $"Content-Length: {bytes.Length}\r\n" +
+                         $"Access-Control-Allow-Origin: *\r\n" +
+                         $"Connection: close\r\n\r\n";
+            var headerBytes = Encoding.UTF8.GetBytes(header);
+            await stream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
+            await stream.WriteAsync(bytes, 0, bytes.Length, ct);
+            await stream.FlushAsync(ct);
+            return;
+        }
+
+        if (action == "image")
+        {
+            var imagePath = Path.Combine(dashboard.DirectoryPath, "image.png");
+            if (!File.Exists(imagePath))
+            {
+                await WriteResponse(stream, 404, "Not Found", "text/plain", "Image not found", ct);
+                return;
+            }
+
+            var content = await File.ReadAllBytesAsync(imagePath, ct);
+            var header = $"HTTP/1.1 200 OK\r\n" +
+                         $"Content-Type: image/png\r\n" +
+                         $"Content-Length: {content.Length}\r\n" +
+                         $"Cache-Control: max-age=3600\r\n" +
+                         $"Access-Control-Allow-Origin: *\r\n" +
+                         $"Connection: close\r\n\r\n";
+            var headerBytes = Encoding.UTF8.GetBytes(header);
+            await stream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
+            await stream.WriteAsync(content, 0, content.Length, ct);
+            await stream.FlushAsync(ct);
+            return;
+        }
+
+        await WriteResponse(stream, 400, "Bad Request", "text/plain", "Unknown action", ct);
+    }
+
+    private async Task ServeFile(NetworkStream stream, string path, CancellationToken ct)
+    {
         var relativePath = path.TrimStart('/');
 
         if (string.IsNullOrEmpty(relativePath) || relativePath == "index.html")
@@ -364,6 +484,12 @@ public class DashboardService : IDashboardService
         if (relativePath == "ws")
         {
             await WriteResponse(stream, 400, "Bad Request", "text/plain", "Use WebSocket upgrade", ct);
+            return;
+        }
+
+        if (ActiveDashboard is null)
+        {
+            await WriteResponse(stream, 503, "Service Unavailable", "text/plain", "No active dashboard", ct);
             return;
         }
 
@@ -388,18 +514,22 @@ public class DashboardService : IDashboardService
         }
 
         var pageContent = _frameworkTemplate;
-        var dashboardPath = Path.Combine(ActiveDashboard!.DirectoryPath, "dashboard.html");
 
-        if (File.Exists(dashboardPath))
+        if (ActiveDashboard is not null)
         {
-            var dashboardContent = await File.ReadAllTextAsync(dashboardPath, ct);
-            var bodyStart = dashboardContent.IndexOf("<body>", StringComparison.OrdinalIgnoreCase);
-            var bodyEnd = dashboardContent.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);
+            var dashboardPath = Path.Combine(ActiveDashboard.DirectoryPath, "dashboard.html");
 
-            if (bodyStart >= 0 && bodyEnd > bodyStart)
+            if (File.Exists(dashboardPath))
             {
-                var bodyContent = dashboardContent[(bodyStart + 6)..bodyEnd];
-                pageContent = pageContent.Replace("<!--DASHBOARD_CONTENT-->", bodyContent);
+                var dashboardContent = await File.ReadAllTextAsync(dashboardPath, ct);
+                var bodyStart = dashboardContent.IndexOf("<body>", StringComparison.OrdinalIgnoreCase);
+                var bodyEnd = dashboardContent.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);
+
+                if (bodyStart >= 0 && bodyEnd > bodyStart)
+                {
+                    var bodyContent = dashboardContent[(bodyStart + 6)..bodyEnd];
+                    pageContent = pageContent.Replace("<!--DASHBOARD_CONTENT-->", bodyContent);
+                }
             }
         }
 
@@ -419,7 +549,7 @@ public class DashboardService : IDashboardService
     private async Task ServeFileContent(NetworkStream stream, string fullPath, CancellationToken ct)
     {
         var fullFile = Path.GetFullPath(fullPath);
-        var dashboardDir = Path.GetFullPath(ActiveDashboard!.DirectoryPath);
+        var dashboardDir = Path.GetFullPath(ActiveDashboard!.DirectoryPath!);
 
         if (!fullFile.StartsWith(dashboardDir, StringComparison.Ordinal))
         {
