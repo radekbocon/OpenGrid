@@ -18,7 +18,7 @@ sealed class Program
     public static string AppDataDirectory { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SimLab");
     private static FileStream? _instanceLock;
     private static TcpListener? _activationListener;
-    public static Action? ActivateWindowRequested;
+    public static Action? ActivateWindowRequested { get; set; }
     
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
