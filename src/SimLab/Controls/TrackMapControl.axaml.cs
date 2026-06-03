@@ -94,13 +94,7 @@ public partial class TrackMapControl : UserControl
 
         var plot = PlotElement.Plot;
 
-        plot.FigureBackground.Color = new Color("#1c1c1e");
-        plot.Axes.Color(new Color("#888888"));
-
-        plot.Grid.XAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
-        plot.Grid.YAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
-        plot.Grid.XAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
-        plot.Grid.YAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
+        plot.FigureBackground.Color = Colors.Transparent;
 
         plot.Layout.Fixed(new PixelPadding(0, 0, 0, 0));
 

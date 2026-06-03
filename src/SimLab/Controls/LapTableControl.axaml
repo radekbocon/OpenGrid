@@ -1,0 +1,90 @@
+<UserControl
+    x:Class="SimLab.Controls.LapTableControl"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="clr-namespace:SimLab.Converters"
+    xmlns:telemetry="clr-namespace:SimLab.Models.Telemetry"
+    x:Name="Root"
+    x:CompileBindings="False">
+
+    <UserControl.Resources>
+        <conv:LapTimeConverter x:Key="LapTimeConverter" />
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid
+            Grid.Row="0"
+            Margin="8,4"
+            ColumnDefinitions="Auto,*,*,*,*,Auto"
+            ColumnSpacing="16">
+            <TextBlock
+                Grid.Column="0"
+                FontWeight="Bold"
+                Text="Lap#"
+                TextAlignment="Left" />
+            <TextBlock
+                Grid.Column="1"
+                FontWeight="Bold"
+                Text="Time"
+                TextAlignment="Left" />
+            <TextBlock
+                Grid.Column="2"
+                FontWeight="Bold"
+                Text="S1"
+                TextAlignment="Left" />
+            <TextBlock
+                Grid.Column="3"
+                FontWeight="Bold"
+                Text="S2"
+                TextAlignment="Left" />
+            <TextBlock
+                Grid.Column="4"
+                FontWeight="Bold"
+                Text="S3"
+                TextAlignment="Left" />
+            <TextBlock
+                Grid.Column="5"
+                FontWeight="Bold"
+                Text="Valid"
+                TextAlignment="Left" />
+        </Grid>
+        <ListBox
+            Grid.Row="1"
+            ItemsSource="{Binding #Root.Laps}"
+            SelectedItem="{Binding #Root.SelectedLap}">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="telemetry:Lap">
+                    <Grid
+                        Margin="8,2"
+                        ColumnDefinitions="Auto,*,*,*,*,Auto"
+                        ColumnSpacing="16">
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="{Binding Number}"
+                            TextAlignment="Left" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Text="{Binding Time, Converter={StaticResource LapTimeConverter}}"
+                            TextAlignment="Left" />
+                        <TextBlock
+                            Grid.Column="2"
+                            Text="{Binding Sector1Time, Converter={StaticResource LapTimeConverter}}"
+                            TextAlignment="Left" />
+                        <TextBlock
+                            Grid.Column="3"
+                            Text="{Binding Sector2Time, Converter={StaticResource LapTimeConverter}}"
+                            TextAlignment="Left" />
+                        <TextBlock
+                            Grid.Column="4"
+                            Text="{Binding Sector3Time, Converter={StaticResource LapTimeConverter}}"
+                            TextAlignment="Left" />
+                        <TextBlock
+                            Grid.Column="5"
+                            Text="{Binding IsValid}"
+                            TextAlignment="Left" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>

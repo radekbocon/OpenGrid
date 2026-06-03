@@ -162,21 +162,34 @@ public partial class ChartControl : UserControl
     
     private static void ApplySubplotStyle(Plot plot)
     {
-        plot.FigureBackground.Color = new Color("#1c1c1e");
-        plot.Axes.Color(new Color("#888888"));
+        plot.FigureBackground.Color = Colors.Transparent;
 
-        plot.Grid.XAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
-        plot.Grid.YAxisStyle.FillColor1 = new Color("#888888").WithAlpha(10);
+        var bodyColor = GetThemeColor("MaterialBodyColor", "#888888");
 
-        plot.Grid.XAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
-        plot.Grid.YAxisStyle.MajorLineStyle.Color = Colors.White.WithAlpha(15);
-        plot.Grid.XAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
-        plot.Grid.YAxisStyle.MinorLineStyle.Color = Colors.White.WithAlpha(5);
+        plot.Axes.Color(bodyColor.WithAlpha(150));
+
+        plot.Grid.XAxisStyle.FillColor1 = bodyColor.WithAlpha(10);
+        plot.Grid.YAxisStyle.FillColor1 = bodyColor.WithAlpha(10);
+
+        plot.Grid.XAxisStyle.MajorLineStyle.Color = bodyColor.WithAlpha(15);
+        plot.Grid.YAxisStyle.MajorLineStyle.Color = bodyColor.WithAlpha(15);
+        plot.Grid.XAxisStyle.MinorLineStyle.Color = bodyColor.WithAlpha(5);
+        plot.Grid.YAxisStyle.MinorLineStyle.Color = bodyColor.WithAlpha(5);
 
         plot.Grid.XAxisStyle.MinorLineStyle.Width = 1;
         plot.Grid.YAxisStyle.MinorLineStyle.Width = 1;
-            
+
         plot.Layout.Fixed(new PixelPadding(50, 16, 32, 50));
+    }
+
+    private static Color GetThemeColor(string key, string fallbackHex)
+    {
+        var app = Application.Current;
+        if (app is not null && app.TryFindResource(key, app.ActualThemeVariant, out var value) && value is Avalonia.Media.Color color)
+        {
+            return new Color(color.R, color.G, color.B, color.A);
+        }
+        return new Color(fallbackHex);
     }
 
     private class XOnlyMouseWheelZoom(ChartControl control) : IUserActionResponse
