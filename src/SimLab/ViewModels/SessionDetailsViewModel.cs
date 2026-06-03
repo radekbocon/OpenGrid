@@ -117,6 +117,8 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
         var firstPos = lap.Records.First().CarPosition;
         var xs = lap.Records.Select(r => (double)(r.CarPosition.X - firstPos.X)).ToArray();
         var ys = lap.Records.Select(r => (double)(r.CarPosition.Z - firstPos.Z)).ToArray();
+        var gas = lap.Records.Select(r => r.Gas).ToArray();
+        var brake = lap.Records.Select(r => r.Brake).ToArray();
 
         TrackData = new List<TrackMapSeries>
         {
@@ -125,7 +127,9 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
                 Name = "Track",
                 Xs = xs,
                 Ys = ys,
-                Color = SKColors.DodgerBlue
+                Color = SKColors.DodgerBlue,
+                GasValues = gas,
+                BrakeValues = brake,
             }
         };
     }

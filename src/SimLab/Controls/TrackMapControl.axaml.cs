@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
@@ -11,6 +12,7 @@ using ScottPlot.Interactivity;
 using ScottPlot.Interactivity.UserActionResponses;
 using ScottPlot.Interactivity.UserActions;
 using SimLab.Models;
+using SkiaSharp;
 
 namespace SimLab.Controls;
 
@@ -100,12 +102,19 @@ public partial class TrackMapControl : UserControl
 
         foreach (var s in seriesList)
         {
-            var xs = s.Xs.ToArray();
-            var ys = s.Ys.ToArray();
-            var scatter = plot.Add.Scatter(xs, ys);
-            scatter.Color = new Color(s.Color.Red, s.Color.Green, s.Color.Blue, s.Color.Alpha);
-            scatter.LineWidth = 2;
-            scatter.MarkerSize = 0;
+            if (s.GasValues is not null && s.BrakeValues is not null && s.GasValues.Count > 0 && s.GasValues.Count == s.Xs.Count)
+            {
+                RenderColoredTrack(plot, s);
+            }
+            else
+            {
+                var xs = s.Xs.ToArray();
+                var ys = s.Ys.ToArray();
+                var scatter = plot.Add.Scatter(xs, ys);
+                scatter.Color = new Color(s.Color.Red, s.Color.Green, s.Color.Blue, s.Color.Alpha);
+                scatter.LineWidth = 6;
+                scatter.MarkerSize = 0;
+            }
         }
 
         plot.HideLegend();
@@ -124,6 +133,41 @@ public partial class TrackMapControl : UserControl
 
         IsVisible = true;
         PlotElement.Refresh();
+    }
+
+    private static void RenderColoredTrack(Plot plot, TrackMapSeries s)
+    {
+        var xs = s.Xs;
+        var ys = s.Ys;
+        var gas = s.GasValues!;
+        var brake = s.BrakeValues!;
+
+        for (int i = 0; i < xs.Count - 1; i++)
+        {
+            var avgGas = (gas[i] + gas[i + 1]) / 2f;
+            var avgBrake = (brake[i] + brake[i + 1]) / 2f;
+            var skColor = GasBrakeHeatColor(avgGas, avgBrake);
+            var color = new Color(skColor.Red, skColor.Green, skColor.Blue, skColor.Alpha);
+
+            var seg = plot.Add.Scatter(
+                [xs[i], xs[i + 1]],
+                new[] { ys[i], ys[i + 1] });
+            seg.Color = color;
+            seg.LineWidth = 6;
+            seg.MarkerSize = 0;
+        }
+    }
+
+    private static SKColor GasBrakeHeatColor(float gas, float brake)
+    {
+        float maxInput = Math.Max(gas, brake);
+        if (maxInput < 0.01f)
+            return new SKColor(40, 40, 40);
+
+        byte r = (byte)Math.Clamp(40 + brake * 215, 0, 255);
+        byte g = (byte)Math.Clamp(40 + gas * 215, 0, 255);
+
+        return new SKColor(r, g, 0);
     }
 
     private void ApplySquareLimits()
