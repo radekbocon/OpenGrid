@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:controls="clr-namespace:SimLab.Controls"
+    xmlns:conv="clr-namespace:SimLab.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:SimLab.Models"
@@ -14,6 +15,11 @@
     d:DesignWidth="800"
     x:DataType="vm:SessionDetailsViewModel"
     mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <conv:LapTimeConverter x:Key="LapTimeConverter" />
+    </UserControl.Resources>
+
     <ScrollViewer>
         <Grid
             Margin="0,0,12,0"
@@ -50,21 +56,85 @@
 
             </Grid>
 
-            <StackPanel
+            <Grid
                 Grid.Row="1"
-                Orientation="Horizontal"
-                Spacing="8">
-                <ComboBox ItemsSource="{Binding Laps}" SelectedItem="{Binding SelectedLap}">
-                    <ComboBox.ItemTemplate>
+                MaxHeight="200"
+                RowDefinitions="Auto,*">
+                <Grid
+                    Grid.Row="0"
+                    Margin="8,4,8,0"
+                    ColumnDefinitions="64,*,*,*,*,Auto"
+                    ColumnSpacing="16">
+                    <TextBlock
+                        Grid.Column="0"
+                        FontWeight="Bold"
+                        Text="Lap#"
+                        TextAlignment="Left" />
+                    <TextBlock
+                        Grid.Column="1"
+                        FontWeight="Bold"
+                        Text="Time"
+                        TextAlignment="Left" />
+                    <TextBlock
+                        Grid.Column="2"
+                        FontWeight="Bold"
+                        Text="S1"
+                        TextAlignment="Left" />
+                    <TextBlock
+                        Grid.Column="3"
+                        FontWeight="Bold"
+                        Text="S2"
+                        TextAlignment="Left" />
+                    <TextBlock
+                        Grid.Column="4"
+                        FontWeight="Bold"
+                        Text="S3"
+                        TextAlignment="Left" />
+                    <TextBlock
+                        Grid.Column="5"
+                        FontWeight="Bold"
+                        Text="Valid"
+                        TextAlignment="Left" />
+                </Grid>
+                <ListBox
+                    Grid.Row="1"
+                    ItemsSource="{Binding Laps}"
+                    SelectedItem="{Binding SelectedLap}">
+                    <ListBox.ItemTemplate>
                         <DataTemplate DataType="telemetry:Lap">
-                            <TextBlock
-                                Classes.FastestLap="{Binding IsFastest}"
-                                Classes.InvalidLap="{Binding !IsValid}"
-                                Text="{Binding DisplayName}" />
+                            <Grid
+                                Margin="8,2"
+                                ColumnDefinitions="64,*,*,*,*,Auto"
+                                ColumnSpacing="16">
+                                <TextBlock
+                                    Grid.Column="0"
+                                    Text="{Binding Number}"
+                                    TextAlignment="Left" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Text="{Binding Time, Converter={StaticResource LapTimeConverter}}"
+                                    TextAlignment="Left" />
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Text="{Binding Sector1Time, Converter={StaticResource LapTimeConverter}}"
+                                    TextAlignment="Left" />
+                                <TextBlock
+                                    Grid.Column="3"
+                                    Text="{Binding Sector2Time, Converter={StaticResource LapTimeConverter}}"
+                                    TextAlignment="Left" />
+                                <TextBlock
+                                    Grid.Column="4"
+                                    Text="{Binding Sector3Time, Converter={StaticResource LapTimeConverter}}"
+                                    TextAlignment="Left" />
+                                <TextBlock
+                                    Grid.Column="5"
+                                    Text="{Binding IsValid}"
+                                    TextAlignment="Left" />
+                            </Grid>
                         </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </StackPanel>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
 
             <controls:TrackMapControl
                 Grid.Row="2"

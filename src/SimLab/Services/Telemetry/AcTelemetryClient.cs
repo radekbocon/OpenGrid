@@ -114,6 +114,8 @@ public class AcTelemetryClient : ITelemetryClient
                 BrakeBias = physicsData.Value.BrakeBias,
                 IsDeltaPositive = graphicsData.Value.IsDeltaPositive == 1,
                 IsValidLap = graphicsData.Value.IsValidLap == 1,
+                SectorIndex = graphicsData.Value.CurrentSectorIndex,
+                LastSectorTime = TimeSpan.FromMilliseconds(graphicsData.Value.LastSectorTime),
                 CarPosition = new Vector3(
                     graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID].X,
                     graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID].Y,

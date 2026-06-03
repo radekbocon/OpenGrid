@@ -134,7 +134,14 @@ public class DirtRallyTelemetryClient : ITelemetryClient
                 Position = (int)packet.RacePos,
                 SessionType = SessionType.Race,
                 TirePressures = new TireValues(packet.TirePressureFL, packet.TirePressureFR, packet.TirePressureRL, packet.TirePressureRR),
-                CarPosition = new Vector3(packet.PosX, packet.PosY, packet.PosZ)
+                CarPosition = new Vector3(packet.PosX, packet.PosY, packet.PosZ),
+                SectorIndex = (int)packet.Sector,
+                LastSectorTime = (int)packet.Sector switch
+                {
+                    2 => TimeSpan.FromSeconds(packet.Sector1Time),
+                    3 => TimeSpan.FromSeconds(packet.Sector2Time),
+                    _ => TimeSpan.Zero
+                }
             };
         }
         catch (Exception ex)

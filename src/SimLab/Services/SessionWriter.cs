@@ -42,7 +42,7 @@ public class SessionWriter
         writer.WriteLine($"# Track: {session.Info.Track}");
         writer.WriteLine($"# Type: {(int)session.Info.Type}");
         writer.WriteLine($"# StartTime: {ToUnixSeconds(session.Info.StartTime).ToString(CultureInfo.InvariantCulture)}");
-        writer.WriteLine("Timestamp,CurrentLap,SpeedKmh,Gas,Brake,Clutch,SteerAngle,Fuel,CurrentGear,EngineRpm,TireTemperatureFL,TireTemperatureFR,TireTemperatureRL,TireTemperatureRR,LapTime,Distance,MaxRpm,TirePressureFL,TirePressureFR,TirePressureRL,TirePressureRR,LastLapTime,BestLapTime,AbsSetting,Tc1Setting,Tc2Setting,DeltaLapTime,Position,EngineMap,BrakeBias,IsDeltaPositive,IsValidLap,PosX,PosY,PosZ");
+        writer.WriteLine("Timestamp,CurrentLap,SpeedKmh,Gas,Brake,Clutch,SteerAngle,Fuel,CurrentGear,EngineRpm,TireTemperatureFL,TireTemperatureFR,TireTemperatureRL,TireTemperatureRR,LapTime,Distance,MaxRpm,TirePressureFL,TirePressureFR,TirePressureRL,TirePressureRR,LastLapTime,BestLapTime,AbsSetting,Tc1Setting,Tc2Setting,DeltaLapTime,Position,EngineMap,BrakeBias,IsDeltaPositive,IsValidLap,SectorIndex,LastSectorTimeSec,PosX,PosY,PosZ");
         writer.Flush();
         return writer;
     }
@@ -86,6 +86,8 @@ public class SessionWriter
         writer.Write($"{r.BrakeBias.ToString(CultureInfo.InvariantCulture)},");
         writer.Write($"{r.IsDeltaPositive},");
         writer.Write($"{r.IsValidLap},");
+        writer.Write($"{r.SectorIndex},");
+        writer.Write($"{r.LastSectorTime.TotalSeconds.ToString(CultureInfo.InvariantCulture)},");
         writer.Write($"{r.CarPosition.X.ToString(CultureInfo.InvariantCulture)},");
         writer.Write($"{r.CarPosition.Y.ToString(CultureInfo.InvariantCulture)},");
         writer.WriteLine($"{r.CarPosition.Z.ToString(CultureInfo.InvariantCulture)}");
@@ -103,7 +105,7 @@ public class SessionWriter
         writer.WriteLine($"# Track: {session.Info.Track?.Key}");
         writer.WriteLine($"# Type: {(int)session.Info.Type}");
         writer.WriteLine($"# StartTime: {ToUnixSeconds(session.Info.StartTime).ToString(CultureInfo.InvariantCulture)}");
-        writer.WriteLine("Timestamp,CurrentLap,SpeedKmh,Gas,Brake,Clutch,SteerAngle,Fuel,CurrentGear,EngineRpm,TireTemperatureFL,TireTemperatureFR,TireTemperatureRL,TireTemperatureRR,LapTime,Distance,MaxRpm,TirePressureFL,TirePressureFR,TirePressureRL,TirePressureRR,LastLapTime,BestLapTime,AbsSetting,Tc1Setting,Tc2Setting,DeltaLapTime,Position,EngineMap,BrakeBias,IsDeltaPositive,IsValidLap,PosX,PosY,PosZ");
+        writer.WriteLine("Timestamp,CurrentLap,SpeedKmh,Gas,Brake,Clutch,SteerAngle,Fuel,CurrentGear,EngineRpm,TireTemperatureFL,TireTemperatureFR,TireTemperatureRL,TireTemperatureRR,LapTime,Distance,MaxRpm,TirePressureFL,TirePressureFR,TirePressureRL,TirePressureRR,LastLapTime,BestLapTime,AbsSetting,Tc1Setting,Tc2Setting,DeltaLapTime,Position,EngineMap,BrakeBias,IsDeltaPositive,IsValidLap,SectorIndex,LastSectorTimeSec,PosX,PosY,PosZ");
         WriteLapHeaders(writer, session);
 
         foreach (var r in session.Records)
@@ -286,7 +288,16 @@ public class SessionWriter
                 IsValidLap = bool.Parse(values[idx++]),
             };
 
-            if (values.Length >= 35)
+            if (values.Length >= 37)
+            {
+                record.SectorIndex = int.Parse(values[idx++], CultureInfo.InvariantCulture);
+                record.LastSectorTime = TimeSpan.FromSeconds(double.Parse(values[idx++], CultureInfo.InvariantCulture));
+                record.CarPosition = new Vector3(
+                    float.Parse(values[idx++], CultureInfo.InvariantCulture),
+                    float.Parse(values[idx++], CultureInfo.InvariantCulture),
+                    float.Parse(values[idx++], CultureInfo.InvariantCulture));
+            }
+            else if (values.Length >= 35)
             {
                 record.CarPosition = new Vector3(
                     float.Parse(values[idx++], CultureInfo.InvariantCulture),

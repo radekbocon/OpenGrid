@@ -87,6 +87,14 @@ public class DebugTelemetryClient : ITelemetryClient
             MaxRpm = 12000f,
             TirePressures = TireValues.FromArray(pressures),
             IsValidLap = true,
+            SectorIndex = currentLap % 3 + 1,
+            LastSectorTime = TimeSpan.FromSeconds((_tick % 1000) switch
+            {
+                < 200 => 0,
+                < 500 => 25.5,
+                < 800 => 55.3,
+                _ => 0
+            }),
             CarPosition = new Vector3(
                 100f + (float)Math.Sin(_tick * 0.05f) * 50f,
                 50f + (float)Math.Cos(_tick * 0.03f) * 30f,

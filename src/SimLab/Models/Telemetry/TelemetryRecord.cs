@@ -34,6 +34,8 @@ public record TelemetryRecord
     public float BrakeBias { get; set; }
     public bool IsDeltaPositive { get; set; }
     public bool IsValidLap { get; set; }
+    public int SectorIndex { get; set; }
+    public TimeSpan LastSectorTime { get; set; }
     public Vector3 CarPosition { get; set; }
 }
 
