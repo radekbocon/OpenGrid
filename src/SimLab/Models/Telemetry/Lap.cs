@@ -41,6 +41,14 @@ public class Lap
     public TimeSpan Sector2Time => _headerTime.HasValue ? TimeSpan.Zero : _sector2;
     public TimeSpan Sector3Time => _headerTime.HasValue ? TimeSpan.Zero : _sector3;
 
+    public double AvgSpeedKmh => Records is { Count: > 0 } ? Math.Round(Records.Average(r => r.SpeedKmh), 1) : 0;
+    public double MaxSpeedKmh => Records is { Count: > 0 } ? Math.Round(Records.Max(r => r.SpeedKmh), 1) : 0;
+    public double MinSpeedKmh => Records is { Count: > 0 } ? Math.Round(Records.Min(r => r.SpeedKmh), 1) : 0;
+    public double FlatOutPercent => Records is { Count: > 0 } ? Math.Round((double)Records.Count(r => r.Gas > 0.95f) / Records.Count * 100, 1) : 0;
+    public double AvgGas => Records is { Count: > 0 } ? Math.Round(Records.Average(r => r.Gas), 3) : 0;
+    public double AvgBrake => Records is { Count: > 0 } ? Math.Round(Records.Average(r => r.Brake), 3) : 0;
+    public double DistanceKm => Records is { Count: > 0 } ? Math.Round((Records.Max(r => r.Distance) - Records.Min(r => r.Distance)) / 1000.0, 2) : 0;
+
     private static void ComputeSectors(List<TelemetryRecord> records, out TimeSpan s1, out TimeSpan s2, out TimeSpan s3)
     {
         s1 = s2 = s3 = TimeSpan.Zero;

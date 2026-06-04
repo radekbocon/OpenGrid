@@ -1,0 +1,74 @@
+<UserControl
+    x:Class="SimLab.Controls.LapStatsControl"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="Root">
+
+    <Grid
+        Margin="8,4"
+        ColumnDefinitions="Auto,*"
+        ColumnSpacing="16"
+        RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+        RowSpacing="8">
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
+            FontWeight="Bold"
+            Text="Avg Speed" />
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="1"
+            HorizontalAlignment="Right"
+            Text="{Binding #Root.SelectedLap.AvgSpeedKmh, StringFormat='{}{0:0.0} km/h'}" />
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="0"
+            FontWeight="Bold"
+            Text="Max Speed" />
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="1"
+            HorizontalAlignment="Right"
+            Text="{Binding #Root.SelectedLap.MaxSpeedKmh, StringFormat='{}{0:0.0} km/h'}" />
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="0"
+            FontWeight="Bold"
+            Text="Min Speed" />
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="1"
+            HorizontalAlignment="Right"
+            Text="{Binding #Root.SelectedLap.MinSpeedKmh, StringFormat='{}{0:0.0} km/h'}" />
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="0"
+            FontWeight="Bold"
+            Text="Flat Out" />
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="1"
+            HorizontalAlignment="Right"
+            Text="{Binding #Root.SelectedLap.FlatOutPercent, StringFormat='{}{0:0.0}%'}" />
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="0"
+            FontWeight="Bold"
+            Text="Avg Throttle" />
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="1"
+            HorizontalAlignment="Right"
+            Text="{Binding #Root.SelectedLap.AvgGas, StringFormat='{}{0:0.0%}'}" />
+        <TextBlock
+            Grid.Row="5"
+            Grid.Column="0"
+            FontWeight="Bold"
+            Text="Avg Brake" />
+        <TextBlock
+            Grid.Row="5"
+            Grid.Column="1"
+            HorizontalAlignment="Right"
+            Text="{Binding #Root.SelectedLap.AvgBrake, StringFormat='{}{0:0.0%}'}" />
+    </Grid>
+</UserControl>

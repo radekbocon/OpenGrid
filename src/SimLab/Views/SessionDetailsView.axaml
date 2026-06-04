@@ -42,20 +42,19 @@
                         ToolTip.Tip="Compare with other laps">
                         <avalonia:MaterialIcon IconSize="24" Kind="Compare" />
                     </Button>
-                    <Button
-                        Padding="8"
-                        Classes="Flat"
-                        Command="{Binding DeleteLapCommand}"
-                        ToolTip.Tip="Delete lap">
-                        <avalonia:MaterialIcon IconSize="24" Kind="Delete" />
-                    </Button>
                 </StackPanel>
 
             </Grid>
 
-            <StackPanel Grid.Row="1" Grid.Column="0">
+            <StackPanel
+                Grid.Row="1"
+                Grid.Column="0"
+                Spacing="8">
                 <controls1:Card>
-                    <controls:LapTableControl Laps="{Binding Laps}" SelectedLap="{Binding SelectedLap}" />
+                    <controls:LapTableControl Laps="{Binding Laps}" SelectedLap="{Binding SelectedLap}" DeleteLapCommand="{Binding DeleteLapCommand}" />
+                </controls1:Card>
+                <controls1:Card>
+                    <controls:LapStatsControl SelectedLap="{Binding SelectedLap}" />
                 </controls1:Card>
             </StackPanel>
 
@@ -65,7 +64,7 @@
                 Grid.Column="1"
                 Spacing="8">
                 <controls1:Card>
-                    <controls:TrackMapControl Height="300" Series="{Binding TrackData}" />
+                    <controls:TrackMapControl Height="400" Series="{Binding TrackData}" />
                 </controls1:Card>
 
                 <controls1:Card>

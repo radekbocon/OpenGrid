@@ -54,9 +54,9 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
     }
 
     [RelayCommand]
-    private async Task DeleteLapAsync()
+    private async Task DeleteLapAsync(Lap? lap)
     {
-        if (_details is null || SelectedLap is null)
+        if (_details is null || lap is null)
         {
             return;
         }
@@ -76,7 +76,7 @@ public partial class SessionDetailsViewModel : LapChartViewModelBase
             return;
         }
 
-        _sessionRepository.DeleteLap(_details, SelectedLap.Number);
+        _sessionRepository.DeleteLap(_details, lap.Number);
 
         Laps = _details.Laps;
         SelectedLap = Laps.FirstOrDefault();
