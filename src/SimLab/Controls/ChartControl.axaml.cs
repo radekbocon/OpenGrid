@@ -11,6 +11,8 @@ using ScottPlot;
 using ScottPlot.Interactivity;
 using ScottPlot.Interactivity.UserActionResponses;
 using ScottPlot.Interactivity.UserActions;
+using ScottPlot.Plottables;
+using SimLab.Models;
 
 namespace SimLab.Controls;
 
@@ -20,6 +22,7 @@ public partial class ChartControl : UserControl
     
     private double _minX;
     private double _maxX;
+    private List<CrosshairState>? _crosshairStates;
 
     public static readonly StyledProperty<IEnumerable<SubplotDefinition>> SubplotsProperty =
         AvaloniaProperty.Register<ChartControl, IEnumerable<SubplotDefinition>>(nameof(Subplots), []);
@@ -38,6 +41,8 @@ public partial class ChartControl : UserControl
         ChartElement.UserInputProcessor.RemoveAll<IUserActionResponse>();
         ChartElement.UserInputProcessor.UserActionResponses.Add(new MouseDragPan(StandardMouseButtons.Left) { LockY = true });
         ChartElement.UserInputProcessor.UserActionResponses.Add(new XOnlyMouseWheelZoom(this));
+        ChartElement.PointerMoved += OnChartPointerMoved;
+        ChartElement.PointerExited += OnChartPointerExited;
     }
 
     private void PointerWheelHandler(object? sender, PointerWheelEventArgs e)
@@ -154,6 +159,33 @@ public partial class ChartControl : UserControl
             subplot.Axes.SetLimitsX(minX, maxX);
         }
 
+        _crosshairStates = [];
+        for (int i = 0; i < definitions.Count; i++)
+        {
+            var crosshair = plots[i].Add.Crosshair(0, 0);
+            crosshair.IsVisible = false;
+            crosshair.HorizontalLine.IsVisible = false;
+            crosshair.LineColor = Colors.Gray.WithAlpha(0.5);
+            crosshair.LineWidth = 1;
+
+            var label = plots[i].Add.Text("", 0, 0);
+            label.IsVisible = false;
+            label.LabelFontSize = 12;
+            label.LabelFontColor = Colors.White;
+            label.LabelBackgroundColor = Colors.Black.WithAlpha(180);
+            label.LabelPadding = 4;
+            label.LabelBold = true;
+
+            _crosshairStates.Add(new CrosshairState
+            {
+                Plot = plots[i],
+                Definition = definitions[i],
+                SeriesList = [.. definitions[i].Series],
+                Crosshair = crosshair,
+                Label = label
+            });
+        }
+
         multiplot.SharedAxes.ShareX(plots);
         ChartElement.Multiplot = multiplot;
         IsVisible = true;
@@ -190,6 +222,119 @@ public partial class ChartControl : UserControl
             return new Color(color.R, color.G, color.B, color.A);
         }
         return new Color(fallbackHex);
+    }
+
+    private void OnChartPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_crosshairStates is null || _crosshairStates.Count == 0)
+            return;
+
+        var point = e.GetPosition(ChartElement);
+        var pixel = new Pixel((float)point.X, (float)point.Y);
+
+        var activePlot = ChartElement.GetPlotAtPixel(pixel);
+        if (activePlot is null)
+            return;
+
+        var coordinates = activePlot.GetCoordinates(pixel);
+        double x = coordinates.X;
+
+        foreach (var state in _crosshairStates)
+        {
+            double y = GetYValueAtX(state.SeriesList, x);
+
+            state.Crosshair.X = x;
+            state.Crosshair.Y = y;
+            state.Crosshair.IsVisible = true;
+
+            state.Label.LabelText = FormatCrosshairLabel(state, x);
+            var yBottom = state.Plot.Axes.GetLimits().Bottom;
+            state.Label.Location = new ScottPlot.Coordinates(x, yBottom);
+            state.Label.LabelOffsetY = -22;
+            state.Label.LabelAlignment = ScottPlot.Alignment.LowerLeft;
+            state.Label.IsVisible = true;
+        }
+
+        ChartElement.Refresh();
+    }
+
+    private void OnChartPointerExited(object? sender, PointerEventArgs e)
+    {
+        if (_crosshairStates is null)
+            return;
+
+        foreach (var state in _crosshairStates)
+        {
+            state.Crosshair.IsVisible = false;
+            state.Label.IsVisible = false;
+        }
+
+        ChartElement.Refresh();
+    }
+
+    private static double GetYValueAtX(List<ChartData> seriesList, double x)
+    {
+        if (seriesList.Count == 0)
+            return 0;
+
+        return InterpolateY(seriesList[0].Xs, seriesList[0].Ys, x);
+    }
+
+    private static double InterpolateY(double[] xs, double[] ys, double x)
+    {
+        if (xs.Length == 0)
+            return 0;
+
+        if (x <= xs[0])
+            return ys[0];
+        if (x >= xs[^1])
+            return ys[^1];
+
+        int index = Array.BinarySearch(xs, x);
+        if (index >= 0)
+            return ys[index];
+
+        int next = ~index;
+        if (next <= 0)
+            return ys[0];
+        if (next >= xs.Length)
+            return ys[^1];
+
+        double x0 = xs[next - 1];
+        double x1 = xs[next];
+        double t = (x - x0) / (x1 - x0);
+        return ys[next - 1] + t * (ys[next] - ys[next - 1]);
+    }
+
+    private static string FormatCrosshairLabel(CrosshairState state, double x)
+    {
+        var labeler = state.Definition.YLabeler;
+
+        if (state.SeriesList.Count == 1)
+        {
+            double y = InterpolateY(state.SeriesList[0].Xs, state.SeriesList[0].Ys, x);
+            return labeler?.Invoke(y) ?? y.ToString("F2");
+        }
+
+        var parts = new List<string>();
+        foreach (var series in state.SeriesList)
+        {
+            double y = InterpolateY(series.Xs, series.Ys, x);
+            string formatted = labeler?.Invoke(y) ?? y.ToString("F2");
+            string name = string.IsNullOrEmpty(series.Name) ? $"Series {parts.Count + 1}" : series.Name;
+            parts.Add($"{name}: {formatted}");
+        }
+
+        return string.Join("\n", parts);
+    }
+
+    private class CrosshairState
+    {
+        public required Plot Plot { get; init; }
+        public required SubplotDefinition Definition { get; init; }
+        public required List<ChartData> SeriesList { get; init; }
+        public required Crosshair Crosshair { get; init; }
+        public required Text Label { get; init; }
     }
 
     private class XOnlyMouseWheelZoom(ChartControl control) : IUserActionResponse
