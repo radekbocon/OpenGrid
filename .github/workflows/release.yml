@@ -39,13 +39,28 @@ jobs:
           VERSION="${BASE_VER}.${{ github.run_number }}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Sign AppImage
+        if: env.GPG_PRIVATE_KEY != ''
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --import --batch --yes
+          gpg --detach-sign --armor --batch --yes \
+            --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
+            _build/SimLab-x86_64.AppImage
+
       - name: Create Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          ASSETS="_build/SimLab-x86_64.AppImage"
+          if [ -f "_build/SimLab-x86_64.AppImage.asc" ]; then
+            ASSETS="$ASSETS _build/SimLab-x86_64.AppImage.asc"
+          fi
           gh release create "v$VERSION" \
             --title "SimLab v$VERSION" \
             --generate-notes \
             --latest \
-            _build/SimLab-x86_64.AppImage
+            $ASSETS
