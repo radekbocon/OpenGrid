@@ -82,7 +82,10 @@
                 IsVisible="{Binding ShowLapDetails}"
                 Spacing="8">
                 <controls1:Card>
-                    <controls:LapTableControl Laps="{Binding Laps}" SelectedLap="{Binding SelectedLap}" DeleteLapCommand="{Binding DeleteLapCommand}" />
+                    <controls:LapTableControl
+                        DeleteLapCommand="{Binding DeleteLapCommand}"
+                        Laps="{Binding Laps}"
+                        SelectedLap="{Binding SelectedLap}" />
                 </controls1:Card>
                 <controls1:Card>
                     <controls:LapStatsControl SelectedLap="{Binding SelectedLap}" />
@@ -94,19 +97,6 @@
                 Grid.Column="0"
                 IsVisible="{Binding ShowComparisonLegend}"
                 Spacing="8">
-                <controls1:Card>
-                    <StackPanel Margin="8" Spacing="4">
-                        <TextBlock Classes="Subtitle2" Text="Compared Laps:" />
-                        <ItemsControl ItemTemplate="{StaticResource LegendItemTemplate}" ItemsSource="{Binding SelectedLaps}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Vertical" Spacing="4" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-                    </StackPanel>
-                </controls1:Card>
-
                 <ItemsControl ItemTemplate="{StaticResource ComparisonLapStatsTemplate}" ItemsSource="{Binding SelectedLaps}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>

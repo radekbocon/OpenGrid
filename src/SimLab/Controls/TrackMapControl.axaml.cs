@@ -44,13 +44,11 @@ public partial class TrackMapControl : UserControl
         PlotElement.UserInputProcessor.UserActionResponses.Add(new TrackMapMouseWheelZoom(this));
         PlotElement.SizeChanged += (_, _) =>
         {
-            if (IsVisible) Dispatcher.UIThread.Post(DeferredApplySquareLimits, DispatcherPriority.Background);
+            if (IsVisible)
+            {
+                Dispatcher.UIThread.Post(ApplySquareLimits, DispatcherPriority.Background);
+            }
         };
-    }
-
-    private void DeferredApplySquareLimits()
-    {
-        if (IsVisible) ApplySquareLimits();
     }
 
     private void PointerWheelHandler(object? sender, PointerWheelEventArgs e)

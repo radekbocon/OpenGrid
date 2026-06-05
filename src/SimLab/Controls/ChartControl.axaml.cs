@@ -185,7 +185,8 @@ public partial class ChartControl : UserControl
     
     private static void ApplySubplotStyle(Plot plot)
     {
-        plot.FigureBackground.Color = Colors.Transparent;
+        // transparent causes some flickering
+        plot.FigureBackground.Color = GetThemeColor("MaterialCardBackgroundColor", "#888888");
 
         var bodyColor = GetThemeColor("MaterialBodyColor", "#888888");
 
