@@ -101,7 +101,7 @@ public partial class LapSelectionViewModel : ObservableObject
             .Select((item, i) => new LapComparisonItem(item.Lap, item.Info, i))
             .ToList();
 
-        _navigationService.NavigateTo<LapComparisonViewModel>(comparisonItems);
+        _navigationService.NavigateTo<SessionDetailsViewModel>(comparisonItems);
         DialogHost.Close(null);
     }
 

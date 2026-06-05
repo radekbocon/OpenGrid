@@ -5,6 +5,7 @@
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:controls="clr-namespace:SimLab.Controls"
     xmlns:controls1="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+    xmlns:converters="clr-namespace:SimLab.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:SimLab.ViewModels"
@@ -13,6 +14,34 @@
     d:DesignWidth="800"
     x:DataType="vm:SessionDetailsViewModel"
     mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:SkiaColorToBrushConverter x:Key="SkiaColorToBrushConverter" />
+        <DataTemplate x:Key="LegendItemTemplate" x:DataType="vm:LapComparisonItem">
+            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="8">
+                <Border
+                    Grid.Column="0"
+                    Width="24"
+                    Height="2"
+                    VerticalAlignment="Center"
+                    Background="{Binding Color, Converter={StaticResource SkiaColorToBrushConverter}}" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes.FastestLap="{Binding Lap.IsFastest}"
+                    Classes.InvalidLap="{Binding !Lap.IsValid}"
+                    Text="{Binding DisplayName}" />
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="ComparisonLapStatsTemplate" x:DataType="vm:LapComparisonItem">
+            <controls1:Card>
+                <StackPanel Margin="8,4" Spacing="4">
+                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource LegendItemTemplate}" />
+                    <controls:LapStatsControl SelectedLap="{Binding Lap}" />
+                </StackPanel>
+            </controls1:Card>
+        </DataTemplate>
+    </UserControl.Resources>
 
     <ScrollViewer>
         <Grid
@@ -34,6 +63,7 @@
                 <StackPanel
                     Grid.Column="1"
                     HorizontalAlignment="Right"
+                    IsVisible="{Binding ShowCompareWithOtherLaps}"
                     Orientation="Horizontal">
                     <Button
                         Padding="8"
@@ -49,6 +79,7 @@
             <StackPanel
                 Grid.Row="1"
                 Grid.Column="0"
+                IsVisible="{Binding ShowLapDetails}"
                 Spacing="8">
                 <controls1:Card>
                     <controls:LapTableControl Laps="{Binding Laps}" SelectedLap="{Binding SelectedLap}" DeleteLapCommand="{Binding DeleteLapCommand}" />
@@ -56,6 +87,33 @@
                 <controls1:Card>
                     <controls:LapStatsControl SelectedLap="{Binding SelectedLap}" />
                 </controls1:Card>
+            </StackPanel>
+
+            <StackPanel
+                Grid.Row="1"
+                Grid.Column="0"
+                IsVisible="{Binding ShowComparisonLegend}"
+                Spacing="8">
+                <controls1:Card>
+                    <StackPanel Margin="8" Spacing="4">
+                        <TextBlock Classes="Subtitle2" Text="Compared Laps:" />
+                        <ItemsControl ItemTemplate="{StaticResource LegendItemTemplate}" ItemsSource="{Binding SelectedLaps}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical" Spacing="4" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+                </controls1:Card>
+
+                <ItemsControl ItemTemplate="{StaticResource ComparisonLapStatsTemplate}" ItemsSource="{Binding SelectedLaps}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical" Spacing="8" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
             </StackPanel>
 
 
