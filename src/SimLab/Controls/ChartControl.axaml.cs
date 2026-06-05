@@ -23,6 +23,7 @@ public partial class ChartControl : UserControl
     private double _minX;
     private double _maxX;
     private List<CrosshairState>? _crosshairStates;
+    private double _lastCrosshairX = double.NaN;
 
     public static readonly StyledProperty<IEnumerable<SubplotDefinition>> SubplotsProperty =
         AvaloniaProperty.Register<ChartControl, IEnumerable<SubplotDefinition>>(nameof(Subplots), []);
@@ -229,10 +230,19 @@ public partial class ChartControl : UserControl
 
         var activePlot = ChartElement.GetPlotAtPixel(pixel);
         if (activePlot is null)
+        {
             return;
+        }
 
         var coordinates = activePlot.GetCoordinates(pixel);
-        double x = coordinates.X;
+        var x = coordinates.X;
+
+        if (Math.Abs(x - _lastCrosshairX) < 0.1)
+        {
+            return;
+        }
+
+        _lastCrosshairX = x;
 
         foreach (var state in _crosshairStates)
         {
@@ -257,6 +267,8 @@ public partial class ChartControl : UserControl
     {
         if (_crosshairStates is null)
             return;
+
+        _lastCrosshairX = double.NaN;
 
         foreach (var state in _crosshairStates)
         {
@@ -285,19 +297,19 @@ public partial class ChartControl : UserControl
         if (x >= xs[^1])
             return ys[^1];
 
-        int index = Array.BinarySearch(xs, x);
+        var index = Array.BinarySearch(xs, x);
         if (index >= 0)
             return ys[index];
 
-        int next = ~index;
+        var next = ~index;
         if (next <= 0)
             return ys[0];
         if (next >= xs.Length)
             return ys[^1];
 
-        double x0 = xs[next - 1];
-        double x1 = xs[next];
-        double t = (x - x0) / (x1 - x0);
+        var x0 = xs[next - 1];
+        var x1 = xs[next];
+        var t = (x - x0) / (x1 - x0);
         return ys[next - 1] + t * (ys[next] - ys[next - 1]);
     }
 
@@ -307,16 +319,16 @@ public partial class ChartControl : UserControl
 
         if (state.SeriesList.Count == 1)
         {
-            double y = InterpolateY(state.SeriesList[0].Xs, state.SeriesList[0].Ys, x);
+            var y = InterpolateY(state.SeriesList[0].Xs, state.SeriesList[0].Ys, x);
             return labeler?.Invoke(y) ?? y.ToString("F2");
         }
 
         var parts = new List<string>();
         foreach (var series in state.SeriesList)
         {
-            double y = InterpolateY(series.Xs, series.Ys, x);
-            string formatted = labeler?.Invoke(y) ?? y.ToString("F2");
-            string name = string.IsNullOrEmpty(series.Name) ? $"Series {parts.Count + 1}" : series.Name;
+            var y = InterpolateY(series.Xs, series.Ys, x);
+            var formatted = labeler?.Invoke(y) ?? y.ToString("F2");
+            var name = string.IsNullOrEmpty(series.Name) ? $"Series {parts.Count + 1}" : series.Name;
             parts.Add($"{name}: {formatted}");
         }
 
