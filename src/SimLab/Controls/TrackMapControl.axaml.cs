@@ -59,16 +59,7 @@ public partial class TrackMapControl : UserControl
         }
 
         var scrollViewer = PlotElement.FindAncestorOfType<ScrollViewer>();
-        var up = e.Delta.Y > 0;
-
-        if (up)
-        {
-            scrollViewer?.LineUp();
-        }
-        else
-        {
-            scrollViewer?.LineDown();
-        }
+        scrollViewer?.Offset += e.Delta * -40;
         e.Handled = true;
     }
 

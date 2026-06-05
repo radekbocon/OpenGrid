@@ -53,16 +53,7 @@ public partial class ChartControl : UserControl
         }
 
         var scrollViewer = ChartElement.FindAncestorOfType<ScrollViewer>();
-        var up = e.Delta.Y > 0;
-
-        if (up)
-        {
-            scrollViewer?.LineUp();
-        }
-        else
-        {
-            scrollViewer?.LineDown();
-        }
+        scrollViewer?.Offset += e.Delta * -40;
         e.Handled = true;
     }
 
@@ -165,7 +156,7 @@ public partial class ChartControl : UserControl
             var crosshair = plots[i].Add.Crosshair(0, 0);
             crosshair.IsVisible = false;
             crosshair.HorizontalLine.IsVisible = false;
-            crosshair.LineColor = Colors.Gray.WithAlpha(0.5);
+            crosshair.LineColor = Colors.Gray.WithAlpha(0.8);
             crosshair.LineWidth = 1;
 
             var label = plots[i].Add.Text("", 0, 0);
@@ -251,7 +242,7 @@ public partial class ChartControl : UserControl
             var yBottom = state.Plot.Axes.GetLimits().Bottom;
             state.Label.Location = new ScottPlot.Coordinates(x, yBottom);
             state.Label.LabelOffsetY = -22;
-            state.Label.LabelAlignment = ScottPlot.Alignment.LowerLeft;
+            state.Label.LabelAlignment = Alignment.LowerLeft;
             state.Label.IsVisible = true;
         }
 
