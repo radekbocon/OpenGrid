@@ -73,3 +73,22 @@ public record struct TireValues(float FrontLeft, float FrontRight, float RearLef
             : new TireValues(array[0], array[1], array[2], array[3]);
     }
 }
+
+public static class GearExtensions
+{
+    public static string DisplayName(this Gear gear)
+    {
+        return gear switch
+        {
+            Gear.R => "R",
+            Gear.N => "N",
+            Gear.N1 => "1",
+            Gear.N2 => "2",
+            Gear.N3 => "3",
+            Gear.N4 => "4",
+            Gear.N5 => "5",
+            Gear.N6 => "6",
+            _ => ""
+        };
+    }
+}

@@ -50,7 +50,7 @@ public partial class SessionDetailsViewModel : ViewModelBase
     public partial bool ShowCompareWithOtherLaps { get; private set; }
 
 
-    public Func<double, string> GearLabeler { get; } = value => Enum.GetName(typeof(Gear), (int)value) ?? "";
+    public Func<double, string> GearLabeler { get; } = value => ((Gear)value).DisplayName() ?? "";
     public Func<double, string> DoubleLabeler { get; } = value => value.ToString("N2");
     public Func<double, string> IntegerLabeler { get; } = value => value.ToString("N0");
 
