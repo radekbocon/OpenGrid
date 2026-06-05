@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install FUSE
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fuse libfuse2
+          sudo modprobe fuse || true
+
+      - name: Build AppImage
+        run: bash appimage/build-appimage.sh build
+
+      - name: Determine version
+        id: version
+        run: |
+          BASE_VER=$(grep -oP '(?<=<InformationalVersion>).*(?=</InformationalVersion>)' src/SimLab/SimLab.csproj)
+          if [ -z "$BASE_VER" ]; then
+            BASE_VER=$(grep -oP '(?<=<Version>).*(?=</Version>)' src/SimLab/SimLab.csproj | head -1)
+          fi
+          VERSION="${BASE_VER}.${{ github.run_number }}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release create "v$VERSION" \
+            --title "SimLab v$VERSION" \
+            --generate-notes \
+            --latest \
+            _build/SimLab-x86_64.AppImage
