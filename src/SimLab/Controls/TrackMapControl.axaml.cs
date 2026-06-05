@@ -18,6 +18,8 @@ namespace SimLab.Controls;
 
 public partial class TrackMapControl : UserControl
 {
+    private const double SegmentDistance = 10.0;
+    
     public static readonly StyledProperty<IReadOnlyList<TrackMapSeries>> SeriesProperty =
         AvaloniaProperty.Register<TrackMapControl, IReadOnlyList<TrackMapSeries>>(nameof(Series), []);
 
@@ -133,30 +135,65 @@ public partial class TrackMapControl : UserControl
         var gas = s.GasValues!;
         var brake = s.BrakeValues!;
 
-        for (int i = 0; i < xs.Count - 1; i++)
-        {
-            var avgGas = (gas[i] + gas[i + 1]) / 2f;
-            var avgBrake = (brake[i] + brake[i + 1]) / 2f;
-            var skColor = GasBrakeHeatColor(avgGas, avgBrake);
-            var color = new Color(skColor.Red, skColor.Green, skColor.Blue, skColor.Alpha);
+        var n = xs.Count;
+        var segmentStarts = new List<int> { 0 };
+        double accumulated = 0;
 
-            var seg = plot.Add.Scatter(
-                [xs[i], xs[i + 1]],
-                new[] { ys[i], ys[i + 1] });
-            seg.Color = color;
-            seg.LineWidth = 6;
-            seg.MarkerSize = 0;
+        for (int i = 1; i < n; i++)
+        {
+            var dx = xs[i] - xs[i - 1];
+            var dy = ys[i] - ys[i - 1];
+            accumulated += Math.Sqrt(dx * dx + dy * dy);
+
+            if (accumulated >= SegmentDistance)
+            {
+                segmentStarts.Add(i);
+                accumulated = 0;
+            }
+        }
+
+        if (segmentStarts[^1] != n - 1)
+            segmentStarts.Add(n - 1);
+
+        for (var si = 0; si < segmentStarts.Count - 1; si++)
+        {
+            var i = segmentStarts[si];
+            var end = Math.Min(segmentStarts[si + 1] + 2, n);
+
+            float avgGas = 0, avgBrake = 0;
+            var count = end - i - 1;
+            for (var j = i; j < end - 1; j++)
+            {
+                avgGas += gas[j];
+                avgBrake += brake[j];
+            }
+            avgGas /= count;
+            avgBrake /= count;
+
+            var spanXs = new double[end - i];
+            var spanYs = new double[end - i];
+            for (int j = i; j < end; j++)
+            {
+                spanXs[j - i] = xs[j];
+                spanYs[j - i] = ys[j];
+            }
+
+            var skColor = GasBrakeHeatColor(avgGas, avgBrake);
+            var scatter = plot.Add.ScatterLine(spanXs, spanYs);
+            scatter.Color = new Color(skColor.Red, skColor.Green, skColor.Blue, skColor.Alpha);
+            scatter.LineWidth = 6;
+            scatter.MarkerSize = 0;
         }
     }
 
     private static SKColor GasBrakeHeatColor(float gas, float brake)
     {
-        float maxInput = Math.Max(gas, brake);
+        var maxInput = Math.Max(gas, brake);
         if (maxInput < 0.01f)
             return new SKColor(40, 40, 40);
 
-        byte r = (byte)Math.Clamp(40 + brake * 215, 0, 255);
-        byte g = (byte)Math.Clamp(40 + gas * 215, 0, 255);
+        var r = (byte)Math.Clamp(40 + brake * 215, 0, 255);
+        var g = (byte)Math.Clamp(40 + gas * 215, 0, 255);
 
         return new SKColor(r, g, 0);
     }
