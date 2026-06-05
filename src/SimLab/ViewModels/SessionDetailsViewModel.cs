@@ -17,6 +17,9 @@ namespace SimLab.ViewModels;
 public partial class SessionDetailsViewModel : ViewModelBase
 {
     private static readonly SKColor DefaultColor = SKColors.DodgerBlue;
+    private readonly Func<double, string> _gearLabeler = value => ((Gear)value).DisplayName();
+    private readonly Func<double, string> _integerLabeler = value => value.ToString("N0");
+    private readonly Func<double, string> _percentLabeler = value => value.ToString("P0");
 
     private readonly SessionRepository _sessionRepository;
     private readonly INavigationService _navigationService;
@@ -48,11 +51,6 @@ public partial class SessionDetailsViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial bool ShowCompareWithOtherLaps { get; private set; }
-
-
-    public Func<double, string> GearLabeler { get; } = value => ((Gear)value).DisplayName() ?? "";
-    public Func<double, string> DoubleLabeler { get; } = value => value.ToString("N2");
-    public Func<double, string> IntegerLabeler { get; } = value => value.ToString("N0");
 
     public SessionDetailsViewModel(SessionRepository sessionRepository, INavigationService navigationService)
     {
@@ -206,12 +204,12 @@ public partial class SessionDetailsViewModel : ViewModelBase
 
             Subplots =
             [
-                new SubplotDefinition { Title = "Gas", Series = [gasData], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
-                new SubplotDefinition { Title = "Brake", Series = [brakeData], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
-                new SubplotDefinition { Title = "Steering", Series = [steeringData], YLabeler = DoubleLabeler, YMinLimit = -1, YMaxLimit = 1 },
-                new SubplotDefinition { Title = "Speed", Series = [speedData], YLabeler = IntegerLabeler },
-                new SubplotDefinition { Title = "Gear", Series = [gearData], YLabeler = GearLabeler, YMinLimit = 0, YMaxLimit = 7 },
-                new SubplotDefinition { Title = "RPM", Series = [rpmData], YLabeler = IntegerLabeler, YMinLimit = 0 },
+                new SubplotDefinition { Title = "Gas", Series = [gasData], YLabeler = _percentLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
+                new SubplotDefinition { Title = "Brake", Series = [brakeData], YLabeler = _percentLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
+                new SubplotDefinition { Title = "Steering", Series = [steeringData], YLabeler = _percentLabeler, YMinLimit = -1, YMaxLimit = 1 },
+                new SubplotDefinition { Title = "Speed", Series = [speedData], YLabeler = _integerLabeler },
+                new SubplotDefinition { Title = "Gear", Series = [gearData], YLabeler = _gearLabeler, YMinLimit = 0, YMaxLimit = 7 },
+                new SubplotDefinition { Title = "RPM", Series = [rpmData], YLabeler = _integerLabeler, YMinLimit = 0 },
             ];
         });
     }
@@ -248,12 +246,12 @@ public partial class SessionDetailsViewModel : ViewModelBase
 
             Subplots =
             [
-                new SubplotDefinition { Title = "Gas", Series = [.. gasSeries], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
-                new SubplotDefinition { Title = "Brake", Series = [.. brakeSeries], YLabeler = DoubleLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
-                new SubplotDefinition { Title = "Steering", Series = [.. steeringSeries], YLabeler = DoubleLabeler, YMinLimit = -1, YMaxLimit = 1 },
-                new SubplotDefinition { Title = "Speed", Series = [.. speedSeries], YLabeler = IntegerLabeler },
-                new SubplotDefinition { Title = "Gear", Series = [.. gearSeries], YLabeler = GearLabeler, YMinLimit = 0, YMaxLimit = 7 },
-                new SubplotDefinition { Title = "RPM", Series = [.. rpmSeries], YLabeler = IntegerLabeler, YMinLimit = 0 },
+                new SubplotDefinition { Title = "Gas", Series = [.. gasSeries], YLabeler = _percentLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
+                new SubplotDefinition { Title = "Brake", Series = [.. brakeSeries], YLabeler = _percentLabeler, YMinLimit = 0, YMaxLimit = 1.02 },
+                new SubplotDefinition { Title = "Steering", Series = [.. steeringSeries], YLabeler = _percentLabeler, YMinLimit = -1, YMaxLimit = 1 },
+                new SubplotDefinition { Title = "Speed", Series = [.. speedSeries], YLabeler = _integerLabeler },
+                new SubplotDefinition { Title = "Gear", Series = [.. gearSeries], YLabeler = _gearLabeler, YMinLimit = 0, YMaxLimit = 7 },
+                new SubplotDefinition { Title = "RPM", Series = [.. rpmSeries], YLabeler = _integerLabeler, YMinLimit = 0 },
             ];
 
             var trackSeries = new List<TrackMapSeries>();

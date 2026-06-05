@@ -41,6 +41,9 @@ public partial class ChartControl : UserControl
         ChartElement.UserInputProcessor.RemoveAll<IUserActionResponse>();
         ChartElement.UserInputProcessor.UserActionResponses.Add(new MouseDragPan(StandardMouseButtons.Left) { LockY = true });
         ChartElement.UserInputProcessor.UserActionResponses.Add(new XOnlyMouseWheelZoom(this));
+#if DEBUG
+        ChartElement.UserInputProcessor.UserActionResponses.Add(new DoubleClickBenchmark(StandardMouseButtons.Right));
+#endif
         ChartElement.PointerMoved += OnChartPointerMoved;
         ChartElement.PointerExited += OnChartPointerExited;
     }

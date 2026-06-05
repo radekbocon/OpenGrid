@@ -42,6 +42,9 @@ public partial class TrackMapControl : UserControl
         PlotElement.UserInputProcessor.RemoveAll<IUserActionResponse>();
         PlotElement.UserInputProcessor.UserActionResponses.Add(new MouseDragPan(StandardMouseButtons.Left));
         PlotElement.UserInputProcessor.UserActionResponses.Add(new TrackMapMouseWheelZoom(this));
+#if DEBUG
+        PlotElement.UserInputProcessor.UserActionResponses.Add(new DoubleClickBenchmark(StandardMouseButtons.Right));
+#endif
         PlotElement.SizeChanged += (_, _) =>
         {
             if (IsVisible)
