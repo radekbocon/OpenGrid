@@ -116,6 +116,8 @@ public class AcTelemetryClient : ITelemetryClient
                 IsValidLap = graphicsData.Value.IsValidLap == 1,
                 SectorIndex = graphicsData.Value.CurrentSectorIndex,
                 LastSectorTime = TimeSpan.FromMilliseconds(graphicsData.Value.LastSectorTime),
+                GForceLat = physicsData.Value.AccG.X,
+                GForceLon = physicsData.Value.AccG.Z,
                 CarPosition = new Vector3(
                     graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID].X,
                     graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID].Y,

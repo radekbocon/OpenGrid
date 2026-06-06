@@ -20,6 +20,7 @@ public partial class SessionDetailsViewModel : ViewModelBase
     private readonly Func<double, string> _gearLabeler = value => ((Gear)value).DisplayName();
     private readonly Func<double, string> _integerLabeler = value => value.ToString("N0");
     private readonly Func<double, string> _percentLabeler = value => value.ToString("P0");
+    private readonly Func<double, string> _gForceLabeler = value => value.ToString("N2");
 
     private readonly SessionRepository _sessionRepository;
     private readonly INavigationService _navigationService;
@@ -201,6 +202,8 @@ public partial class SessionDetailsViewModel : ViewModelBase
             var speedData = CreateChartData("Speed", xs, lap.Records.Select(r => Math.Round(r.SpeedKmh, 1)), DefaultColor);
             var gearData = CreateChartData("Gear", xs, lap.Records.Select(r => (double)r.CurrentGear), DefaultColor, isStep: true);
             var rpmData = CreateChartData("RPM", xs, lap.Records.Select(r => (double)r.EngineRpm), DefaultColor);
+            var gForceLatData = CreateChartData("Lat", xs, lap.Records.Select(r => (double)r.GForceLat), DefaultColor);
+            var gForceLonData = CreateChartData("Lon", xs, lap.Records.Select(r => (double)r.GForceLon), SKColors.OrangeRed);
 
             Subplots =
             [
@@ -210,6 +213,7 @@ public partial class SessionDetailsViewModel : ViewModelBase
                 new SubplotDefinition { Title = "Speed", Series = [speedData], YLabeler = _integerLabeler },
                 new SubplotDefinition { Title = "Gear", Series = [gearData], YLabeler = _gearLabeler, YMinLimit = 0, YMaxLimit = 7 },
                 new SubplotDefinition { Title = "RPM", Series = [rpmData], YLabeler = _integerLabeler, YMinLimit = 0 },
+                new SubplotDefinition { Title = "G-Forces", Series = [gForceLatData, gForceLonData], YLabeler = _gForceLabeler },
             ];
         });
     }
@@ -226,6 +230,8 @@ public partial class SessionDetailsViewModel : ViewModelBase
             var speedSeries = new List<ChartData>();
             var gearSeries = new List<ChartData>();
             var rpmSeries = new List<ChartData>();
+            var gForceLatSeries = new List<ChartData>();
+            var gForceLonSeries = new List<ChartData>();
 
             foreach (var item in SelectedLaps)
             {
@@ -242,6 +248,8 @@ public partial class SessionDetailsViewModel : ViewModelBase
                 speedSeries.Add(CreateChartData(item.ShortName, xs, records.Select(r => Math.Round(r.SpeedKmh, 1)), color));
                 gearSeries.Add(CreateChartData(item.ShortName, xs, records.Select(r => (double)(int)r.CurrentGear), color, isStep: true));
                 rpmSeries.Add(CreateChartData(item.ShortName, xs, records.Select(r => (double)r.EngineRpm), color));
+                gForceLatSeries.Add(CreateChartData(item.ShortName, xs, records.Select(r => (double)r.GForceLat), color));
+                gForceLonSeries.Add(CreateChartData(item.ShortName, xs, records.Select(r => (double)r.GForceLon), color));
             }
 
             Subplots =
@@ -252,6 +260,7 @@ public partial class SessionDetailsViewModel : ViewModelBase
                 new SubplotDefinition { Title = "Speed", Series = [.. speedSeries], YLabeler = _integerLabeler },
                 new SubplotDefinition { Title = "Gear", Series = [.. gearSeries], YLabeler = _gearLabeler, YMinLimit = 0, YMaxLimit = 7 },
                 new SubplotDefinition { Title = "RPM", Series = [.. rpmSeries], YLabeler = _integerLabeler, YMinLimit = 0 },
+                new SubplotDefinition { Title = "G-Forces", Series = [.. gForceLatSeries, .. gForceLonSeries], YLabeler = _gForceLabeler },
             ];
 
             var trackSeries = new List<TrackMapSeries>();

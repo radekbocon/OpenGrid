@@ -135,6 +135,8 @@ public class DirtRallyTelemetryClient : ITelemetryClient
                 SessionType = SessionType.Race,
                 TirePressures = new TireValues(packet.TirePressureFL, packet.TirePressureFR, packet.TirePressureRL, packet.TirePressureRR),
                 CarPosition = new Vector3(packet.PosX, packet.PosY, packet.PosZ),
+                GForceLat = packet.GForceLat,
+                GForceLon = packet.GForceLon,
                 SectorIndex = (int)packet.Sector,
                 LastSectorTime = (int)packet.Sector switch
                 {

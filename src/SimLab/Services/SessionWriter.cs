@@ -42,7 +42,7 @@ public class SessionWriter
         writer.WriteLine($"# Track: {session.Info.Track}");
         writer.WriteLine($"# Type: {(int)session.Info.Type}");
         writer.WriteLine($"# StartTime: {ToUnixSeconds(session.Info.StartTime).ToString(CultureInfo.InvariantCulture)}");
-        writer.WriteLine("Timestamp,CurrentLap,SpeedKmh,Gas,Brake,Clutch,SteerAngle,Fuel,CurrentGear,EngineRpm,TireTemperatureFL,TireTemperatureFR,TireTemperatureRL,TireTemperatureRR,LapTime,Distance,MaxRpm,TirePressureFL,TirePressureFR,TirePressureRL,TirePressureRR,LastLapTime,BestLapTime,AbsSetting,Tc1Setting,Tc2Setting,DeltaLapTime,Position,EngineMap,BrakeBias,IsDeltaPositive,IsValidLap,SectorIndex,LastSectorTimeSec,PosX,PosY,PosZ");
+        writer.WriteLine("Timestamp,CurrentLap,SpeedKmh,Gas,Brake,Clutch,SteerAngle,Fuel,CurrentGear,EngineRpm,TireTemperatureFL,TireTemperatureFR,TireTemperatureRL,TireTemperatureRR,LapTime,Distance,MaxRpm,TirePressureFL,TirePressureFR,TirePressureRL,TirePressureRR,LastLapTime,BestLapTime,AbsSetting,Tc1Setting,Tc2Setting,DeltaLapTime,Position,EngineMap,BrakeBias,IsDeltaPositive,IsValidLap,SectorIndex,LastSectorTimeSec,PosX,PosY,PosZ,GForceLat,GForceLon");
         writer.Flush();
         return writer;
     }
@@ -90,7 +90,9 @@ public class SessionWriter
         writer.Write($"{r.LastSectorTime.TotalSeconds.ToString(CultureInfo.InvariantCulture)},");
         writer.Write($"{r.CarPosition.X.ToString(CultureInfo.InvariantCulture)},");
         writer.Write($"{r.CarPosition.Y.ToString(CultureInfo.InvariantCulture)},");
-        writer.WriteLine($"{r.CarPosition.Z.ToString(CultureInfo.InvariantCulture)}");
+        writer.Write($"{r.CarPosition.Z.ToString(CultureInfo.InvariantCulture)},");
+        writer.Write($"{r.GForceLat.ToString(CultureInfo.InvariantCulture)},");
+        writer.WriteLine($"{r.GForceLon.ToString(CultureInfo.InvariantCulture)}");
         writer.Flush();
     }
 
@@ -105,7 +107,7 @@ public class SessionWriter
         writer.WriteLine($"# Track: {session.Info.Track?.Key}");
         writer.WriteLine($"# Type: {(int)session.Info.Type}");
         writer.WriteLine($"# StartTime: {ToUnixSeconds(session.Info.StartTime).ToString(CultureInfo.InvariantCulture)}");
-        writer.WriteLine("Timestamp,CurrentLap,SpeedKmh,Gas,Brake,Clutch,SteerAngle,Fuel,CurrentGear,EngineRpm,TireTemperatureFL,TireTemperatureFR,TireTemperatureRL,TireTemperatureRR,LapTime,Distance,MaxRpm,TirePressureFL,TirePressureFR,TirePressureRL,TirePressureRR,LastLapTime,BestLapTime,AbsSetting,Tc1Setting,Tc2Setting,DeltaLapTime,Position,EngineMap,BrakeBias,IsDeltaPositive,IsValidLap,SectorIndex,LastSectorTimeSec,PosX,PosY,PosZ");
+        writer.WriteLine("Timestamp,CurrentLap,SpeedKmh,Gas,Brake,Clutch,SteerAngle,Fuel,CurrentGear,EngineRpm,TireTemperatureFL,TireTemperatureFR,TireTemperatureRL,TireTemperatureRR,LapTime,Distance,MaxRpm,TirePressureFL,TirePressureFR,TirePressureRL,TirePressureRR,LastLapTime,BestLapTime,AbsSetting,Tc1Setting,Tc2Setting,DeltaLapTime,Position,EngineMap,BrakeBias,IsDeltaPositive,IsValidLap,SectorIndex,LastSectorTimeSec,PosX,PosY,PosZ,GForceLat,GForceLon");
         WriteLapHeaders(writer, session);
 
         foreach (var r in session.Records)
@@ -288,7 +290,18 @@ public class SessionWriter
                 IsValidLap = bool.Parse(values[idx++]),
             };
 
-            if (values.Length >= 37)
+            if (values.Length >= 39)
+            {
+                record.SectorIndex = int.Parse(values[idx++], CultureInfo.InvariantCulture);
+                record.LastSectorTime = TimeSpan.FromSeconds(double.Parse(values[idx++], CultureInfo.InvariantCulture));
+                record.CarPosition = new Vector3(
+                    float.Parse(values[idx++], CultureInfo.InvariantCulture),
+                    float.Parse(values[idx++], CultureInfo.InvariantCulture),
+                    float.Parse(values[idx++], CultureInfo.InvariantCulture));
+                record.GForceLat = float.Parse(values[idx++], CultureInfo.InvariantCulture);
+                record.GForceLon = float.Parse(values[idx++], CultureInfo.InvariantCulture);
+            }
+            else if (values.Length >= 37)
             {
                 record.SectorIndex = int.Parse(values[idx++], CultureInfo.InvariantCulture);
                 record.LastSectorTime = TimeSpan.FromSeconds(double.Parse(values[idx++], CultureInfo.InvariantCulture));

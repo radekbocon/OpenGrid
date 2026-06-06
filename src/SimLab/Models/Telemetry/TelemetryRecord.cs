@@ -37,6 +37,8 @@ public record TelemetryRecord
     public int SectorIndex { get; set; }
     public TimeSpan LastSectorTime { get; set; }
     public Vector3 CarPosition { get; set; }
+    public float GForceLat { get; set; }
+    public float GForceLon { get; set; }
 }
 
 public enum SessionType

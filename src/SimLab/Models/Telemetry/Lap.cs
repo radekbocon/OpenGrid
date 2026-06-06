@@ -47,6 +47,9 @@ public class Lap
     public double FlatOutPercent => Records is { Count: > 0 } ? Math.Round((double)Records.Count(r => r.Gas > 0.95f) / Records.Count * 100, 1) : 0;
     public double AvgGas => Records is { Count: > 0 } ? Math.Round(Records.Average(r => r.Gas), 3) : 0;
     public double AvgBrake => Records is { Count: > 0 } ? Math.Round(Records.Average(r => r.Brake), 3) : 0;
+    public double MaxGForceLat => Records is { Count: > 0 } ? Math.Round(Records.Max(r => r.GForceLat), 2) : 0;
+    public double MaxGForceLon => Records is { Count: > 0 } ? Math.Round(Records.Max(r => r.GForceLon), 2) : 0;
+    public double MinGForceLon => Records is { Count: > 0 } ? Math.Round(Records.Min(r => r.GForceLon), 2) : 0;
     public double DistanceKm => Records is { Count: > 0 } ? Math.Round((Records.Max(r => r.Distance) - Records.Min(r => r.Distance)) / 1000.0, 2) : 0;
 
     private static void ComputeSectors(List<TelemetryRecord> records, out TimeSpan s1, out TimeSpan s2, out TimeSpan s3)

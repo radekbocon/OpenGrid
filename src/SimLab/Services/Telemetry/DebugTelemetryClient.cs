@@ -95,6 +95,8 @@ public class DebugTelemetryClient : ITelemetryClient
                 < 800 => 55.3,
                 _ => 0
             }),
+            GForceLat = (float)(Math.Sin(_tick * 0.1) * 1.5),
+            GForceLon = (float)(Math.Cos(_tick * 0.08) * 1.5),
             CarPosition = new Vector3(
                 100f + (float)Math.Sin(_tick * 0.05f) * 50f,
                 50f + (float)Math.Cos(_tick * 0.03f) * 30f,
