@@ -52,7 +52,7 @@ public partial class TrackMapControl : UserControl
 
     private void PointerWheelHandler(object? sender, PointerWheelEventArgs e)
     {
-        if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.GetCurrentPoint(this).Properties.IsRightButtonPressed)
         {
             return;
         }
