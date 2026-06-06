@@ -58,7 +58,7 @@ public partial class TrackMapControl : UserControl
         }
 
         var scrollViewer = PlotElement.FindAncestorOfType<ScrollViewer>();
-        scrollViewer?.Offset += e.Delta * -40;
+        scrollViewer?.Offset += e.Delta * -50;
         e.Handled = true;
     }
 
@@ -156,6 +156,14 @@ public partial class TrackMapControl : UserControl
             plot.Axes.SetLimitsX(centerX - newRangeX / 2, centerX + newRangeX / 2);
             plot.Axes.SetLimitsY(limits.Bottom, limits.Top);
         }
+    }
+
+    private void ResetZoomClicked(object? sender, RoutedEventArgs e)
+    {
+        var plot = PlotElement.Plot;
+        plot.Axes.AutoScale();
+        ApplySquareLimits();
+        PlotElement.Refresh();
     }
 
     private class TrackMapMouseWheelZoom(TrackMapControl owner) : IUserActionResponse

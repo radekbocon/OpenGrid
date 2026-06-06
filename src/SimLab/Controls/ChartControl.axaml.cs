@@ -57,7 +57,7 @@ public partial class ChartControl : UserControl
         }
 
         var scrollViewer = ChartElement.FindAncestorOfType<ScrollViewer>();
-        scrollViewer?.Offset += e.Delta * -40;
+        scrollViewer?.Offset += e.Delta * -50;
         e.Handled = true;
     }
 
@@ -317,22 +317,35 @@ public partial class ChartControl : UserControl
     {
         var labeler = state.Definition.YLabeler;
 
+        var parts = new List<string>();
+
         if (state.SeriesList.Count == 1)
         {
             var y = InterpolateY(state.SeriesList[0].Xs, state.SeriesList[0].Ys, x);
-            return labeler?.Invoke(y) ?? y.ToString("F2");
+            parts.Add(labeler?.Invoke(y) ?? y.ToString("F2"));
         }
-
-        var parts = new List<string>();
-        foreach (var series in state.SeriesList)
+        else
         {
-            var y = InterpolateY(series.Xs, series.Ys, x);
-            var formatted = labeler?.Invoke(y) ?? y.ToString("F2");
-            var name = string.IsNullOrEmpty(series.Name) ? $"Series {parts.Count + 1}" : series.Name;
-            parts.Add($"{name}: {formatted}");
+            foreach (var series in state.SeriesList)
+            {
+                var y = InterpolateY(series.Xs, series.Ys, x);
+                var formatted = labeler?.Invoke(y) ?? y.ToString("F2");
+                var name = string.IsNullOrEmpty(series.Name) ? $"Series {parts.Count + 1}" : series.Name;
+                parts.Add($"{name}: {formatted}");
+            }
         }
 
+        parts.Add($"Distance: {x:F1} m");
         return string.Join("\n", parts);
+    }
+
+    private void ResetZoomClicked(object? sender, RoutedEventArgs e)
+    {
+        foreach (var subplot in _crosshairStates?.Select(s => s.Plot) ?? [])
+        {
+            subplot.Axes.SetLimitsX(_minX, _maxX);
+        }
+        ChartElement.Refresh();
     }
 
     private class CrosshairState

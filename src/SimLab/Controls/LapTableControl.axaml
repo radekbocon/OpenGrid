@@ -12,7 +12,7 @@
         <conv:LapTimeConverter x:Key="LapTimeConverter" />
     </UserControl.Resources>
 
-    <Grid RowDefinitions="Auto,*" Grid.IsSharedSizeScope="True">
+    <Grid Grid.IsSharedSizeScope="True" RowDefinitions="Auto,*">
         <Grid
             Grid.Row="0"
             Margin="8,4"
@@ -63,9 +63,7 @@
             SelectedItem="{Binding #Root.SelectedLap}">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="telemetry:Lap">
-                    <Grid
-                        Margin="8,2"
-                        ColumnSpacing="16">
+                    <Grid Margin="8,2" ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Col0" />
                             <ColumnDefinition Width="*" SharedSizeGroup="Col1" />
@@ -77,33 +75,34 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock
                             Grid.Column="0"
-                            Text="{Binding Number}"
                             VerticalAlignment="Center"
+                            Text="{Binding Number}"
                             TextAlignment="Left" />
                         <TextBlock
                             Grid.Column="1"
-                            Text="{Binding Time, Converter={StaticResource LapTimeConverter}}"
                             VerticalAlignment="Center"
+                            Classes.FastestLap="{Binding IsFastest}"
+                            Text="{Binding Time, Converter={StaticResource LapTimeConverter}}"
                             TextAlignment="Left" />
                         <TextBlock
                             Grid.Column="2"
-                            Text="{Binding Sector1Time, Converter={StaticResource LapTimeConverter}}"
                             VerticalAlignment="Center"
+                            Text="{Binding Sector1Time, Converter={StaticResource LapTimeConverter}}"
                             TextAlignment="Left" />
                         <TextBlock
                             Grid.Column="3"
-                            Text="{Binding Sector2Time, Converter={StaticResource LapTimeConverter}}"
                             VerticalAlignment="Center"
+                            Text="{Binding Sector2Time, Converter={StaticResource LapTimeConverter}}"
                             TextAlignment="Left" />
                         <TextBlock
                             Grid.Column="4"
-                            Text="{Binding Sector3Time, Converter={StaticResource LapTimeConverter}}"
                             VerticalAlignment="Center"
+                            Text="{Binding Sector3Time, Converter={StaticResource LapTimeConverter}}"
                             TextAlignment="Left" />
                         <TextBlock
                             Grid.Column="5"
-                            Text="{Binding IsValid}"
                             VerticalAlignment="Center"
+                            Text="{Binding IsValid}"
                             TextAlignment="Left" />
                         <Button
                             Grid.Column="6"

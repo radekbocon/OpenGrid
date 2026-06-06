@@ -63,12 +63,23 @@
                 <StackPanel
                     Grid.Column="1"
                     HorizontalAlignment="Right"
-                    IsVisible="{Binding ShowCompareWithOtherLaps}"
                     Orientation="Horizontal">
+                    <Button Padding="8" Classes="Flat">
+                        <Button.Flyout>
+                            <Flyout Placement="BottomEdgeAlignedLeft">
+                                <TextBlock
+                                    MaxWidth="150"
+                                    Text="Hold Ctrl or the right mouse button while scrolling to zoom the charts and map."
+                                    TextWrapping="Wrap" />
+                            </Flyout>
+                        </Button.Flyout>
+                        <avalonia:MaterialIcon IconSize="24" Kind="InfoCircleOutline" />
+                    </Button>
                     <Button
                         Padding="8"
                         Classes="Flat"
                         Command="{Binding CompareWithOtherLapsCommand}"
+                        IsVisible="{Binding ShowCompareWithOtherLaps}"
                         ToolTip.Tip="Compare with other laps">
                         <avalonia:MaterialIcon IconSize="24" Kind="Compare" />
                     </Button>
