@@ -335,7 +335,7 @@ public partial class ChartControl : UserControl
             }
         }
 
-        parts.Add($"Distance: {x:F1} m");
+        parts.Add($"{x:F1} m");
         return string.Join("\n", parts);
     }
 
