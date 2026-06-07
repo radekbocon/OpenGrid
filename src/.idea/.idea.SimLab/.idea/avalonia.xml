@@ -13,6 +13,7 @@
         <entry key="SimLab/Controls/LapSelectionDialog.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Controls/LapStatsControl.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Controls/LapTableControl.axaml" value="SimLab/SimLab.csproj" />
+        <entry key="SimLab/Controls/PageHeader.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Controls/PageView.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Controls/TrackMapControl.axaml" value="SimLab/SimLab.csproj" />
         <entry key="SimLab/Controls/UdpTelemetryInstructionsDialog.axaml" value="SimLab/SimLab.csproj" />

@@ -53,6 +53,8 @@ public partial class SessionDetailsViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial bool ShowCompareWithOtherLaps { get; private set; }
+    
+    public bool CanGoBack => _navigationService.CanGoBack;
 
     public SessionDetailsViewModel(SessionRepository sessionRepository, INavigationService navigationService)
     {
@@ -99,6 +101,12 @@ public partial class SessionDetailsViewModel : ViewModelBase
         Title = "Lap Comparison";
         SelectedLaps = comparisonItems;
         await SetComparisonChartDataAsync();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanGoBack))]
+    private void GoBack()
+    {
+        _navigationService.GoBack();
     }
 
     [RelayCommand]

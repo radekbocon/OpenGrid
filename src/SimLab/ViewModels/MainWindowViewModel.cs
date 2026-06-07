@@ -1,6 +1,4 @@
-using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -35,10 +33,6 @@ public partial class MainWindowViewModel : ViewModelBase
             }
         }
     }
-    
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(GoBackCommand))]
-    public partial bool CanGoBack { get; set; }
 
     [ObservableProperty]
     public partial MenuItem? SelectedMenuItem { get; set; }
@@ -103,12 +97,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private void SelectMenuItem(MenuItem menuItem)
     {
         _navigationService.NavigateTo(menuItem.ViewModelType);
-    }
-
-    [RelayCommand(CanExecute = nameof(CanGoBack))]
-    private void GoBack()
-    {
-        _navigationService.GoBack();
     }
 
     [RelayCommand]

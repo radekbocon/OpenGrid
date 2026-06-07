@@ -63,7 +63,8 @@
                                         <Button
                                             Grid.Column="2"
                                             Margin="8"
-                                            Padding="8"
+                                            Padding="4"
+                                            VerticalAlignment="Center"
                                             Classes="Flat"
                                             Command="{Binding ShowTelemetrySetupCommand}"
                                             Content="{avalonia:MaterialIconExt Kind=InformationOutline,

@@ -10,18 +10,17 @@
     xmlns:telemetry="clr-namespace:SimLab.Models.Telemetry"
     xmlns:views="clr-namespace:SimLab.Views"
     xmlns:vm="using:SimLab.ViewModels"
-    Padding="16,16,4,16"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vm:SessionsViewModel"
     mc:Ignorable="d">
 
-    <ScrollViewer Padding="0,0,12,0">
-        <Grid RowDefinitions="Auto, Auto, Auto">
-            <StackPanel
-                Grid.Row="0"
-                Orientation="Horizontal"
-                Spacing="8">
+    <DockPanel>
+        <controls1:PageHeader
+            Title="Sessions"
+            DockPanel.Dock="Top"
+            IsBackButtonVisible="False">
+            <StackPanel Orientation="Horizontal" Spacing="8">
                 <Button
                     Command="{Binding StartSessionCommand}"
                     Content="Start Recording"
@@ -35,15 +34,12 @@
                     Content="Compare Laps"
                     IsVisible="{Binding HasMultipleLapSessions}" />
             </StackPanel>
+        </controls1:PageHeader>
 
-            <TextBlock
-                Grid.Row="1"
-                Margin="0,8,0,8"
-                Text="Sessions:" />
 
+        <ScrollViewer Padding="0,0,12,0">
             <ListBox
                 Name="SessionsList"
-                Grid.Row="2"
                 MaxWidth="1000"
                 ItemsSource="{Binding Sessions}">
                 <Interaction.Behaviors>
@@ -90,7 +86,7 @@
                                     Grid.RowSpan="3"
                                     Grid.Column="1"
                                     Margin="4"
-                                    Padding="8"
+                                    Padding="4"
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Center"
                                     Classes="flat"
@@ -105,6 +101,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
+
+    </DockPanel>
 </controls1:PageView>

@@ -42,7 +42,6 @@ public class NavigationService : INavigationService
         _viewModels.Push(viewModel);
         
         _mainWindowViewModel?.CurrentViewModel = viewModel;
-        _mainWindowViewModel?.CanGoBack = CanGoBack;
     }
 
     public void NavigateTo(Type type)
@@ -58,7 +57,6 @@ public class NavigationService : INavigationService
         _viewModels.Push(viewModel);
         
         _mainWindowViewModel?.CurrentViewModel = viewModel;
-        _mainWindowViewModel?.CanGoBack = CanGoBack;
     }
     
     public void GoBack()
@@ -68,7 +66,6 @@ public class NavigationService : INavigationService
             Log.Information("Navigating back");
             _viewModels.Pop();
             _mainWindowViewModel?.CurrentViewModel = _viewModels.Peek();
-            _mainWindowViewModel?.CanGoBack = CanGoBack;
         }
     }
 }
