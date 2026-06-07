@@ -7,6 +7,7 @@ using DialogHostAvalonia;
 using SimLab.Controls;
 using SimLab.Models.Telemetry;
 using SimLab.Services;
+using SimLab.Services.SessionPersist;
 using SimLab.Services.Telemetry;
 
 namespace SimLab.ViewModels;
@@ -31,8 +32,6 @@ public partial class SessionsViewModel : ViewModelBase
         _sessionRepository = sessionRepository;
         _telemetryService = telemetryService;
         _navigationService = navigationService;
-        _sessionRepository.IsRecordingChanged += SessionRepositoryOnIsRecordingChanged;
-        _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
 
         CanStartRecording = _telemetryService.ConnectionStatus == TelemetryConnectionStatus.Connected;
         IsMenuItem = true;
@@ -41,7 +40,12 @@ public partial class SessionsViewModel : ViewModelBase
     private void SessionRepositoryOnIsRecordingChanged(object? sender, bool e)
     {
         OnPropertyChanged(nameof(IsRecording));
-        LoadedAsync().FireAndForgetSafe();
+        
+        // Reload sessions when recording stops
+        if (!IsRecording)
+        {
+            GetSessionsAsync().FireAndForgetSafe();
+        }
     }
 
     private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
@@ -52,10 +56,25 @@ public partial class SessionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task LoadedAsync()
     {
+        _sessionRepository.IsRecordingChanged += SessionRepositoryOnIsRecordingChanged;
+        _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
+        
+        await GetSessionsAsync();
+    }
+    
+    private async Task GetSessionsAsync()
+    {
         var sessions = await _sessionRepository.LoadSessionsAsync();
         Sessions = new ObservableCollection<SessionInfo>(sessions);
         OnPropertyChanged(nameof(Sessions));
         OnPropertyChanged(nameof(HasMultipleLapSessions));
+    }
+
+    [RelayCommand]
+    private void Unloaded()
+    {
+        _sessionRepository.IsRecordingChanged -= SessionRepositoryOnIsRecordingChanged;
+        _telemetryService.TelemetryStatusChanged -= TelemetryServiceOnTelemetryStatusChanged;
     }
 
     [RelayCommand(CanExecute = nameof(CanStartRecording))]

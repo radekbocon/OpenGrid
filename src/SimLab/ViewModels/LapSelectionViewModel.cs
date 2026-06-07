@@ -10,6 +10,7 @@ using SimLab.Converters;
 using SimLab.Models;
 using SimLab.Models.Telemetry;
 using SimLab.Services;
+using SimLab.Services.SessionPersist;
 
 namespace SimLab.ViewModels;
 

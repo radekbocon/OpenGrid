@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SimLab.Services;
+using SimLab.Services.SessionPersist;
 using SimLab.Services.Telemetry;
 using SimLab.ViewModels;
 

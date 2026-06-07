@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using CsvHelper;
 using Serilog;
 using SimLab.Models.Telemetry;
 using SimLab.Services.Telemetry;
 
-namespace SimLab.Services;
+namespace SimLab.Services.SessionPersist;
 
 public class SessionRepository
 {
@@ -18,7 +19,7 @@ public class SessionRepository
     private readonly SessionWriter _sessionWriter;
     private TimeSpan RecordInterval => TimeSpan.FromMilliseconds(1000.0 / _settingsService.RecordingRateHz);
     private DateTime _lastRecordTimestamp;
-    private StreamWriter? _currentFileWriter;
+    private CsvWriter? _currentFileWriter;
 
     public SessionDetails? CurrentSession { get; private set; }
 
@@ -27,6 +28,11 @@ public class SessionRepository
         get;
         private set
         {
+            if (field == value)
+            {
+                return;
+            }
+            
             field = value;
             IsRecordingChanged?.Invoke(this, value);
         }
@@ -95,13 +101,19 @@ public class SessionRepository
 
     public async Task StopRecordingAsync()
     {
-        _telemetryService.TelemetryReceived -= TelemetryServiceOnTelemetryReceived;
-        IsRecording = false;
-
-        if (CurrentSession is not null)
+        try
         {
-            FinalizeCurrentSession();
-            CurrentSession = null;
+            _telemetryService.TelemetryReceived -= TelemetryServiceOnTelemetryReceived;
+
+            if (CurrentSession is not null)
+            {
+                FinalizeCurrentSession();
+                CurrentSession = null;
+            }
+        }
+        finally
+        {
+            IsRecording = false;
         }
     }
 

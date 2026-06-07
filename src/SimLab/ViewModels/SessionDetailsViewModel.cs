@@ -10,6 +10,7 @@ using SimLab.Controls;
 using SimLab.Models;
 using SimLab.Models.Telemetry;
 using SimLab.Services;
+using SimLab.Services.SessionPersist;
 using SkiaSharp;
 
 namespace SimLab.ViewModels;

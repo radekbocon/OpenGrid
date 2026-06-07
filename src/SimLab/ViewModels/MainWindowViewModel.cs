@@ -11,6 +11,7 @@ using Material.Icons;
 using SimLab.Controls;
 using SimLab.Models;
 using SimLab.Services;
+using SimLab.Services.SessionPersist;
 using SimLab.Services.Telemetry;
 
 namespace SimLab.ViewModels;
