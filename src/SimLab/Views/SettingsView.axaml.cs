@@ -1,8 +1,8 @@
-using Avalonia.Controls;
+using SimLab.Controls;
 
 namespace SimLab.Views;
 
-public partial class SettingsView : UserControl
+public partial class SettingsView : PageView
 {
     public SettingsView()
     {

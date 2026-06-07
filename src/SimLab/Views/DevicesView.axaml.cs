@@ -1,10 +1,8 @@
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+using SimLab.Controls;
 
 namespace SimLab.Views;
 
-public partial class DevicesView : UserControl
+public partial class DevicesView : PageView
 {
     public DevicesView()
     {

@@ -1,10 +1,8 @@
-using Avalonia.Controls;
-using Avalonia.Interactivity;
-using SimLab.ViewModels;
+using SimLab.Controls;
 
 namespace SimLab.Views;
 
-public partial class HomeView : UserControl
+public partial class HomeView : PageView
 {
     public HomeView()
     {

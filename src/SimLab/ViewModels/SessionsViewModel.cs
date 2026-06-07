@@ -53,13 +53,21 @@ public partial class SessionsViewModel : ViewModelBase
         CanStartRecording = e == TelemetryConnectionStatus.Connected;
     }
 
-    [RelayCommand]
-    private async Task LoadedAsync()
+    protected override async Task OnLoadedAsync()
     {
         _sessionRepository.IsRecordingChanged += SessionRepositoryOnIsRecordingChanged;
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
-        
         await GetSessionsAsync();
+        
+        await base.OnLoadedAsync();
+    }
+    
+    protected override Task OnUnloadedAsync()
+    {
+        _sessionRepository.IsRecordingChanged -= SessionRepositoryOnIsRecordingChanged;
+        _telemetryService.TelemetryStatusChanged -= TelemetryServiceOnTelemetryStatusChanged;
+        
+        return base.OnUnloadedAsync();
     }
     
     private async Task GetSessionsAsync()
@@ -68,13 +76,6 @@ public partial class SessionsViewModel : ViewModelBase
         Sessions = new ObservableCollection<SessionInfo>(sessions);
         OnPropertyChanged(nameof(Sessions));
         OnPropertyChanged(nameof(HasMultipleLapSessions));
-    }
-
-    [RelayCommand]
-    private void Unloaded()
-    {
-        _sessionRepository.IsRecordingChanged -= SessionRepositoryOnIsRecordingChanged;
-        _telemetryService.TelemetryStatusChanged -= TelemetryServiceOnTelemetryStatusChanged;
     }
 
     [RelayCommand(CanExecute = nameof(CanStartRecording))]

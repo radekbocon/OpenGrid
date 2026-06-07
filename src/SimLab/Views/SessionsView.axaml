@@ -1,9 +1,10 @@
-<UserControl
+<controls1:PageView
     x:Class="SimLab.Views.SessionsView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+    xmlns:controls1="clr-namespace:SimLab.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:telemetry="clr-namespace:SimLab.Models.Telemetry"
@@ -14,15 +15,6 @@
     d:DesignWidth="800"
     x:DataType="vm:SessionsViewModel"
     mc:Ignorable="d">
-
-    <Interaction.Behaviors>
-        <EventTriggerBehavior EventName="AttachedToVisualTree">
-            <InvokeCommandAction Command="{Binding LoadedCommand}" />
-        </EventTriggerBehavior>
-        <EventTriggerBehavior EventName="DetachedFromVisualTree">
-            <InvokeCommandAction Command="{Binding UnloadedCommand}" />
-        </EventTriggerBehavior>
-    </Interaction.Behaviors>
 
     <ScrollViewer Padding="0,0,12,0">
         <Grid RowDefinitions="Auto, Auto, Auto">
@@ -115,4 +107,4 @@
             </ListBox>
         </Grid>
     </ScrollViewer>
-</UserControl>
+</controls1:PageView>

@@ -24,19 +24,21 @@ public partial class HomeViewModel : ViewModelBase
         IsMenuItem = true;
     }
 
-    [RelayCommand]
-    private void Loaded()
+    protected override Task OnLoadedAsync()
     {
         _steamGameManager.GameStarted += OnSteamGameStarted;
         _steamGameManager.GameStopped += OnSteamGameStopped;
         SetInstalledGames();
+        
+        return base.OnLoadedAsync();
     }
 
-    [RelayCommand]
-    private void Unloaded()
+    protected override Task OnUnloadedAsync()
     {
         _steamGameManager.GameStarted -= OnSteamGameStarted;
         _steamGameManager.GameStopped -= OnSteamGameStopped;
+        
+        return base.OnUnloadedAsync();
     }
 
     [RelayCommand]

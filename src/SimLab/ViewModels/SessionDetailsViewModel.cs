@@ -26,7 +26,7 @@ public partial class SessionDetailsViewModel : ViewModelBase
     private readonly SessionRepository _sessionRepository;
     private readonly INavigationService _navigationService;
     private SessionDetails? _details;
-
+    
     [ObservableProperty]
     public partial string Title { get; private set; } = string.Empty;
 

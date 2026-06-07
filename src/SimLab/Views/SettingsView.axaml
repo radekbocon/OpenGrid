@@ -1,8 +1,9 @@
-<UserControl
+<controls1:PageView
     x:Class="SimLab.Views.SettingsView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+    xmlns:controls1="clr-namespace:SimLab.Controls"
     xmlns:converters="using:SimLab.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -107,4 +108,4 @@
 
     </StackPanel>
 
-</UserControl>
+</controls1:PageView>

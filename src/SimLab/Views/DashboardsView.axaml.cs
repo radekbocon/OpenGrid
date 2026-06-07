@@ -1,8 +1,8 @@
-using Avalonia.Controls;
+using SimLab.Controls;
 
 namespace SimLab.Views;
 
-public partial class DashboardsView : UserControl
+public partial class DashboardsView : PageView
 {
     public DashboardsView()
     {
