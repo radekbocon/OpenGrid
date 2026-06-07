@@ -4,9 +4,9 @@
   <metadata_license>MIT</metadata_license>
   <project_license>GPL-3.0</project_license>
   <name>SimLab</name>
-  <summary>Linux desktop telemetry app for sim racing games</summary>
+  <summary>Telemetry and dashboard tool for sim racing games with live overlays, data capture, and session analysis.</summary>
   <description>
-    <p>A Linux desktop telemetry app for sim racing games.</p>
+    <p>Telemetry and dashboard tool for sim racing games with live overlays, data capture, and session analysis.</p>
   </description>
   <categories>
     <category>Utility</category>

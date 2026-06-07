@@ -54,7 +54,7 @@
                     Grid.Column="0"
                     VerticalAlignment="Center"
                     Classes="Body2"
-                    Text="Minimize to Tray" />
+                    Text="Close to Tray" />
                 <ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTray}" />
             </Grid>
         </controls:Card>
