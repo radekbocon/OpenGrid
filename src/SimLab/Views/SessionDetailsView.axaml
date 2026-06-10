@@ -76,7 +76,7 @@
                 <StackPanel
                     Grid.Column="0"
                     IsVisible="{Binding ShowLapDetails}"
-                    Spacing="4">
+                    Spacing="8">
                     <controls1:Card>
                         <controls:LapTableControl
                             DeleteLapCommand="{Binding DeleteLapCommand}"
