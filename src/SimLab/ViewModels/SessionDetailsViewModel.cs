@@ -269,7 +269,7 @@ public partial class SessionDetailsViewModel : ViewModelBase
                 new SubplotDefinition { Title = "Speed", Series = [.. speedSeries], YLabeler = _integerLabeler },
                 new SubplotDefinition { Title = "Gear", Series = [.. gearSeries], YLabeler = _gearLabeler, YMinLimit = 0, YMaxLimit = 7 },
                 new SubplotDefinition { Title = "RPM", Series = [.. rpmSeries], YLabeler = _integerLabeler, YMinLimit = 0 },
-                new SubplotDefinition { Title = "G-Forces", Series = [.. gForceLatSeries], YLabeler = _gForceLabeler },
+                new SubplotDefinition { Title = "Lateral G-Forces", Series = [.. gForceLatSeries], YLabeler = _gForceLabeler },
             ];
 
             var trackSeries = new List<TrackMapSeries>();
