@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Reflection;
 using Avalonia.Controls;
@@ -16,6 +17,8 @@ public partial class AboutDialog : UserControl
         {
             VersionText.Text = version.ToString();
         }
+
+        CopyrightTextBlock.Text = $"© {DateTime.Now.Year} Radoslaw Bocon";
     }
 
     private void CloseClick(object? sender, RoutedEventArgs e)

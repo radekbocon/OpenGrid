@@ -47,14 +47,16 @@
                 Opacity="0.6"
                 Text="License" />
             <TextBlock
+                Name="CopyrightTextBlock"
                 Classes="Body2"
                 Opacity="0.8"
-                TextWrapping="Wrap">
-                © 2026 Radoslaw Bocon<LineBreak />
-                This software is provided as is and without any warranty.</TextBlock>
-            <HyperlinkButton NavigateUri="https://www.gnu.org/licenses/gpl-3.0.html">
-                GNU General Public License v3
-            </HyperlinkButton>
+                TextWrapping="Wrap" />
+            <TextBlock
+                Classes="Body2"
+                Opacity="0.8"
+                Text="This software is provided 'as is' and without any warranty."
+                TextWrapping="Wrap" />
+            <HyperlinkButton Content="GNU General Public License v3" NavigateUri="https://www.gnu.org/licenses/gpl-3.0.html" />
 
         </StackPanel>
 
