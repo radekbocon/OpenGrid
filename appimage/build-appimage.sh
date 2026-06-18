@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_ID="io.github.radekbocon.SimLab"
-APP_NAME="SimLab"
+APP_ID="io.github.radekbocon.OpenGrid"
+APP_NAME="OpenGrid"
 APP_DIRNAME="simlab"
 LINUX_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(dirname "$LINUX_DIR")"
@@ -44,7 +44,7 @@ check_deps() {
 # ------------------------------------------------------------------
 publish_app() {
     print_step "Publishing $APP_NAME for linux-x64..."
-    dotnet publish "$SRC_DIR/SimLab/SimLab.csproj" \
+    dotnet publish "$SRC_DIR/OpenGrid/OpenGrid.csproj" \
         -c Release \
         -r linux-x64 \
         --self-contained true \
@@ -53,8 +53,8 @@ publish_app() {
         -o "$PUBLISH_DIR" \
         --nologo
 
-    print_step "Publishing SimLabBridge for win-x64..."
-    dotnet publish "$SRC_DIR/SimLabBridge/SimLabBridge.csproj" \
+    print_step "Publishing OpenGridBridge for win-x64..."
+    dotnet publish "$SRC_DIR/OpenGridBridge/OpenGridBridge.csproj" \
         -c Release \
         -r win-x64 \
         --self-contained true \

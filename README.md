@@ -1,4 +1,4 @@
-# SimLab
+# OpenGrid
 
 A Linux desktop telemetry app for sim racing games. Includes and launches shared memory bridge. Veeery much work in progress.
 
@@ -27,8 +27,8 @@ Follows the **MVVM pattern** using `CommunityToolkit.Mvvm` with dependency injec
 
 ### Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) - SimLab
-- [.NET 8 SDK](https://dotnet.microsoft.com/download) - SimLabBridge
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) - OpenGrid
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) - OpenGridBridge
 - [Avalonia UI](https://docs.avaloniaui.net/docs/get-started/)
 
 ### Build & Run
@@ -36,10 +36,10 @@ Follows the **MVVM pattern** using `CommunityToolkit.Mvvm` with dependency injec
 ```bash
 cd src
 dotnet build
-dotnet run --project SimLab
+dotnet run --project OpenGrid
 ```
 
-The build automatically publishes `SimLabBridge` as a single-file Win-x64 executable alongside the main output.
+The build automatically publishes `OpenGridBridge` as a single-file Win-x64 executable alongside the main output.
 
 ## TODO
 
