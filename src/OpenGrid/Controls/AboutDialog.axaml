@@ -1,0 +1,83 @@
+<UserControl
+    x:Class="OpenGrid.Controls.AboutDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    Width="400">
+    <Grid
+        Margin="8,8,8,16"
+        RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+        RowSpacing="16">
+        <Border Grid.Row="0" HorizontalAlignment="Right">
+            <Button
+                Padding="8"
+                Classes="Flat"
+                Click="CloseClick"
+                Content="{avalonia:MaterialIconExt Kind=Close,
+                                                   IconSize=24}" />
+        </Border>
+
+        <StackPanel
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            Orientation="Vertical"
+            Spacing="8">
+            <Image
+                Width="100"
+                Height="100"
+                Source="../Assets/icon.png" />
+            <TextBlock
+                x:Name="VersionText"
+                HorizontalAlignment="Center"
+                FontSize="14"
+                Opacity="0.7" />
+        </StackPanel>
+
+        <Border
+            Grid.Row="2"
+            Height="1"
+            Background="{DynamicResource MaterialDividerBrush}" />
+
+        <StackPanel
+            Grid.Row="3"
+            Orientation="Vertical"
+            Spacing="4">
+            <TextBlock
+                FontSize="13"
+                Opacity="0.6"
+                Text="License" />
+            <TextBlock
+                Name="CopyrightTextBlock"
+                Classes="Body2"
+                Opacity="0.8"
+                TextWrapping="Wrap" />
+            <TextBlock
+                Classes="Body2"
+                Opacity="0.8"
+                Text="This software is provided 'as is' and without any warranty."
+                TextWrapping="Wrap" />
+            <HyperlinkButton Content="GNU General Public License v3" NavigateUri="https://www.gnu.org/licenses/gpl-3.0.html" />
+
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="4"
+            HorizontalAlignment="Center"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button
+                MinWidth="200"
+                Click="ReportIssueClick"
+                Theme="{StaticResource MaterialOutlineButton}">
+                <Grid ColumnDefinitions="Auto, *" ColumnSpacing="8">
+                    <TextBlock
+                        Grid.Column="0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Text="Report Issue" />
+                    <avalonia:MaterialIcon Grid.Column="1" Kind="ExternalLink" />
+                </Grid>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,165 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Serilog;
+using OpenGrid.Models;
+
+namespace OpenGrid.Services.Telemetry;
+
+/// <summary>
+/// Service for reading telemetry data from shared files written by the bridge
+/// Polls the shared memory files continuously for new data
+/// </summary>
+public class TelemetryService : ITelemetryService
+{
+    private const int PollIntervalMs = 1000 / 120;
+
+    private readonly List<ITelemetryClient> _telemetryClients;
+    private readonly SharedMemoryBridgeLauncher _sharedMemoryBridgeLauncher;
+    private readonly SteamWatcher _steamWatcher;
+
+    private ITelemetryClient? _telemetryClient;
+
+    private CancellationTokenSource? _cancellationTokenSource;
+    private bool _disposed;
+
+    public event EventHandler<TelemetryEventArgs>? TelemetryReceived;
+    public event EventHandler<TelemetryConnectionStatus>? TelemetryStatusChanged;
+
+    public TelemetryConnectionStatus ConnectionStatus
+    {
+        get;
+        private set
+        {
+            field = value;
+            TelemetryStatusChanged?.Invoke(this, value);
+        }
+    }
+
+    public SteamGame? CurrentGame { get; private set; }
+
+    public TelemetryService(IEnumerable<ITelemetryClient> telemetryClients,
+        SharedMemoryBridgeLauncher sharedMemoryBridgeLauncher, SteamWatcher steamWatcher)
+    {
+        _telemetryClients = telemetryClients.ToList();
+        _sharedMemoryBridgeLauncher = sharedMemoryBridgeLauncher;
+        _steamWatcher = steamWatcher;
+
+        _steamWatcher.GameStopped += SteamWatcherOnGameStopped;
+    }
+
+    public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
+    {
+        try
+        {
+            _disposed = false;
+            CurrentGame = game;
+            ConnectionStatus = TelemetryConnectionStatus.Connecting;
+
+            _telemetryClient = _telemetryClients.First(x => x.GetType() == game.TelemetryClientType);
+
+            if (game.RequiresSharedMemoryBridge)
+            {
+                await _sharedMemoryBridgeLauncher.LaunchBridgeAsync(game, cancellationToken);
+            }
+
+            var result = await _telemetryClient.ConnectAsync(cancellationToken);
+            ConnectionStatus = result ? TelemetryConnectionStatus.Connected : TelemetryConnectionStatus.Disconnected;
+
+            return result;
+        }
+        catch (Exception e)
+        {
+            ConnectionStatus = TelemetryConnectionStatus.Error;
+            Log.Error(e, "Error connecting to telemetry: {0}", e.Message);
+            return false;
+        }
+    }
+
+    public void StartReading()
+    {
+        if (ConnectionStatus != TelemetryConnectionStatus.Connected)
+        {
+            Log.Warning("Cannot start reading telemetry: not connected");
+            return;
+        }
+
+        try
+        {
+            _cancellationTokenSource = new CancellationTokenSource();
+            _ = ReadPollingLoopAsync(_cancellationTokenSource.Token);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error starting reading telemetry: {0}", ex.Message);
+            ConnectionStatus = TelemetryConnectionStatus.Disconnected;
+        }
+    }
+
+    public void StopReading()
+    {
+        ConnectionStatus = TelemetryConnectionStatus.Disconnected;
+        _sharedMemoryBridgeLauncher.StopBridge();
+        _telemetryClient?.Stop();
+        _telemetryClient = null;
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = null;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        StopReading();
+        _disposed = true;
+    }
+
+    private void SteamWatcherOnGameStopped(SteamGameProcess gameProcess)
+    {
+        if (CurrentGame?.AppId == gameProcess.SteamGame.AppId)
+        {
+            Dispose();
+        }
+    }
+
+    private async Task ReadPollingLoopAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                var snapshot = _telemetryClient?.ReadTelemetry();
+                if (snapshot != null && CurrentGame != null)
+                {
+                    TelemetryReceived?.Invoke(this, new TelemetryEventArgs(CurrentGame, snapshot));
+                }
+
+                await Task.Delay(PollIntervalMs, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                ConnectionStatus = TelemetryConnectionStatus.Disconnected;
+                break;
+            }
+            catch (Exception)
+            {
+                ConnectionStatus = TelemetryConnectionStatus.Disconnected;
+                await Task.Delay(1000, cancellationToken); // Wait longer on error
+            }
+        }
+    }
+}
+
+public enum TelemetryConnectionStatus
+{
+    Disconnected,
+    Connecting,
+    Connected,
+    Error
+}

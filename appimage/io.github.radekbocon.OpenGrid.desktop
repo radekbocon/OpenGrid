@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=OpenGrid
+Comment=Telemetry and dashboard tool for sim racing games with live overlays, data capture, and session analysis.
+Exec=OpenGrid
+Icon=io.github.radekbocon.OpenGrid
+Type=Application
+Categories=Utility;
+Terminal=false
+StartupNotify=true
