@@ -1,0 +1,24 @@
+using OpenGrid.Converters;
+using OpenGrid.Models;
+using OpenGrid.Models.Telemetry;
+using SkiaSharp;
+
+namespace OpenGrid.ViewModels;
+
+public record LapComparisonItem
+{
+    public Lap Lap { get; }
+    public SessionInfo SessionInfo { get; }
+    public int ColorIndex { get; }
+    public SKColor Color => ColorPalette.GetColor(ColorIndex);
+
+    public string DisplayName => $"{SessionInfo.Car} - Lap {Lap.Number} ({LapTimeConverter.Format(Lap.Time)})";
+    public string ShortName => $"Lap {Lap.Number}";
+
+    public LapComparisonItem(Lap lap, SessionInfo sessionInfo, int colorIndex)
+    {
+        Lap = lap;
+        SessionInfo = sessionInfo;
+        ColorIndex = colorIndex;
+    }
+}

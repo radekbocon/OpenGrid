@@ -1,0 +1,111 @@
+<controls1:PageView
+    x:Class="OpenGrid.Views.SettingsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+    xmlns:controls1="clr-namespace:OpenGrid.Controls"
+    xmlns:converters="using:OpenGrid.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:OpenGrid.ViewModels"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vm:SettingsViewModel"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:ValueEqualsConverter x:Key="ValueEqualsConverter" />
+    </UserControl.Resources>
+
+    <StackPanel
+        MaxWidth="1000"
+        Margin="24"
+        Spacing="8">
+        <TextBlock
+            Classes="Subtitle1"
+            FontWeight="SemiBold"
+            Text="Appearance" />
+        <controls:Card Padding="16,8">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Body2"
+                    Text="Theme" />
+                <ComboBox
+                    Grid.Column="1"
+                    Width="160"
+                    HorizontalAlignment="Right"
+                    DisplayMemberBinding="{Binding Name}"
+                    ItemsSource="{Binding Themes}"
+                    SelectedItem="{Binding SelectedTheme}"
+                    Theme="{StaticResource MaterialFilledComboBox}" />
+            </Grid>
+        </controls:Card>
+
+        <TextBlock
+            Margin="0,16,0,0"
+            Classes="Subtitle1"
+            FontWeight="SemiBold"
+            Text="General" />
+        <controls:Card Padding="16,16">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Body2"
+                    Text="Close to Tray" />
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding MinimizeToTray}" />
+            </Grid>
+        </controls:Card>
+
+        <TextBlock
+            Margin="0,16,0,0"
+            Classes="Subtitle1"
+            FontWeight="SemiBold"
+            Text="Recording" />
+        <controls:Card Padding="16,8">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Body2"
+                    Text="Session Recording Rate" />
+                <controls:Card
+                    Grid.Column="1"
+                    Padding="0"
+                    InsideClipping="True">
+                    <controls:Card.Styles>
+                        <Style Selector="RadioButton">
+                            <Setter Property="Theme" Value="{StaticResource MaterialButtonlikeRadioButton}" />
+                        </Style>
+                    </controls:Card.Styles>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton
+                            Classes="light"
+                            Content="8 Hz"
+                            GroupName="RecordingRate"
+                            IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=8}" />
+                        <RadioButton
+                            Classes="light"
+                            Content="15 Hz"
+                            GroupName="RecordingRate"
+                            IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=15}" />
+                        <RadioButton
+                            Classes="light"
+                            Content="30 Hz"
+                            GroupName="RecordingRate"
+                            IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=30}" />
+                        <RadioButton
+                            Classes="light"
+                            Content="60 Hz"
+                            GroupName="RecordingRate"
+                            IsChecked="{Binding RecordingRateHz, Converter={StaticResource ValueEqualsConverter}, ConverterParameter=60}" />
+                    </StackPanel>
+                </controls:Card>
+            </Grid>
+        </controls:Card>
+
+    </StackPanel>
+
+</controls1:PageView>

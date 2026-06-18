@@ -1,0 +1,132 @@
+<Window
+    x:Class="OpenGrid.Views.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogHostAvalonia="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:OpenGrid.Models"
+    xmlns:vm="using:OpenGrid.ViewModels"
+    Title="OpenGrid"
+    d:DesignHeight="700"
+    d:DesignWidth="1000"
+    x:DataType="vm:MainWindowViewModel"
+    Icon="/Assets/icon.png"
+    mc:Ignorable="d">
+
+    <dialogHostAvalonia:DialogHost
+        Background="{DynamicResource MaterialCardBackgroundBrush}"
+        BlurBackground="True"
+        OverlayBackground="#90000000">
+        <dialogHostAvalonia:DialogHost.DialogContent>
+            <ContentPresenter />
+        </dialogHostAvalonia:DialogHost.DialogContent>
+        <DockPanel>
+            <!--  Side Bar  -->
+            <StackPanel
+                Name="SideBar"
+                Width="220"
+                VerticalAlignment="Stretch"
+                Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}"
+                DockPanel.Dock="Left">
+                <Grid
+                    Margin="8"
+                    ColumnDefinitions="Auto, *"
+                    ColumnSpacing="8">
+                    <Image
+                        Grid.Column="0"
+                        Height="48"
+                        Margin="8,0,0,0"
+                        Source="../Assets/logo.png" />
+                    <Button
+                        Grid.Column="1"
+                        Padding="4"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Classes="Flat"
+                        Content="{avalonia:MaterialIconExt DotsVertical,
+                                                           IconSize=24}">
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuItem
+                                    Padding="4"
+                                    Command="{Binding StartRecordingCommand}"
+                                    Header="Start Recording Session"
+                                    IsEnabled="{Binding CanStartRecording}">
+                                    <MenuItem.Icon>
+                                        <avalonia:MaterialIcon Kind="Record" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem
+                                    Padding="4"
+                                    Command="{Binding StopRecordingCommand}"
+                                    Header="Stop Recording Session"
+                                    IsEnabled="{Binding CanStopRecording}">
+                                    <MenuItem.Icon>
+                                        <avalonia:MaterialIcon Kind="Stop" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="-" />
+                                <MenuItem
+                                    Padding="4"
+                                    Command="{Binding ShowLogsFolderCommand}"
+                                    Header="Open Logs Folder">
+                                    <MenuItem.Icon>
+                                        <avalonia:MaterialIcon Kind="FolderOpen" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem
+                                    Padding="4"
+                                    Command="{Binding ProjectPageCommand}"
+                                    Header="Project Page">
+                                    <MenuItem.Icon>
+                                        <avalonia:MaterialIcon Kind="Github" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem
+                                    Padding="4"
+                                    Command="{Binding AboutCommand}"
+                                    Header="About OpenGrid">
+                                    <MenuItem.Icon>
+                                        <avalonia:MaterialIcon Kind="InformationOutline" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </Grid>
+                <ListBox
+                    Name="MenuItems"
+                    VerticalAlignment="Stretch"
+                    ItemsSource="{Binding MenuItems}"
+                    SelectedItem="{Binding SelectedMenuItem}">
+                    <Interaction.Behaviors>
+                        <EventTriggerBehavior EventName="SelectionChanged">
+                            <InvokeCommandAction Command="{Binding SelectMenuItemCommand}" CommandParameter="{Binding #MenuItems.SelectedItem}" />
+                        </EventTriggerBehavior>
+                    </Interaction.Behaviors>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:MenuItem">
+                            <Grid Margin="4" ColumnDefinitions="Auto,*">
+                                <avalonia:MaterialIcon
+                                    Width="24"
+                                    Height="24"
+                                    Kind="{Binding Icon}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Classes="Subtitle1"
+                                    Text="{Binding Label}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+
+            <!--  Content Area  -->
+            <ContentControl Content="{Binding CurrentViewModel}" />
+        </DockPanel>
+    </dialogHostAvalonia:DialogHost>
+</Window>

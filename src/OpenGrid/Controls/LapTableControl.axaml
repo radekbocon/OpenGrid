@@ -1,0 +1,121 @@
+<UserControl
+    x:Class="OpenGrid.Controls.LapTableControl"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:conv="clr-namespace:OpenGrid.Converters"
+    xmlns:telemetry="clr-namespace:OpenGrid.Models.Telemetry"
+    x:Name="Root"
+    x:CompileBindings="False">
+
+    <UserControl.Resources>
+        <conv:LapTimeConverter x:Key="LapTimeConverter" />
+    </UserControl.Resources>
+
+    <Grid Grid.IsSharedSizeScope="True" RowDefinitions="Auto,*">
+        <Grid
+            Grid.Row="0"
+            Margin="8,4"
+            ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="Col0" />
+                <ColumnDefinition Width="*" SharedSizeGroup="Col1" />
+                <ColumnDefinition Width="*" SharedSizeGroup="Col2" />
+                <ColumnDefinition Width="*" SharedSizeGroup="Col3" />
+                <ColumnDefinition Width="*" SharedSizeGroup="Col4" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="Col5" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="Col6" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                Grid.Column="0"
+                FontWeight="Bold"
+                Text="Lap#"
+                TextAlignment="Left" />
+            <TextBlock
+                Grid.Column="1"
+                FontWeight="Bold"
+                Text="Time"
+                TextAlignment="Left" />
+            <TextBlock
+                Grid.Column="2"
+                FontWeight="Bold"
+                Text="S1"
+                TextAlignment="Left" />
+            <TextBlock
+                Grid.Column="3"
+                FontWeight="Bold"
+                Text="S2"
+                TextAlignment="Left" />
+            <TextBlock
+                Grid.Column="4"
+                FontWeight="Bold"
+                Text="S3"
+                TextAlignment="Left" />
+            <TextBlock
+                Grid.Column="5"
+                FontWeight="Bold"
+                Text="Valid"
+                TextAlignment="Left" />
+        </Grid>
+        <ListBox
+            Grid.Row="1"
+            ItemsSource="{Binding #Root.Laps}"
+            SelectedItem="{Binding #Root.SelectedLap}">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="telemetry:Lap">
+                    <Grid Margin="8,2" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Col0" />
+                            <ColumnDefinition Width="*" SharedSizeGroup="Col1" />
+                            <ColumnDefinition Width="*" SharedSizeGroup="Col2" />
+                            <ColumnDefinition Width="*" SharedSizeGroup="Col3" />
+                            <ColumnDefinition Width="*" SharedSizeGroup="Col4" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Col5" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Col6" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="{Binding Number}"
+                            TextAlignment="Left" />
+                        <TextBlock
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Classes.FastestLap="{Binding IsFastest}"
+                            Text="{Binding Time, Converter={StaticResource LapTimeConverter}}"
+                            TextAlignment="Left" />
+                        <TextBlock
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            Text="{Binding Sector1Time, Converter={StaticResource LapTimeConverter}}"
+                            TextAlignment="Left" />
+                        <TextBlock
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            Text="{Binding Sector2Time, Converter={StaticResource LapTimeConverter}}"
+                            TextAlignment="Left" />
+                        <TextBlock
+                            Grid.Column="4"
+                            VerticalAlignment="Center"
+                            Text="{Binding Sector3Time, Converter={StaticResource LapTimeConverter}}"
+                            TextAlignment="Left" />
+                        <TextBlock
+                            Grid.Column="5"
+                            VerticalAlignment="Center"
+                            Text="{Binding IsValid}"
+                            TextAlignment="Left" />
+                        <Button
+                            Grid.Column="6"
+                            Padding="4"
+                            Classes="Flat"
+                            Command="{Binding #Root.DeleteLapCommand}"
+                            CommandParameter="{Binding}"
+                            ToolTip.Tip="Delete lap">
+                            <avalonia:MaterialIcon IconSize="18" Kind="Delete" />
+                        </Button>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>

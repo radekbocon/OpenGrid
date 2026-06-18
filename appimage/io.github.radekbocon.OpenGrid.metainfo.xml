@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.radekbocon.OpenGrid</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>GPL-3.0</project_license>
+  <name>OpenGrid</name>
+  <summary>Telemetry and dashboard tool for sim racing games with live overlays, data capture, and session analysis.</summary>
+  <description>
+    <p>Telemetry and dashboard tool for sim racing games with live overlays, data capture, and session analysis.</p>
+  </description>
+  <categories>
+    <category>Utility</category>
+  </categories>
+  <url type="homepage">https://github.com/radekbocon/OpenGrid</url>
+  <url type="vcs-browser">https://github.com/radekbocon/OpenGrid</url>
+  <launchable type="desktop-id">io.github.radekbocon.OpenGrid.desktop</launchable>
+  <releases>
+    <release version="0.1.0" date="2026-05-10" />
+  </releases>
+  <content_rating type="oars-1.1" />
+</component>
