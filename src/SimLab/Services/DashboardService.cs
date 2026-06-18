@@ -8,7 +8,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -22,15 +21,16 @@ namespace SimLab.Services;
 
 public class DashboardService : IDashboardService
 {
+    private static string? _frameworkTemplate;
+    
     private readonly ITelemetryService _telemetryService;
     private readonly ISettingsService _settingsService;
     private readonly IDashboardRepository _repository;
-    private TcpListener? _listener;
+    private HttpListener? _listener;
     private CancellationTokenSource? _cts;
     private readonly ConcurrentDictionary<WebSocket, byte> _connectedSockets = [];
-    private readonly ConcurrentDictionary<string, ConcurrentDictionary<WebSocket, byte>> _deviceSockets = new(StringComparer.OrdinalIgnoreCase);
 
-    public bool IsRunning => _listener is not null;
+    public bool IsRunning => _listener is { IsListening: true};
     public int Port { get; private set; }
     public DashboardInfo? ActiveDashboard { get; private set; }
 
@@ -57,10 +57,7 @@ public class DashboardService : IDashboardService
         EnsureRunning();
     }
 
-    public string GetUrl(bool useNetwork)
-    {
-        return useNetwork ? NetworkUrl : LocalUrl;
-    }
+    public string GetUrl(bool useNetwork) => useNetwork ? NetworkUrl : LocalUrl;
 
     public void OpenInBrowser()
     {
@@ -87,6 +84,7 @@ public class DashboardService : IDashboardService
         _telemetryService.TelemetryReceived -= OnTelemetryReceived;
         _cts?.Cancel();
         _listener?.Stop();
+        _listener?.Close();
         _listener = null;
         IsRunningChanged?.Invoke(this, false);
 
@@ -98,11 +96,10 @@ public class DashboardService : IDashboardService
             }
             catch
             {
-                // ignored
+                // ignore
             }
         }
         _connectedSockets.Clear();
-        _deviceSockets.Clear();
 
         Log.Information("Dashboard HTTP server stopped");
     }
@@ -121,7 +118,8 @@ public class DashboardService : IDashboardService
             Port = FindFreePort();
         }
 
-        _listener = new TcpListener(IPAddress.Any, Port);
+        _listener = new HttpListener();
+        _listener.Prefixes.Add($"http://*:{Port}/");
         _listener.Start();
         _settingsService.DashboardPort = Port;
         _cts = new CancellationTokenSource();
@@ -135,7 +133,8 @@ public class DashboardService : IDashboardService
     {
         try
         {
-            using var listener = new TcpListener(IPAddress.Loopback, port);
+            using var listener = new HttpListener();
+            listener.Prefixes.Add($"http://127.0.0.1:{port}/");
             listener.Start();
             listener.Stop();
             return true;
@@ -183,14 +182,13 @@ public class DashboardService : IDashboardService
         foreach (var dead in deadSockets)
         {
             _connectedSockets.TryRemove(dead, out _);
-            RemoveDeviceSocket(dead);
             try
             {
                 dead.Dispose();
             }
             catch
             {
-                // ignored
+                // ignore
             }
         }
     }
@@ -201,10 +199,11 @@ public class DashboardService : IDashboardService
         {
             try
             {
-                var client = await _listener!.AcceptTcpClientAsync(ct);
-                _ = HandleConnectionAsync(client, ct);
+                var context = await _listener!.GetContextAsync().WaitAsync(ct);
+                _ = HandleConnectionAsync(context, ct);
             }
             catch (OperationCanceledException) { break; }
+            catch (HttpListenerException) { break; }
             catch (ObjectDisposedException) { break; }
             catch (Exception ex)
             {
@@ -213,121 +212,69 @@ public class DashboardService : IDashboardService
         }
     }
 
-    private async Task HandleConnectionAsync(TcpClient client, CancellationToken ct)
+    private async Task HandleConnectionAsync(HttpListenerContext context, CancellationToken ct)
     {
-        var remoteIp = ((IPEndPoint)client.Client.RemoteEndPoint!).Address.ToString();
+        var remoteIp = context.Request.RemoteEndPoint.Address.ToString();
         try
         {
-            using var stream = client.GetStream();
-            var buffer = new byte[8192];
-            var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, ct);
-            if (bytesRead == 0) return;
+            var request = context.Request;
+            var path = request.Url?.AbsolutePath ?? "/";
 
-            var request = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            var lines = request.Split("\r\n");
-            if (lines.Length == 0) return;
-
-            var requestLine = lines[0];
-            var parts = requestLine.Split(' ');
-            if (parts.Length < 2) return;
-
-            var method = parts[0];
-            var path = parts[1];
-
-            var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var line in lines.Skip(1))
+            if (request.IsWebSocketRequest)
             {
-                if (string.IsNullOrEmpty(line)) break;
-                var colonIdx = line.IndexOf(':');
-                if (colonIdx > 0)
-                {
-                    var key = line[..colonIdx].Trim();
-                    var value = line[(colonIdx + 1)..].Trim();
-                    headers[key] = value;
-                }
-            }
-
-            if (method == "GET" && path == "/ws" &&
-                headers.TryGetValue("Upgrade", out var upgrade) &&
-                upgrade.Equals("websocket", StringComparison.OrdinalIgnoreCase))
-            {
-                await HandleWebSocketUpgrade(stream, headers, ct, remoteIp);
+                await HandleWebSocketUpgrade(context, ct, remoteIp);
                 return;
             }
 
-            if (method == "GET")
+            if (request.HttpMethod == "GET")
             {
                 var queryIdx = path.IndexOf('?');
                 var pathOnly = queryIdx >= 0 ? path[..queryIdx] : path;
 
-                if (pathOnly == "/api/dashboards")
+                switch (pathOnly)
                 {
-                    await ServeDashboardList(stream, ct);
-                    return;
+                    case "/api/dashboards":
+                        await ServeDashboardList(context, ct);
+                        break;
+                    case not null when pathOnly.StartsWith("/api/dashboard/"):
+                        await ServeDashboardApi(context, pathOnly, ct);
+                        break;
+                    default:
+                        await ServeFile(context, pathOnly!, ct);
+                        break;
                 }
-
-                if (pathOnly.StartsWith("/api/dashboard/"))
-                {
-                    await ServeDashboardApi(stream, pathOnly, ct);
-                    return;
-                }
-
-                await ServeFile(stream, pathOnly, ct);
             }
             else
             {
-                await WriteResponse(stream, 405, "Method Not Allowed", "text/plain", "Method Not Allowed", ct);
+                context.Response.StatusCode = 405;
+                context.Response.Close();
             }
         }
         catch (OperationCanceledException) { }
+        catch (HttpListenerException) { }
         catch (Exception ex)
         {
             Log.Warning(ex, "Error handling dashboard connection from {Ip}", remoteIp);
         }
-        finally
-        {
-            client.Close();
-        }
     }
 
-    private void RemoveDeviceSocket(WebSocket ws)
+    private async Task HandleWebSocketUpgrade(HttpListenerContext context, CancellationToken ct, string remoteIp)
     {
-        foreach (var kvp in _deviceSockets)
+        WebSocket ws;
+        try
         {
-            if (kvp.Value.TryRemove(ws, out _) && kvp.Value.IsEmpty)
-                _deviceSockets.TryRemove(kvp.Key, out _);
+            var wsContext = await context.AcceptWebSocketAsync(subProtocol: null);
+            ws = wsContext.WebSocket;
         }
-    }
-
-    private async Task HandleWebSocketUpgrade(NetworkStream stream, Dictionary<string, string> headers, CancellationToken ct, string remoteIp)
-    {
-        if (!headers.TryGetValue("Sec-WebSocket-Key", out var key))
+        catch (Exception ex)
         {
-            await WriteResponse(stream, 400, "Bad Request", "text/plain", "Missing Sec-WebSocket-Key", ct);
+            Log.Warning(ex, "WebSocket upgrade failed from {Ip}", remoteIp);
+            context.Response.StatusCode = 400;
+            context.Response.Close();
             return;
         }
 
-        var acceptKey = ComputeWebSocketAcceptKey(key);
-        var response = $"HTTP/1.1 101 Switching Protocols\r\n" +
-                       $"Upgrade: websocket\r\n" +
-                       $"Connection: Upgrade\r\n" +
-                       $"Sec-WebSocket-Accept: {acceptKey}\r\n" +
-                       $"Access-Control-Allow-Origin: *\r\n\r\n";
-
-        var responseBytes = Encoding.UTF8.GetBytes(response);
-        await stream.WriteAsync(responseBytes, 0, responseBytes.Length, ct);
-        await stream.FlushAsync(ct);
-
-        var ws = WebSocket.CreateFromStream(stream, new WebSocketCreationOptions
-        {
-            IsServer = true,
-            KeepAliveInterval = TimeSpan.FromSeconds(30)
-        });
-
         _connectedSockets.TryAdd(ws, 0);
-
-        var deviceSockets = _deviceSockets.GetOrAdd(remoteIp, _ => new ConcurrentDictionary<WebSocket, byte>());
-        deviceSockets.TryAdd(ws, 0);
 
         try
         {
@@ -336,9 +283,7 @@ public class DashboardService : IDashboardService
             {
                 var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), ct);
                 if (result.MessageType == WebSocketMessageType.Close)
-                {
                     break;
-                }
             }
         }
         catch (OperationCanceledException) { }
@@ -351,18 +296,14 @@ public class DashboardService : IDashboardService
             }
             catch
             {
-                // ignored
+                // ignore
             }
-
             ws.Dispose();
             _connectedSockets.TryRemove(ws, out _);
-            RemoveDeviceSocket(ws);
         }
     }
 
-    private static string? _frameworkTemplate;
-
-    private async Task ServeDashboardList(NetworkStream stream, CancellationToken ct)
+    private async Task ServeDashboardList(HttpListenerContext context, CancellationToken ct)
     {
         var dashboards = _repository.GetAllDashboards();
         var list = dashboards.Select(d => new
@@ -372,28 +313,28 @@ public class DashboardService : IDashboardService
             description = d.Description,
             image = File.Exists(Path.Combine(d.DirectoryPath, "image.png"))
                 ? $"/api/dashboard/{d.Id}/image"
-                : null,
+                : null
         }).ToList();
 
         var json = JsonSerializer.Serialize(list, JsonOptions);
         var bytes = Encoding.UTF8.GetBytes(json);
-        var header = $"HTTP/1.1 200 OK\r\n" +
-                     $"Content-Type: application/json\r\n" +
-                     $"Content-Length: {bytes.Length}\r\n" +
-                     $"Access-Control-Allow-Origin: *\r\n" +
-                     $"Connection: close\r\n\r\n";
-        var headerBytes = Encoding.UTF8.GetBytes(header);
-        await stream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
-        await stream.WriteAsync(bytes, 0, bytes.Length, ct);
-        await stream.FlushAsync(ct);
+
+        var response = context.Response;
+        response.StatusCode = 200;
+        response.ContentType = "application/json; charset=utf-8";
+        response.ContentLength64 = bytes.Length;
+        response.Headers["Access-Control-Allow-Origin"] = "*";
+        await response.OutputStream.WriteAsync(bytes, 0, bytes.Length, ct);
+        response.Close();
     }
 
-    private async Task ServeDashboardApi(NetworkStream stream, string path, CancellationToken ct)
+    private async Task ServeDashboardApi(HttpListenerContext context, string path, CancellationToken ct)
     {
         var segments = path.Split('/');
         if (segments.Length < 4)
         {
-            await WriteResponse(stream, 400, "Bad Request", "text/plain", "Invalid path", ct);
+            context.Response.StatusCode = 400;
+            context.Response.Close();
             return;
         }
 
@@ -401,7 +342,8 @@ public class DashboardService : IDashboardService
         var dashboard = _repository.GetById(id);
         if (dashboard is null)
         {
-            await WriteResponse(stream, 404, "Not Found", "text/plain", "Dashboard not found", ct);
+            context.Response.StatusCode = 404;
+            context.Response.Close();
             return;
         }
 
@@ -412,7 +354,8 @@ public class DashboardService : IDashboardService
             var htmlPath = Path.Combine(dashboard.DirectoryPath, "dashboard.html");
             if (!File.Exists(htmlPath))
             {
-                await WriteResponse(stream, 404, "Not Found", "text/plain", "Dashboard HTML not found", ct);
+                context.Response.StatusCode = 404;
+                context.Response.Close();
                 return;
             }
 
@@ -433,15 +376,14 @@ public class DashboardService : IDashboardService
 
             var json = JsonSerializer.Serialize(result, JsonOptions);
             var bytes = Encoding.UTF8.GetBytes(json);
-            var header = $"HTTP/1.1 200 OK\r\n" +
-                         $"Content-Type: application/json\r\n" +
-                         $"Content-Length: {bytes.Length}\r\n" +
-                         $"Access-Control-Allow-Origin: *\r\n" +
-                         $"Connection: close\r\n\r\n";
-            var headerBytes = Encoding.UTF8.GetBytes(header);
-            await stream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
-            await stream.WriteAsync(bytes, 0, bytes.Length, ct);
-            await stream.FlushAsync(ct);
+
+            var response = context.Response;
+            response.StatusCode = 200;
+            response.ContentType = "application/json; charset=utf-8";
+            response.ContentLength64 = bytes.Length;
+            response.Headers["Access-Control-Allow-Origin"] = "*";
+            await response.OutputStream.WriteAsync(bytes, 0, bytes.Length, ct);
+            response.Close();
             return;
         }
 
@@ -450,67 +392,71 @@ public class DashboardService : IDashboardService
             var imagePath = Path.Combine(dashboard.DirectoryPath, "image.png");
             if (!File.Exists(imagePath))
             {
-                await WriteResponse(stream, 404, "Not Found", "text/plain", "Image not found", ct);
+                context.Response.StatusCode = 404;
+                context.Response.Close();
                 return;
             }
 
             var content = await File.ReadAllBytesAsync(imagePath, ct);
-            var header = $"HTTP/1.1 200 OK\r\n" +
-                         $"Content-Type: image/png\r\n" +
-                         $"Content-Length: {content.Length}\r\n" +
-                         $"Cache-Control: max-age=3600\r\n" +
-                         $"Access-Control-Allow-Origin: *\r\n" +
-                         $"Connection: close\r\n\r\n";
-            var headerBytes = Encoding.UTF8.GetBytes(header);
-            await stream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
-            await stream.WriteAsync(content, 0, content.Length, ct);
-            await stream.FlushAsync(ct);
+
+            var response = context.Response;
+            response.StatusCode = 200;
+            response.ContentType = "image/png";
+            response.ContentLength64 = content.Length;
+            response.Headers["Cache-Control"] = "max-age=3600";
+            response.Headers["Access-Control-Allow-Origin"] = "*";
+            await response.OutputStream.WriteAsync(content, 0, content.Length, ct);
+            response.Close();
             return;
         }
 
-        await WriteResponse(stream, 400, "Bad Request", "text/plain", "Unknown action", ct);
+        context.Response.StatusCode = 400;
+        context.Response.Close();
     }
 
-    private async Task ServeFile(NetworkStream stream, string path, CancellationToken ct)
+    private async Task ServeFile(HttpListenerContext context, string path, CancellationToken ct)
     {
         var relativePath = path.TrimStart('/');
 
         if (string.IsNullOrEmpty(relativePath) || relativePath == "index.html")
         {
-            await ServeFrameworkPage(stream, ct);
+            await ServeFrameworkPage(context, ct);
             return;
         }
 
         if (relativePath == "ws")
         {
-            await WriteResponse(stream, 400, "Bad Request", "text/plain", "Use WebSocket upgrade", ct);
+            context.Response.StatusCode = 400;
+            context.Response.Close();
             return;
         }
 
         if (ActiveDashboard is null)
         {
-            await WriteResponse(stream, 503, "Service Unavailable", "text/plain", "No active dashboard", ct);
+            context.Response.StatusCode = 503;
+            context.Response.Close();
             return;
         }
 
         var fullPath = Path.Combine(ActiveDashboard.DirectoryPath, relativePath);
-        await ServeFileContent(stream, fullPath, ct);
+        await ServeFileContent(context, fullPath, ct);
     }
 
-    private async Task ServeFrameworkPage(NetworkStream netStream, CancellationToken ct)
+    private async Task ServeFrameworkPage(HttpListenerContext context, CancellationToken ct)
     {
         if (_frameworkTemplate is null)
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "SimLab.Assets.DashboardFramework.index.html";
-            using var resStream = assembly.GetManifestResourceStream(resourceName);
+            const string resourceName = "SimLab.Assets.DashboardFramework.index.html";
+            await using var resStream = assembly.GetManifestResourceStream(resourceName);
             if (resStream is null)
             {
-                await WriteResponse(netStream, 500, "Internal Server Error", "text/plain", "Framework not found", ct);
+                context.Response.StatusCode = 500;
+                context.Response.Close();
                 return;
             }
             using var reader = new StreamReader(resStream);
-            _frameworkTemplate = await reader.ReadToEndAsync();
+            _frameworkTemplate = await reader.ReadToEndAsync(ct);
         }
 
         var pageContent = _frameworkTemplate;
@@ -518,7 +464,6 @@ public class DashboardService : IDashboardService
         if (ActiveDashboard is not null)
         {
             var dashboardPath = Path.Combine(ActiveDashboard.DirectoryPath, "dashboard.html");
-
             if (File.Exists(dashboardPath))
             {
                 var dashboardContent = await File.ReadAllTextAsync(dashboardPath, ct);
@@ -534,32 +479,32 @@ public class DashboardService : IDashboardService
         }
 
         var bytes = Encoding.UTF8.GetBytes(pageContent);
-        var header = $"HTTP/1.1 200 OK\r\n" +
-                     $"Content-Type: text/html\r\n" +
-                     $"Content-Length: {bytes.Length}\r\n" +
-                     $"Cache-Control: no-cache\r\n" +
-                     $"Access-Control-Allow-Origin: *\r\n" +
-                     $"Connection: close\r\n\r\n";
-        var headerBytes = Encoding.UTF8.GetBytes(header);
-        await netStream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
-        await netStream.WriteAsync(bytes, 0, bytes.Length, ct);
-        await netStream.FlushAsync(ct);
+        var response = context.Response;
+        response.StatusCode = 200;
+        response.ContentType = "text/html; charset=utf-8";
+        response.ContentLength64 = bytes.Length;
+        response.Headers["Cache-Control"] = "no-cache";
+        response.Headers["Access-Control-Allow-Origin"] = "*";
+        await response.OutputStream.WriteAsync(bytes, 0, bytes.Length, ct);
+        response.Close();
     }
 
-    private async Task ServeFileContent(NetworkStream stream, string fullPath, CancellationToken ct)
+    private async Task ServeFileContent(HttpListenerContext context, string fullPath, CancellationToken ct)
     {
         var fullFile = Path.GetFullPath(fullPath);
-        var dashboardDir = Path.GetFullPath(ActiveDashboard!.DirectoryPath!);
+        var dashboardDir = Path.GetFullPath(ActiveDashboard!.DirectoryPath);
 
         if (!fullFile.StartsWith(dashboardDir, StringComparison.Ordinal))
         {
-            await WriteResponse(stream, 403, "Forbidden", "text/plain", "Forbidden", ct);
+            context.Response.StatusCode = 403;
+            context.Response.Close();
             return;
         }
 
         if (!File.Exists(fullFile))
         {
-            await WriteResponse(stream, 404, "Not Found", "text/plain", "File not found", ct);
+            context.Response.StatusCode = 404;
+            context.Response.Close();
             return;
         }
 
@@ -580,44 +525,20 @@ public class DashboardService : IDashboardService
         };
 
         var content = await File.ReadAllBytesAsync(fullFile, ct);
-        var header = $"HTTP/1.1 200 OK\r\n" +
-                     $"Content-Type: {contentType}\r\n" +
-                     $"Content-Length: {content.Length}\r\n" +
-                     $"Cache-Control: no-cache\r\n" +
-                     $"Access-Control-Allow-Origin: *\r\n" +
-                     $"Connection: close\r\n\r\n";
 
-        var headerBytes = Encoding.UTF8.GetBytes(header);
-        await stream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
-        await stream.WriteAsync(content, 0, content.Length, ct);
-        await stream.FlushAsync(ct);
-    }
-
-    private static async Task WriteResponse(NetworkStream stream, int statusCode, string statusText,
-        string contentType, string body, CancellationToken ct)
-    {
-        var bodyBytes = Encoding.UTF8.GetBytes(body);
-        var header = $"HTTP/1.1 {statusCode} {statusText}\r\n" +
-                     $"Content-Type: {contentType}\r\n" +
-                     $"Content-Length: {bodyBytes.Length}\r\n" +
-                     $"Access-Control-Allow-Origin: *\r\n" +
-                     $"Connection: close\r\n\r\n";
-        var headerBytes = Encoding.UTF8.GetBytes(header);
-        await stream.WriteAsync(headerBytes, 0, headerBytes.Length, ct);
-        await stream.WriteAsync(bodyBytes, 0, bodyBytes.Length, ct);
-        await stream.FlushAsync(ct);
-    }
-
-    private static string ComputeWebSocketAcceptKey(string key)
-    {
-        var combined = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-        var hash = SHA1.HashData(Encoding.UTF8.GetBytes(combined));
-        return Convert.ToBase64String(hash);
+        var response = context.Response;
+        response.StatusCode = 200;
+        response.ContentType = contentType;
+        response.ContentLength64 = content.Length;
+        response.Headers["Cache-Control"] = "no-cache";
+        response.Headers["Access-Control-Allow-Origin"] = "*";
+        await response.OutputStream.WriteAsync(content, 0, content.Length, ct);
+        response.Close();
     }
 
     private static int FindFreePort()
     {
-        var listener = new TcpListener(IPAddress.Loopback, 0);
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();
