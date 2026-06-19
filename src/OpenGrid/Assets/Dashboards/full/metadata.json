@@ -1,0 +1,7 @@
+{
+  "name": "Full Telemetry",
+  "description": "Ferrari 296 GT3-inspired race dashboard — RPM, gear, speed, tire temps, inputs, and lap times",
+  "version": "1.0",
+  "type": "dashboard",
+  "author": "OpenGrid"
+}

@@ -10,4 +10,8 @@ public class DashboardMetadata
     public string Description { get; set; } = "";
     [JsonPropertyName("version")]
     public string Version { get; set; } = "1.0";
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = "dashboard";
+    [JsonPropertyName("author")]
+    public string Author { get; set; } = "";
 }

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Telemetry</title>
+<script src="/framework/opengrid.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#050505}
+@font-face{font-family:'Racing';src:local('Segoe UI'),local('Arial');font-weight:700}
+body{color:#fff;font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;height:100%;padding:8px;gap:4px;background:radial-gradient(ellipse at center,#0d0d0d 0%,#050505 100%)}
+
+.shift-lights{display:flex;gap:3px;justify-content:center;flex-shrink:0;height:8px;padding:0 4px}
+.shift-light{width:20px;border-radius:1px;background:#111;transition:background .04s}
+.shift-light.on{background:#ffd100}
+.shift-light.red{background:#e00}
+
+.main-grid{display:grid;flex:1;min-height:0;gap:6px;grid-template-columns:auto 1fr auto;grid-template-rows:1fr auto auto}
+.speed-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 16px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:3px;min-width:100px}
+.speed-label{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:2px;font-weight:500}
+.speed-value{font-size:min(4vw,36px);font-weight:300;font-family:'Courier New',monospace;color:#ddd;line-height:1.1}
+.speed-unit{font-size:10px;color:#555;font-weight:400}
+
+.center-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:3px;padding:4px 16px;position:relative}
+.rpm-container{width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;justify-content:center}
+.rpm-bar-track{width:100%;height:10px;background:#111;overflow:hidden;border-radius:2px}
+.rpm-bar-fill{height:100%;transition:width .04s;background:linear-gradient(90deg,#fff,#ffd100 55%,#fa0 72%,#e00 85%);border-radius:2px}
+.rpm-bar-fill.low{background:linear-gradient(90deg,#555,#888)}
+.rpm-number{font-size:min(3.2vw,28px);font-weight:300;font-family:'Courier New',monospace;color:#888;line-height:1}
+.rpm-label{font-size:8px;color:#444;text-transform:uppercase;letter-spacing:2px}
+.gear-container{display:flex;align-items:center;justify-content:center;gap:8px;margin:2px 0}
+.gear-display{font-size:min(12vw,96px);font-weight:700;color:#fff;line-height:1;font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:-3px}
+.gear-label{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:2px;writing-mode:vertical-lr;text-orientation:mixed}
+.rpm-digits{font-size:min(3.5vw,30px);font-weight:600;font-family:'Courier New',monospace;color:#ffd100;line-height:1}
+
+.tire-panel{display:flex;flex-direction:column;gap:3px;padding:8px 10px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:3px;min-width:80px}
+.tire-row{display:flex;gap:6px;justify-content:center}
+.tire-item{text-align:center;padding:2px 4px}
+.tire-item .pos{font-size:7px;color:#444;font-weight:600}
+.tire-item .temp{font-size:11px;font-family:'Courier New',monospace;font-weight:600;color:#888;transition:color .3s}
+.tire-item .temp.cold{color:#4488ff}
+.tire-item .temp.optimal{color:#22cc44}
+.tire-item .temp.hot{color:#ffa500}
+.tire-item .temp.overheat{color:#e00}
+
+.data-grid{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.data-cell{text-align:center;padding:3px 6px;background:#0a0a0a;border:1px solid #151515;border-radius:2px}
+.data-cell .l{font-size:7px;color:#444;text-transform:uppercase;letter-spacing:1px;font-weight:500}
+.data-cell .v{font-family:'Courier New',monospace;font-size:13px;font-weight:600;color:#bbb;line-height:1.3}
+.data-cell .v.grn{color:#22cc44}
+.data-cell .v.red{color:#e00}
+.data-cell .v.org{color:#ffa500}
+.data-cell .v.yel{color:#ffd100}
+
+.input-row{grid-column:1/-1;display:flex;gap:4px;align-items:center}
+.input-group{flex:1;display:flex;align-items:center;gap:3px}
+.input-label{font-size:7px;color:#444;min-width:20px;text-transform:uppercase;letter-spacing:1px;font-weight:500}
+.input-track{flex:1;height:5px;background:#111;overflow:hidden;border-radius:2px}
+.input-fill{height:100%;transition:width .04s;border-radius:2px}
+.input-gas .input-fill{background:#ffd100}
+.input-brake .input-fill{background:#e00}
+.input-clutch .input-fill{background:#666}
+
+.session-bar{grid-column:1/-1;display:flex;gap:8px;flex-shrink:0;font-size:9px;color:#555;justify-content:center;align-items:center;padding:2px 0}
+.session-bar strong{color:#888;font-weight:600}
+.session-bar .sep{color:#222}
+
+.status{font-size:7px;text-align:center;flex-shrink:0;color:#444;text-transform:uppercase;letter-spacing:2px;font-weight:500}
+.status.on{color:#22cc44}
+
+@media(min-aspect-ratio:2/1){.main-grid{grid-template-columns:auto 1fr auto;grid-template-rows:1fr auto}}
+</style>
+</head>
+<body>
+
+<div class="shift-lights" id="shiftLights"></div>
+
+<div class="main-grid">
+    <div class="speed-panel">
+        <div class="speed-label">Speed</div>
+        <div class="speed-value" id="speedDisp">0</div>
+        <div class="speed-unit">km/h</div>
+    </div>
+
+    <div class="center-panel">
+        <div class="rpm-container">
+            <div class="rpm-label">Engine</div>
+            <div class="gear-container">
+                <div class="gear-display" id="gearDisp">N</div>
+                <div class="rpm-digits" id="rpmDisp">0</div>
+            </div>
+            <div class="rpm-bar-track"><div class="rpm-bar-fill" id="rpmBar"></div></div>
+        </div>
+    </div>
+
+    <div class="tire-panel">
+        <div class="tire-row">
+            <div class="tire-item"><div class="pos">FL</div><div class="temp" id="tfL">--</div></div>
+            <div class="tire-item"><div class="pos">FR</div><div class="temp" id="tfR">--</div></div>
+        </div>
+        <div class="tire-row">
+            <div class="tire-item"><div class="pos">RL</div><div class="temp" id="trL">--</div></div>
+            <div class="tire-item"><div class="pos">RR</div><div class="temp" id="trR">--</div></div>
+        </div>
+    </div>
+
+    <div class="data-grid">
+        <div class="data-cell"><div class="l">Current</div><div class="v" id="curLap">--:--</div></div>
+        <div class="data-cell"><div class="l">Best</div><div class="v grn" id="bestLap">--:--</div></div>
+        <div class="data-cell"><div class="l">Last</div><div class="v org" id="lastLap">--:--</div></div>
+        <div class="data-cell"><div class="l">Delta</div><div class="v" id="deltaTime">--:--</div></div>
+        <div class="data-cell"><div class="l">Fuel</div><div class="v yel" id="fuelDisp">--</div></div>
+        <div class="data-cell"><div class="l">Position</div><div class="v org" id="posDisp">--</div></div>
+        <div class="data-cell"><div class="l">Lap</div><div class="v" id="lapDisp">--</div></div>
+        <div class="data-cell"><div class="l">G-Force</div><div class="v" id="gForceDisp">0.00</div></div>
+        <div class="data-cell"><div class="l">Session</div><div class="v" id="sessDisp">--</div></div>
+        <div class="data-cell"><div class="l">Car</div><div class="v" id="carDisp">--</div></div>
+    </div>
+
+    <div class="input-row">
+        <div class="input-group input-gas"><span class="input-label">Gas</span><div class="input-track"><div class="input-fill" id="gasBar"></div></div></div>
+        <div class="input-group input-brake"><span class="input-label">Brake</span><div class="input-track"><div class="input-fill" id="brakeBar"></div></div></div>
+        <div class="input-group input-clutch"><span class="input-label">Clutch</span><div class="input-track"><div class="input-fill" id="clutchBar"></div></div></div>
+    </div>
+
+    <div class="session-bar">
+        <span id="sessDisp2">--</span>
+        <span class="sep">|</span>
+        <strong id="carDisp2">--</strong>
+        <span class="sep">@</span>
+        <strong id="trkDisp">--</strong>
+    </div>
+</div>
+
+<div class="status" id="status">DISCONNECTED</div>
+
+<script>
+var nSL=10;
+(function(){var c=document.getElementById('shiftLights');for(var i=0;i<nSL;i++){var e=document.createElement('div');e.className='shift-light';e.id='s'+i;c.appendChild(e)}})();
+var tR=0,cR=0,tS=0,cS=0,mR=8000;
+
+function us(rp){
+ var bar=document.getElementById('rpmBar');
+ var pct=Math.min(rp,1)*100;
+ bar.style.width=pct+'%';
+ bar.className='rpm-bar-fill'+(rp<0.15?' low':'');
+ for(var i=0;i<nSL;i++){
+  var th=.6+(i/nSL)*.4,e=document.getElementById('s'+i);
+  rp>=th?e.className='shift-light'+(th>.85?' red':' on'):e.className='shift-light'
+ }
+}
+
+function rndr(){
+ var rp=Math.min(cR/mR,1);
+ document.getElementById('rpmDisp').textContent=Math.round(cR);
+ document.getElementById('speedDisp').textContent=Math.round(cS);
+ us(rp)
+}
+
+function anim(){cR+=(tR-cR)*.12;cS+=(tS-cS)*.12;if(Math.abs(cR-tR)<1)cR=tR;if(Math.abs(cS-tS)<.5)cS=tS;rndr();requestAnimationFrame(anim)}
+
+function fm(ms){if(!ms||ms<=0)return'--:--';var s=ms/1e3,m=Math.floor(s/60);return m+':'+((s%60)<10?'0':'')+(s%60).toFixed(3)}
+
+function tC(t){return t<60?'cold':t<90?'optimal':t<110?'hot':'overheat'}
+
+OpenGrid.onTelemetry=function(d){
+ tR=d.engineRpm||0;mR=d.maxRpm||8000;tS=d.speedKmh||0;
+ document.getElementById('gearDisp').textContent=d.gear||'N';
+ document.getElementById('curLap').textContent=fm(d.lapTimeMs);
+ document.getElementById('lastLap').textContent=fm(d.lastLapTimeMs);
+ document.getElementById('bestLap').textContent=fm(d.bestLapTimeMs);
+ var de=document.getElementById('deltaTime');
+ if(d.deltaLapTimeMs&&d.deltaLapTimeMs>0){de.textContent=(d.isDeltaPositive?'+':'-')+fm(d.deltaLapTimeMs);de.className='v '+(d.isDeltaPositive?'red':'grn')}else{de.textContent='--:--';de.className='v'}
+ document.getElementById('gasBar').style.width=(d.gas*100)+'%';
+ document.getElementById('brakeBar').style.width=(d.brake*100)+'%';
+ document.getElementById('clutchBar').style.width=((d.clutch||0)*100)+'%';
+ document.getElementById('fuelDisp').textContent=(d.fuel||0).toFixed(1);
+ document.getElementById('posDisp').textContent=d.position||'--';
+ document.getElementById('lapDisp').textContent=d.currentLap||'--';
+ if(d.tireTemps){var t=d.tireTemps;document.getElementById('tfL').textContent=Math.round(t.fl)+'°';document.getElementById('tfL').className='temp '+tC(t.fl);document.getElementById('tfR').textContent=Math.round(t.fr)+'°';document.getElementById('tfR').className='temp '+tC(t.fr);document.getElementById('trL').textContent=Math.round(t.rl)+'°';document.getElementById('trL').className='temp '+tC(t.rl);document.getElementById('trR').textContent=Math.round(t.rr)+'°';document.getElementById('trR').className='temp '+tC(t.rr)}
+ document.getElementById('gForceDisp').textContent=Math.max(Math.abs(d.gForceLat||0),Math.abs(d.gForceLon||0)).toFixed(2);
+ document.getElementById('sessDisp').textContent=d.sessionType||'--';
+ document.getElementById('sessDisp2').textContent=d.sessionType||'--';
+ if(d.car){document.getElementById('carDisp').textContent=d.car.displayName||'--';document.getElementById('carDisp2').textContent=d.car.displayName||'--'}
+ if(d.track)document.getElementById('trkDisp').textContent=d.track.displayName||'--'
+};
+
+OpenGrid.onConnected=function(){var e=document.getElementById('status');e.textContent='CONNECTED';e.className='status on'};
+OpenGrid.onDisconnected=function(){var e=document.getElementById('status');e.textContent='DISCONNECTED';e.className='status'};
+OpenGrid.connect({port:8190});anim();
+</script>
+</body>
+</html>

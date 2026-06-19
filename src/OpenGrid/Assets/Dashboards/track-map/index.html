@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Map</title>
+<script src="/framework/opengrid.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#050505}
+body{color:#fff;font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;height:100%;padding:6px;gap:4px;background:radial-gradient(ellipse at center,#0d0d0d 0%,#050505 100%)}
+
+.top-bar{display:flex;justify-content:space-between;flex-shrink:0;padding:0 4px;align-items:center}
+.top-bar .l{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:2px;font-weight:500}
+.top-bar .l b{color:#999;font-weight:600}
+.top-bar .tag{font-size:7px;color:#22cc44;border:1px solid #1a3a1a;padding:1px 8px;letter-spacing:2px;text-transform:uppercase;font-weight:500}
+
+.main-row{display:flex;gap:4px;flex:1;min-height:0}
+.map-panel{flex:3;border:1px solid #1a1a1a;padding:3px;display:flex;flex-direction:column;background:#060606}
+canvas#trkCvs{width:100%;flex:1;min-height:200px;background:#060606;border:1px solid #111}
+
+.side{flex:1;display:flex;flex-direction:column;gap:3px;min-width:130px}
+.box{border:1px solid #1a1a1a;padding:5px 8px;background:#0a0a0a;border-radius:2px}
+.box .h{font-size:7px;color:#444;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px;font-weight:500}
+
+.pos-v{font-size:28px;font-weight:700;color:#fff;line-height:1;font-family:'Courier New',monospace}
+.spd-v{font-size:22px;font-weight:600;color:#ffd100;line-height:1;font-family:'Courier New',monospace}
+.spd-v .u{font-size:10px;color:#555;font-weight:400;font-family:'Segoe UI',sans-serif}
+
+.lap-v{font-size:18px;font-weight:600;font-family:'Courier New',monospace;line-height:1.2;color:#ccc}
+.lap-v.grn{color:#22cc44}
+.lap-v.org{color:#ffa500}
+
+.sectors{display:flex;gap:2px;margin-top:3px}
+.sector{flex:1;padding:2px 4px;text-align:center;font-size:7px;font-weight:600;background:#080808;border:1px solid #1a1a1a;color:#444;transition:all .15s;font-family:'Courier New',monospace}
+.sector.active{background:#111;border-color:#ffd100;color:#ffd100}
+.sector.done{background:#0a1a0a;border-color:#22cc44;color:#22cc44}
+
+.info-g{display:flex;flex-direction:column;gap:1px}
+.info-r{display:flex;justify-content:space-between;font-size:9px;padding:2px 0;border-bottom:1px solid #0f0f0f}
+.info-r:last-child{border-bottom:none}
+.info-r .l{color:#555;font-size:8px;text-transform:uppercase;letter-spacing:1px}
+.info-r .v{font-weight:600;color:#999;font-family:'Courier New',monospace}
+
+.status{font-size:7px;text-align:center;flex-shrink:0;color:#444;text-transform:uppercase;letter-spacing:2px;font-weight:500}
+.status.on{color:#22cc44}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <span class="l"><b id="trkLabel">TRACK MAP</b></span>
+    <span class="tag">LIVE</span>
+</div>
+
+<div class="main-row">
+    <div class="map-panel">
+        <canvas id="trkCvs"></canvas>
+    </div>
+    <div class="side">
+        <div class="box"><div class="h">Position</div><div class="pos-v" id="posDisp">--</div></div>
+        <div class="box"><div class="h">Speed</div><div class="spd-v" id="spdDisp">-- <span class="u">km/h</span></div></div>
+        <div class="box"><div class="h">Current Lap</div><div class="lap-v" id="curLap">--:--</div>
+            <div class="sectors">
+                <div class="sector" id="s1">S1 <span id="s1t">--</span></div>
+                <div class="sector" id="s2">S2 <span id="s2t">--</span></div>
+                <div class="sector" id="s3">S3 <span id="s3t">--</span></div>
+            </div>
+        </div>
+        <div class="box"><div class="h">Best Lap</div><div class="lap-v grn" id="bestLap">--:--</div></div>
+        <div class="box"><div class="h">Lap Data</div>
+            <div class="info-g">
+                <div class="info-r"><span class="l">Lap</span><span class="v" id="lapN">--</span></div>
+                <div class="info-r"><span class="l">Dist</span><span class="v" id="distDisp">-- m</span></div>
+                <div class="info-r"><span class="l">Session</span><span class="v" id="sessDisp">--</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="status" id="status">DISCONNECTED</div>
+
+<script>
+var cvs=document.getElementById('trkCvs'),ctx=cvs.getContext('2d');
+var trail=[],tMax=500,pMx=Infinity,pXX=-Infinity,pMz=Infinity,pXz=-Infinity,lPos=null;
+
+function rsz(){
+ var r=cvs.getBoundingClientRect(),d=window.devicePixelRatio||1;
+ cvs.width=r.width*d;cvs.height=r.height*d;
+ ctx.scale(d,d);cvs.style.width=r.width+'px';cvs.style.height=r.height+'px';drw()
+}
+window.addEventListener('resize',rsz);setTimeout(rsz,100);
+
+function drw(){
+ var w=cvs.getBoundingClientRect().width,h=cvs.getBoundingClientRect().height,pad=16;
+ ctx.clearRect(0,0,w,h);
+ if(trail.length<2)return;
+ var sx=pMx,sz=pMz,rx=pXX-pMx||1,rz=pXz-pMz||1,sc=Math.min((w-pad*2)/rx,(h-pad*2)/rz),ox=(w-rx*sc)/2,oy=(h-rz*sc)/2;
+ ctx.strokeStyle='#1a1a1a';ctx.lineWidth=1;ctx.strokeRect(ox-1,oy-1,rx*sc+2,rz*sc+2);
+ var grad=ctx.createLinearGradient(ox,oy,ox+rx*sc,oy+rz*sc);
+ grad.addColorStop(0,'#ffd100');grad.addColorStop(0.5,'#22cc44');grad.addColorStop(1,'#ffd100');
+ ctx.strokeStyle=grad;ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
+ for(var i=0;i<trail.length;i++){var x=(trail[i].x-sx)*sc+ox,y=(trail[i].z-sz)*sc+oy;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke();
+ if(lPos){
+  var cx=(lPos.x-sx)*sc+ox,cy=(lPos.z-sz)*sc+oy;
+  ctx.shadowColor='#fff';ctx.shadowBlur=6;
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#ffd100';ctx.beginPath();ctx.arc(cx,cy,2,0,Math.PI*2);ctx.fill()
+ }
+}
+
+function fm(ms){if(!ms||ms<=0)return'--:--';var s=ms/1e3,m=Math.floor(s/60);return m+':'+((s%60)<10?'0':'')+(s%60).toFixed(3)}
+function fS(ms){if(!ms||ms<=0)return'--';return(ms/1e3).toFixed(1)}
+
+OpenGrid.onTelemetry=function(d){
+ document.getElementById('spdDisp').innerHTML=Math.round(d.speedKmh)+' <span class="u">km/h</span>';
+ document.getElementById('posDisp').textContent=d.position||'--';
+ document.getElementById('curLap').textContent=fm(d.lapTimeMs);
+ document.getElementById('bestLap').textContent=fm(d.bestLapTimeMs);
+ document.getElementById('lapN').textContent=d.currentLap||'--';
+ document.getElementById('sessDisp').textContent=d.sessionType||'--';
+ if(d.distance!==undefined&&d.distance!==null)document.getElementById('distDisp').textContent=Math.round(d.distance)+' m';
+ if(d.carPosition){var p=d.carPosition;lPos={x:p.x,z:p.z};trail.push(lPos);if(trail.length>tMax)trail.shift();if(p.x<pMx)pMx=p.x;if(p.x>pXX)pXX=p.x;if(p.z<pMz)pMz=p.z;if(p.z>pXz)pXz=p.z}
+ if(d.track)document.getElementById('trkLabel').textContent=d.track.displayName||'TRACK MAP';
+ var s1=document.getElementById('s1'),s2=document.getElementById('s2'),s3=document.getElementById('s3');
+ s1.className='sector'+(d.sectorIndex>=1?' done':'')+(d.sectorIndex===0?' active':'');
+ s2.className='sector'+(d.sectorIndex>=2?' done':'')+(d.sectorIndex===1?' active':'');
+ s3.className='sector'+(d.sectorIndex===2?' active':'');
+ if(d.lastSectorTimeMs&&d.sectorIndex===1)document.getElementById('s1t').textContent=fS(d.lastSectorTimeMs);
+ drw()
+};
+
+OpenGrid.onConnected=function(){document.getElementById('status').textContent='CONNECTED';document.getElementById('status').className='status on'};
+OpenGrid.onDisconnected=function(){document.getElementById('status').textContent='DISCONNECTED';document.getElementById('status').className='status'};
+OpenGrid.connect({port:8190});
+</script>
+</body>
+</html>

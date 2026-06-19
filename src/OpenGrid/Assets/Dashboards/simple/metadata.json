@@ -1,0 +1,7 @@
+{
+  "name": "Simple Telemetry",
+  "description": "Porsche 911 GT3-inspired dashboard — analog tach, gear, speed, and key telemetry at a glance",
+  "version": "1.0",
+  "type": "dashboard",
+  "author": "OpenGrid"
+}

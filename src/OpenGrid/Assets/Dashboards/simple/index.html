@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Telemetry</title>
+<script src="/framework/opengrid.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#050505}
+body{color:#fff;font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:16px;background:radial-gradient(ellipse at center,#0d0d0d 0%,#050505 100%)}
+
+.cluster{width:100%;max-width:520px;display:flex;flex-direction:column;gap:6px;align-items:center}
+
+.shift-lights{display:flex;gap:2px;justify-content:center;width:100%;max-width:360px;height:6px}
+.shift-light{flex:1;background:#111;border-radius:1px;transition:background .04s}
+.shift-light.on{background:#ffd100}
+.shift-light.red{background:#e00}
+
+.gauge-block{position:relative;width:100%;display:flex;flex-direction:column;align-items:center;padding:8px 0;border:1px solid #1a1a1a;border-radius:4px;background:#0a0a0a}
+.gauge-canvas-wrap{position:relative;width:100%;max-width:300px;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+.gauge-canvas-wrap canvas{width:100%;height:100%}
+.gauge-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.gear{font-size:min(16vw,100px);font-weight:700;color:#fff;line-height:1;font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:-2px;margin-top:8px}
+.speed{font-size:min(6vw,36px);font-weight:300;color:#999;font-family:'Courier New',monospace;line-height:1;margin-top:-2px}
+.speed .u{font-size:.4em;color:#444;font-weight:400;font-family:'Segoe UI',sans-serif}
+.rpm-digits{font-size:min(3.5vw,20px);font-weight:600;color:#ffd100;font-family:'Courier New',monospace;margin-top:2px}
+.rpm-label{font-size:7px;color:#444;text-transform:uppercase;letter-spacing:2px;margin-top:1px}
+
+.data-row{display:flex;width:100%;gap:3px}
+.data-cell{flex:1;text-align:center;padding:5px 4px;background:#0a0a0a;border:1px solid #151515;border-radius:2px}
+.data-cell .l{font-size:7px;color:#444;text-transform:uppercase;letter-spacing:1px;font-weight:500}
+.data-cell .v{font-family:'Courier New',monospace;font-size:15px;font-weight:600;color:#bbb;line-height:1.3}
+.data-cell .v.grn{color:#22cc44}
+.data-cell .v.yel{color:#ffd100}
+.data-cell .v.org{color:#ffa500}
+
+.input-row{display:flex;gap:4px;width:100%}
+.input-group{flex:1;display:flex;align-items:center;gap:3px}
+.input-label{font-size:7px;color:#444;min-width:20px;text-transform:uppercase;letter-spacing:1px;font-weight:500}
+.input-track{flex:1;height:4px;background:#111;overflow:hidden;border-radius:2px}
+.input-fill{height:100%;transition:width .04s;border-radius:2px}
+.input-gas .input-fill{background:#ffd100}
+.input-brake .input-fill{background:#e00}
+
+.status{font-size:7px;text-align:center;color:#444;text-transform:uppercase;letter-spacing:2px;font-weight:500}
+.status.on{color:#22cc44}
+</style>
+</head>
+<body>
+
+<div class="cluster">
+    <div class="shift-lights" id="shiftLights"></div>
+
+    <div class="gauge-block">
+        <div class="gauge-canvas-wrap">
+            <canvas id="tacho"></canvas>
+            <div class="gauge-overlay">
+                <div class="gear" id="gearDisp">N</div>
+                <div class="speed"><span id="speedDisp">0</span> <span class="u">km/h</span></div>
+                <div class="rpm-digits" id="rpmDisp">0</div>
+                <div class="rpm-label">RPM</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="data-row">
+        <div class="data-cell"><div class="l">Fuel</div><div class="v yel" id="fuelDisp">--</div></div>
+        <div class="data-cell"><div class="l">Lap</div><div class="v" id="lapDisp">--:--</div></div>
+        <div class="data-cell"><div class="l">Pos</div><div class="v org" id="posDisp">--</div></div>
+        <div class="data-cell"><div class="l">Best</div><div class="v grn" id="bestDisp">--:--</div></div>
+    </div>
+
+    <div class="input-row">
+        <div class="input-group input-gas"><span class="input-label">Gas</span><div class="input-track"><div class="input-fill" id="gasBar"></div></div></div>
+        <div class="input-group input-brake"><span class="input-label">Brake</span><div class="input-track"><div class="input-fill" id="brakeBar"></div></div></div>
+    </div>
+
+    <div class="status" id="status">DISCONNECTED</div>
+</div>
+
+<script>
+var nSL=8;
+(function(){var c=document.getElementById('shiftLights');for(var i=0;i<nSL;i++){var e=document.createElement('div');e.className='shift-light';e.id='s'+i;c.appendChild(e)}})();
+var tR=0,cR=0,tS=0,cS=0,mR=8000;
+
+var tc=document.getElementById('tacho'),tx=tc.getContext('2d');
+var SW=Math.PI*1.5,ST=Math.PI*1.25;
+
+function rC(c){
+ var r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;
+ c.width=r.width*d;c.height=r.height*d;
+ c.getContext('2d').scale(d,d);
+ return{w:r.width,h:r.height}
+}
+
+function dG(ctx,w,h,v,m){
+ var cx=w/2,cy=h*0.52,r=Math.min(w,h)*0.38,lw=r*0.13;
+ ctx.clearRect(0,0,w,h);
+ var g=0.6,y=0.8;
+ ctx.beginPath();ctx.arc(cx,cy,r,ST,ST-SW*g,true);ctx.strokeStyle='#1a3a1a';ctx.lineWidth=lw;ctx.lineCap='butt';ctx.stroke();
+ ctx.beginPath();ctx.arc(cx,cy,r,ST-SW*g,ST-SW*y,true);ctx.strokeStyle='#3a3a00';ctx.lineWidth=lw;ctx.stroke();
+ ctx.beginPath();ctx.arc(cx,cy,r,ST-SW*y,ST-SW,true);ctx.strokeStyle='#3a1a1a';ctx.lineWidth=lw;ctx.stroke();
+ var p=Math.min(v/m,1);
+ ctx.beginPath();ctx.arc(cx,cy,r,ST,ST-SW*Math.min(p,g),true);ctx.strokeStyle='#22cc44';ctx.lineWidth=lw;ctx.stroke();
+ if(p>g){ctx.beginPath();ctx.arc(cx,cy,r,ST-SW*g,ST-SW*Math.min(p,y),true);ctx.strokeStyle='#ffd100';ctx.lineWidth=lw;ctx.stroke()}
+ if(p>y){ctx.beginPath();ctx.arc(cx,cy,r,ST-SW*y,ST-SW*p,true);ctx.strokeStyle='#e00';ctx.lineWidth=lw;ctx.stroke()}
+ for(var i=0;i<=12;i++){var t=i/12,a=ST-t*SW,ir=r-lw*0.5,or=r+lw*0.3;ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*ir,cy+Math.sin(a)*ir);ctx.lineTo(cx+Math.cos(a)*or,cy+Math.sin(a)*or);ctx.strokeStyle=i%3===0?'#555':'#222';ctx.lineWidth=i%3===0?1.5:.8;ctx.stroke()}
+ var na=ST-p*SW,nl=r-lw*0.4;
+ ctx.beginPath();ctx.moveTo(cx-Math.cos(na)*4,cy-Math.sin(na)*4);ctx.lineTo(cx+Math.cos(na)*nl,cy+Math.sin(na)*nl);
+ ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();
+ var cr=lw*0.15;ctx.beginPath();ctx.arc(cx,cy,cr,0,Math.PI*2);ctx.fillStyle='#111';ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=.5;ctx.stroke()
+}
+
+function rndr(){
+ var d=rC(tc);dG(tx,d.w,d.h,cR,mR);
+ document.getElementById('rpmDisp').textContent=Math.round(cR);
+ document.getElementById('speedDisp').textContent=Math.round(cS);
+ var rp=Math.min(cR/mR,1);
+ for(var i=0;i<nSL;i++){var th=.6+(i/nSL)*.4,e=document.getElementById('s'+i);rp>=th?e.className='shift-light'+(th>.85?' red':' on'):e.className='shift-light'}
+}
+
+function anim(){cR+=(tR-cR)*.1;cS+=(tS-cS)*.1;if(Math.abs(cR-tR)<1)cR=tR;if(Math.abs(cS-tS)<.5)cS=tS;rndr();requestAnimationFrame(anim)}
+
+function fm(ms){if(!ms||ms<=0)return'--:--';var s=ms/1e3,m=Math.floor(s/60);return m+':'+((s%60)<10?'0':'')+(s%60).toFixed(3)}
+
+OpenGrid.onTelemetry=function(d){
+ tR=d.engineRpm||0;mR=d.maxRpm||8000;tS=d.speedKmh||0;
+ document.getElementById('gearDisp').textContent=d.gear||'N';
+ document.getElementById('fuelDisp').textContent=(d.fuel||0).toFixed(1);
+ document.getElementById('lapDisp').textContent=fm(d.lapTimeMs);
+ document.getElementById('posDisp').textContent=d.position||'--';
+ document.getElementById('bestDisp').textContent=fm(d.bestLapTimeMs);
+ document.getElementById('gasBar').style.width=(d.gas*100)+'%';
+ document.getElementById('brakeBar').style.width=(d.brake*100)+'%'
+};
+
+OpenGrid.onConnected=function(){var e=document.getElementById('status');e.textContent='CONNECTED';e.className='status on'};
+OpenGrid.onDisconnected=function(){var e=document.getElementById('status');e.textContent='DISCONNECTED';e.className='status'};
+OpenGrid.connect({port:8190});anim();
+</script>
+</body>
+</html>

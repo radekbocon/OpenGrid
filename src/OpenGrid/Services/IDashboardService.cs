@@ -1,16 +1,12 @@
-using System;
+using System.Collections.ObjectModel;
 using OpenGrid.Models;
 
 namespace OpenGrid.Services;
 
 public interface IDashboardService
 {
-    bool IsRunning { get; }
-    int Port { get; }
-    DashboardInfo? ActiveDashboard { get; }
-    event EventHandler<bool>? IsRunningChanged;
-    void Start(DashboardInfo dashboard);
-    string GetUrl(bool useNetwork);
-    void OpenInBrowser();
-    void Stop();
+    ObservableCollection<DashboardInfo> Dashboards { get; }
+    IEnumerable<DashboardInfo> GetByType(DashboardType type);
+    DashboardInfo? GetById(string id);
+    void Scan();
 }

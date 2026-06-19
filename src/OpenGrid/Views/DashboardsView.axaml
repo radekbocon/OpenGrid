@@ -1,113 +1,104 @@
-<controls1:PageView
+<controls:PageView
     x:Class="OpenGrid.Views.DashboardsView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
-    xmlns:controls1="clr-namespace:OpenGrid.Controls"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:controls="clr-namespace:OpenGrid.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="clr-namespace:OpenGrid.Models"
-    xmlns:views="clr-namespace:OpenGrid.Views"
     xmlns:vm="using:OpenGrid.ViewModels"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="600"
+    d:DesignWidth="900"
     x:DataType="vm:DashboardsViewModel"
     mc:Ignorable="d">
 
     <DockPanel>
-        <controls1:PageHeader
+        <controls:PageHeader
             Title="Dashboards"
             DockPanel.Dock="Top"
             IsBackButtonVisible="False">
-            <Grid ColumnDefinitions="Auto, Auto, Auto" ColumnSpacing="8">
-                <icons:MaterialIconExt
-                    VerticalAlignment="Center"
-                    IconSize="18"
-                    Kind="Server" />
-                <TextBlock
-                    Grid.Column="1"
-                    VerticalAlignment="Center"
-                    FontSize="13"
-                    Text="{Binding StatusText}" />
-                <Button
-                    Grid.Column="2"
-                    Command="{Binding StopServerCommand}"
-                    Content="Stop Server"
-                    IsVisible="{Binding IsServerRunning}" />
-                <Button
-                    Grid.Column="2"
-                    Command="{Binding StartServerCommand}"
-                    Content="Start Server"
-                    IsVisible="{Binding !IsServerRunning}" />
-            </Grid>
-        </controls1:PageHeader>
+            <Button
+                Classes="Flat"
+                Command="{Binding RefreshCommand}"
+                ToolTip.Tip="Refresh dashboard list">
+                <avalonia:MaterialIconExt IconSize="24" Kind="Refresh" />
+            </Button>
+        </controls:PageHeader>
 
-        <ScrollViewer Padding="0,0,12,0">
-            <ItemsControl Margin="8,0" ItemsSource="{Binding Dashboards}">
+        <ScrollViewer Padding="0,12,12,0">
+            <ItemsControl ItemsSource="{Binding Dashboards}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <WrapPanel />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="models:DashboardInfo">
-                        <controls:Card
-                            Width="280"
+                    <DataTemplate x:DataType="vm:DashboardCardViewModel">
+                        <Border
+                            Width="240"
+                            Margin="8"
                             Padding="0"
-                            VerticalAlignment="Top">
+                            Background="{DynamicResource MaterialCardBackgroundBrush}"
+                            CornerRadius="8">
                             <StackPanel>
-                                <Border CornerRadius="8">
-                                    <Image Source="{Binding Image}" />
+                                <!--  Preview image or placeholder  -->
+                                <Border
+                                    Height="120"
+                                    Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}"
+                                    CornerRadius="8,8,0,0">
+                                    <Image
+                                        Width="240"
+                                        Height="120"
+                                        Source="{Binding Dashboard.Image}"
+                                        Stretch="UniformToFill" />
                                 </Border>
-                                <StackPanel Margin="16" Spacing="8">
+
+                                <!--  Info  -->
+                                <StackPanel Margin="12,8" Spacing="4">
                                     <TextBlock
-                                        HorizontalAlignment="Center"
-                                        FontSize="18"
+                                        FontSize="16"
                                         FontWeight="SemiBold"
-                                        Text="{Binding Name}" />
-
+                                        Text="{Binding Dashboard.Name}" />
                                     <TextBlock
-                                        HorizontalAlignment="Center"
-                                        FontSize="13"
-                                        Opacity="0.7"
-                                        Text="{Binding Description}"
-                                        TextAlignment="Center"
+                                        MaxHeight="36"
+                                        FontSize="12"
+                                        Opacity="0.6"
+                                        Text="{Binding Dashboard.Description}"
                                         TextWrapping="Wrap" />
+                                </StackPanel>
 
-                                    <StackPanel
-                                        HorizontalAlignment="Center"
-                                        Orientation="Horizontal"
-                                        Spacing="8">
+                                <!--  Actions  -->
+                                <Border
+                                    Padding="8"
+                                    BorderBrush="{DynamicResource MaterialCardBorderBrush}"
+                                    BorderThickness="0,1,0,0">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
                                         <Button
                                             Padding="8,4"
                                             Classes="Flat"
-                                            Command="{Binding $parent[views:DashboardsView].((vm:DashboardsViewModel)DataContext)?.OpenInBrowserCommand}"
-                                            CommandParameter="{Binding}">
+                                            Command="{Binding OpenInBrowserCommand}">
                                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <icons:MaterialIconExt IconSize="16" Kind="Web" />
+                                                <avalonia:MaterialIconExt IconSize="14" Kind="OpenInNew" />
                                                 <TextBlock FontSize="12" Text="Browser" />
                                             </StackPanel>
                                         </Button>
                                         <Button
                                             Padding="8,4"
                                             Classes="Flat"
-                                            Command="{Binding $parent[views:DashboardsView].((vm:DashboardsViewModel)DataContext)?.OpenOnDeviceCommand}"
-                                            CommandParameter="{Binding}">
+                                            Command="{Binding ShowOnDeviceCommand}">
                                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <icons:MaterialIconExt IconSize="16" Kind="Cellphone" />
+                                                <avalonia:MaterialIconExt IconSize="14" Kind="Qrcode" />
                                                 <TextBlock FontSize="12" Text="Device" />
                                             </StackPanel>
                                         </Button>
                                     </StackPanel>
-                                </StackPanel>
+                                </Border>
                             </StackPanel>
-                        </controls:Card>
-
+                        </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
     </DockPanel>
 
-</controls1:PageView>
+</controls:PageView>
