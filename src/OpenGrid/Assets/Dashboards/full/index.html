@@ -1,194 +1,518 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Full Telemetry</title>
-<script src="/framework/opengrid.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#050505}
-@font-face{font-family:'Racing';src:local('Segoe UI'),local('Arial');font-weight:700}
-body{color:#fff;font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;height:100%;padding:8px;gap:4px;background:radial-gradient(ellipse at center,#0d0d0d 0%,#050505 100%)}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Racing Dashboard</title>
+    <script src="/framework/opengrid.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-.shift-lights{display:flex;gap:3px;justify-content:center;flex-shrink:0;height:8px;padding:0 4px}
-.shift-light{width:20px;border-radius:1px;background:#111;transition:background .04s}
-.shift-light.on{background:#ffd100}
-.shift-light.red{background:#e00}
+        html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #111;
+        }
 
-.main-grid{display:grid;flex:1;min-height:0;gap:6px;grid-template-columns:auto 1fr auto;grid-template-rows:1fr auto auto}
-.speed-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 16px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:3px;min-width:100px}
-.speed-label{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:2px;font-weight:500}
-.speed-value{font-size:min(4vw,36px);font-weight:300;font-family:'Courier New',monospace;color:#ddd;line-height:1.1}
-.speed-unit{font-size:10px;color:#555;font-weight:400}
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-.center-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:3px;padding:4px 16px;position:relative}
-.rpm-container{width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;justify-content:center}
-.rpm-bar-track{width:100%;height:10px;background:#111;overflow:hidden;border-radius:2px}
-.rpm-bar-fill{height:100%;transition:width .04s;background:linear-gradient(90deg,#fff,#ffd100 55%,#fa0 72%,#e00 85%);border-radius:2px}
-.rpm-bar-fill.low{background:linear-gradient(90deg,#555,#888)}
-.rpm-number{font-size:min(3.2vw,28px);font-weight:300;font-family:'Courier New',monospace;color:#888;line-height:1}
-.rpm-label{font-size:8px;color:#444;text-transform:uppercase;letter-spacing:2px}
-.gear-container{display:flex;align-items:center;justify-content:center;gap:8px;margin:2px 0}
-.gear-display{font-size:min(12vw,96px);font-weight:700;color:#fff;line-height:1;font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:-3px}
-.gear-label{font-size:8px;color:#555;text-transform:uppercase;letter-spacing:2px;writing-mode:vertical-lr;text-orientation:mixed}
-.rpm-digits{font-size:min(3.5vw,30px);font-weight:600;font-family:'Courier New',monospace;color:#ffd100;line-height:1}
+        .dash {
+            flex-shrink: 0;
+            background: #000;
+            padding: 12px;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: 120px 140px 140px 140px 120px;
+        }
 
-.tire-panel{display:flex;flex-direction:column;gap:3px;padding:8px 10px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:3px;min-width:80px}
-.tire-row{display:flex;gap:6px;justify-content:center}
-.tire-item{text-align:center;padding:2px 4px}
-.tire-item .pos{font-size:7px;color:#444;font-weight:600}
-.tire-item .temp{font-size:11px;font-family:'Courier New',monospace;font-weight:600;color:#888;transition:color .3s}
-.tire-item .temp.cold{color:#4488ff}
-.tire-item .temp.optimal{color:#22cc44}
-.tire-item .temp.hot{color:#ffa500}
-.tire-item .temp.overheat{color:#e00}
+        .tile {
+            border-radius: 8px;
+            border: 2px solid #333;
+            background: #111;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
 
-.data-grid{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
-.data-cell{text-align:center;padding:3px 6px;background:#0a0a0a;border:1px solid #151515;border-radius:2px}
-.data-cell .l{font-size:7px;color:#444;text-transform:uppercase;letter-spacing:1px;font-weight:500}
-.data-cell .v{font-family:'Courier New',monospace;font-size:13px;font-weight:600;color:#bbb;line-height:1.3}
-.data-cell .v.grn{color:#22cc44}
-.data-cell .v.red{color:#e00}
-.data-cell .v.org{color:#ffa500}
-.data-cell .v.yel{color:#ffd100}
+        .label {
+            font-size: 28px;
+            letter-spacing: 2px;
+        }
 
-.input-row{grid-column:1/-1;display:flex;gap:4px;align-items:center}
-.input-group{flex:1;display:flex;align-items:center;gap:3px}
-.input-label{font-size:7px;color:#444;min-width:20px;text-transform:uppercase;letter-spacing:1px;font-weight:500}
-.input-track{flex:1;height:5px;background:#111;overflow:hidden;border-radius:2px}
-.input-fill{height:100%;transition:width .04s;border-radius:2px}
-.input-gas .input-fill{background:#ffd100}
-.input-brake .input-fill{background:#e00}
-.input-clutch .input-fill{background:#666}
+        .value {
+            font-size: 48px;
+            font-weight: bold;
+        }
 
-.session-bar{grid-column:1/-1;display:flex;gap:8px;flex-shrink:0;font-size:9px;color:#555;justify-content:center;align-items:center;padding:2px 0}
-.session-bar strong{color:#888;font-weight:600}
-.session-bar .sep{color:#222}
+        .red {
+            background: linear-gradient(#900, #f00);
+        }
 
-.status{font-size:7px;text-align:center;flex-shrink:0;color:#444;text-transform:uppercase;letter-spacing:2px;font-weight:500}
-.status.on{color:#22cc44}
+        .blue {
+            background: linear-gradient(#1c5fa7, #3a9cff);
+        }
 
-@media(min-aspect-ratio:2/1){.main-grid{grid-template-columns:auto 1fr auto;grid-template-rows:1fr auto}}
-</style>
+        .gray {
+            background: linear-gradient(#666, #d5d5d5);
+            color: black;
+        }
+
+        .green {
+            background: linear-gradient(#005f00, #18c918);
+        }
+
+        .yellow {
+            background: linear-gradient(#c4a000, #ffd400);
+            color: black;
+        }
+
+        .black {
+            background: #050505;
+        }
+
+        .lap-counter {
+            border-radius: 8px;
+            border: 2px solid #555;
+            background: #999;
+            color: white;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lap-counter .value {
+            font-size: 54px;
+        }
+
+        .bbal {
+            border-radius: 8px;
+            border: 2px solid #555;
+            background: #999;
+            color: white;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .speed {
+            border-radius: 8px;
+            border: 2px solid #555;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .speed .value {
+            color: black;
+        }
+
+        .rpm {
+            border: 2px solid #555;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 15px;
+        }
+
+        .rpm-scale {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .rpm-scale span {
+            flex: 1;
+            height: 14px;
+            border-radius: 3px;
+            background: #a00;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .gear {
+            width: 290px;
+            height: 260px;
+            border-radius: 8px;
+            background: linear-gradient(#ddd, #aaa);
+            color: black;
+            font-size: 150px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .footer-box {
+            background: #111;
+            border: 2px solid #444;
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .footer-title {
+            font-size: 28px;
+        }
+
+        .footer-value {
+            font-size: 48px;
+        }
+    </style>
 </head>
 <body>
 
-<div class="shift-lights" id="shiftLights"></div>
+<div class="dash">
 
-<div class="main-grid">
-    <div class="speed-panel">
-        <div class="speed-label">Speed</div>
-        <div class="speed-value" id="speedDisp">0</div>
-        <div class="speed-unit">km/h</div>
+    <div class="tile" style="grid-column:1/3;grid-row:1">
+        <div class="label" id="sessDisp">RACE</div>
     </div>
 
-    <div class="center-panel">
-        <div class="rpm-container">
-            <div class="rpm-label">Engine</div>
-            <div class="gear-container">
-                <div class="gear-display" id="gearDisp">N</div>
-                <div class="rpm-digits" id="rpmDisp">0</div>
-            </div>
-            <div class="rpm-bar-track"><div class="rpm-bar-fill" id="rpmBar"></div></div>
+    <div class="lap-counter" style="grid-column:3;grid-row:1">
+        <div class="label">LAPCNTR</div>
+        <div class="value" id="lapCntr">7</div>
+    </div>
+
+    <div class="rpm" style="grid-column:4/7;grid-row:1">
+        <div class="rpm-scale" id="shiftLights">
+            <span style="background:#0f0"></span>
+            <span style="background:#0f0"></span>
+            <span style="background:#0f0"></span>
+            <span style="background:#0f0"></span>
+            <span style="background:#0f0"></span>
+            <span style="background:#0f0"></span>
+            <span style="background:#0f0"></span>
+            <span style="background:#0f0"></span>
+            <span style="background:#ff0"></span>
+            <span style="background:#660"></span>
+            <span style="background:#600"></span>
+            <span style="background:#600"></span>
         </div>
     </div>
 
-    <div class="tire-panel">
-        <div class="tire-row">
-            <div class="tire-item"><div class="pos">FL</div><div class="temp" id="tfL">--</div></div>
-            <div class="tire-item"><div class="pos">FR</div><div class="temp" id="tfR">--</div></div>
-        </div>
-        <div class="tire-row">
-            <div class="tire-item"><div class="pos">RL</div><div class="temp" id="trL">--</div></div>
-            <div class="tire-item"><div class="pos">RR</div><div class="temp" id="trR">--</div></div>
-        </div>
+    <div class="speed gray" style="grid-column:7/10;grid-row:1">
+        <div class="label">SPEED</div>
+        <div class="value" id="speedDisp">134.4</div>
     </div>
 
-    <div class="data-grid">
-        <div class="data-cell"><div class="l">Current</div><div class="v" id="curLap">--:--</div></div>
-        <div class="data-cell"><div class="l">Best</div><div class="v grn" id="bestLap">--:--</div></div>
-        <div class="data-cell"><div class="l">Last</div><div class="v org" id="lastLap">--:--</div></div>
-        <div class="data-cell"><div class="l">Delta</div><div class="v" id="deltaTime">--:--</div></div>
-        <div class="data-cell"><div class="l">Fuel</div><div class="v yel" id="fuelDisp">--</div></div>
-        <div class="data-cell"><div class="l">Position</div><div class="v org" id="posDisp">--</div></div>
-        <div class="data-cell"><div class="l">Lap</div><div class="v" id="lapDisp">--</div></div>
-        <div class="data-cell"><div class="l">G-Force</div><div class="v" id="gForceDisp">0.00</div></div>
-        <div class="data-cell"><div class="l">Session</div><div class="v" id="sessDisp">--</div></div>
-        <div class="data-cell"><div class="l">Car</div><div class="v" id="carDisp">--</div></div>
+    <div class="tile red" style="grid-column:1;grid-row:2">
+        <div class="label">P_FL</div>
+        <div class="value" id="pfL">31.2</div>
     </div>
 
-    <div class="input-row">
-        <div class="input-group input-gas"><span class="input-label">Gas</span><div class="input-track"><div class="input-fill" id="gasBar"></div></div></div>
-        <div class="input-group input-brake"><span class="input-label">Brake</span><div class="input-track"><div class="input-fill" id="brakeBar"></div></div></div>
-        <div class="input-group input-clutch"><span class="input-label">Clutch</span><div class="input-track"><div class="input-fill" id="clutchBar"></div></div></div>
+    <div class="tile blue" style="grid-column:2;grid-row:2">
+        <div class="label">P_FR</div>
+        <div class="value" id="pfR">25.2</div>
     </div>
 
-    <div class="session-bar">
-        <span id="sessDisp2">--</span>
-        <span class="sep">|</span>
-        <strong id="carDisp2">--</strong>
-        <span class="sep">@</span>
-        <strong id="trkDisp">--</strong>
+    <div class="tile black" style="grid-column:1;grid-row:3">
+        <div class="label">P_RL</div>
+        <div class="value" id="prL">27.6</div>
     </div>
+
+    <div class="tile black" style="grid-column:2;grid-row:3">
+        <div class="label">P_RR</div>
+        <div class="value" id="prR">24.9</div>
+    </div>
+
+    <div class="center" style="grid-column:3/8;grid-row:2/4">
+        <div class="gear" id="gearDisp">3</div>
+    </div>
+
+    <div class="tile blue" style="grid-column:8;grid-row:2">
+        <div class="label">T_FL</div>
+        <div class="value" id="tfL">77</div>
+    </div>
+
+    <div class="tile black" style="grid-column:9;grid-row:2">
+        <div class="label">T_FR</div>
+        <div class="value" id="tfR">85</div>
+    </div>
+
+    <div class="tile blue" style="grid-column:8;grid-row:3">
+        <div class="label">T_RL</div>
+        <div class="value" id="trL">78</div>
+    </div>
+
+    <div class="tile red" style="grid-column:9;grid-row:3">
+        <div class="label">T_RR</div>
+        <div class="value" id="trR">111</div>
+    </div>
+
+    <div class="tile" style="grid-column:1;grid-row:4">
+        <div class="label">MIX</div>
+        <div class="value" id="mixDisp">3</div>
+    </div>
+
+    <div class="tile" style="grid-column:2;grid-row:4">
+        <div class="label">POS</div>
+        <div class="value" id="posDisp">15</div>
+    </div>
+
+    <div class="tile" style="grid-column:3;grid-row:4">
+        <div class="label">ABS</div>
+        <div class="value" id="absDisp">OFF</div>
+    </div>
+
+    <div class="tile yellow" style="grid-column:4;grid-row:4">
+        <div class="label">FUEL</div>
+        <div class="value" id="fuelDisp">27.4</div>
+    </div>
+
+    <div class="tile green" style="grid-column:5;grid-row:4">
+        <div class="label">DIFF</div>
+        <div class="value" id="deltaTime">-2.32</div>
+    </div>
+
+    <div class="bbal" style="grid-column:6;grid-row:4">
+        <div class="label">BBAL</div>
+        <div class="value" id="bbalDisp">65.4</div>
+    </div>
+
+    <div class="tile" style="grid-column:7;grid-row:4">
+        <div class="label">TC1</div>
+        <div class="value" id="tc1Disp">OFF</div>
+    </div>
+
+    <div class="tile" style="grid-column:8;grid-row:4">
+        <div class="label">TC2</div>
+        <div class="value" id="tc2Disp">OFF</div>
+    </div>
+
+    <div class="tile" style="grid-column:9;grid-row:4">
+        <div class="label">TC3</div>
+        <div class="value" id="tc3Disp">OFF</div>
+    </div>
+
+    <div class="footer-box" style="grid-column:1/4;grid-row:5">
+        <div class="footer-title">PREV LAP</div>
+        <div class="footer-value" id="prevLap">01:46.86</div>
+    </div>
+
+    <div class="footer-box" style="grid-column:4/7;grid-row:5">
+        <div class="footer-title">LAP</div>
+        <div class="footer-value" id="lastLap">01:46.86</div>
+    </div>
+
+    <div class="footer-box" style="grid-column:7/10;grid-row:5">
+        <div class="footer-title">PREDICTED LAP</div>
+        <div class="footer-value" id="predLap">01:46.47</div>
+    </div>
+
 </div>
 
-<div class="status" id="status">DISCONNECTED</div>
+<div id="status" style="display:none"></div>
 
 <script>
-var nSL=10;
-(function(){var c=document.getElementById('shiftLights');for(var i=0;i<nSL;i++){var e=document.createElement('div');e.className='shift-light';e.id='s'+i;c.appendChild(e)}})();
-var tR=0,cR=0,tS=0,cS=0,mR=8000;
+    const numShiftLights = 12;
+    let targetRpm = 0, currentRpm = 0, targetSpeed = 0, currentSpeed = 0, maxRpm = 8000;
 
-function us(rp){
- var bar=document.getElementById('rpmBar');
- var pct=Math.min(rp,1)*100;
- bar.style.width=pct+'%';
- bar.className='rpm-bar-fill'+(rp<0.15?' low':'');
- for(var i=0;i<nSL;i++){
-  var th=.6+(i/nSL)*.4,e=document.getElementById('s'+i);
-  rp>=th?e.className='shift-light'+(th>.85?' red':' on'):e.className='shift-light'
- }
-}
+    function scaleAll(s) {
+        const d = document.querySelector('.dash');
+        if (!d) return;
+        d.style.width = Math.round(1280 * s) + 'px';
+        d.style.height = Math.round(720 * s) + 'px';
+        d.style.gap = Math.round(10 * s) + 'px';
+        d.style.padding = Math.round(12 * s) + 'px';
+        d.style.gridTemplateRows =
+            Math.round(120 * s) + 'px ' +
+            Math.round(140 * s) + 'px ' +
+            Math.round(140 * s) + 'px ' +
+            Math.round(140 * s) + 'px ' +
+            Math.round(120 * s) + 'px';
 
-function rndr(){
- var rp=Math.min(cR/mR,1);
- document.getElementById('rpmDisp').textContent=Math.round(cR);
- document.getElementById('speedDisp').textContent=Math.round(cS);
- us(rp)
-}
+        d.querySelectorAll('.label, .footer-title').forEach(function (e) {
+            e.style.fontSize = Math.round(28 * s) + 'px';
+            e.style.letterSpacing = Math.round(2 * s) + 'px';
+        });
 
-function anim(){cR+=(tR-cR)*.12;cS+=(tS-cS)*.12;if(Math.abs(cR-tR)<1)cR=tR;if(Math.abs(cS-tS)<.5)cS=tS;rndr();requestAnimationFrame(anim)}
+        d.querySelectorAll('.value').forEach(function (e) {
+            e.style.fontSize = Math.round(48 * s) + 'px';
+        });
 
-function fm(ms){if(!ms||ms<=0)return'--:--';var s=ms/1e3,m=Math.floor(s/60);return m+':'+((s%60)<10?'0':'')+(s%60).toFixed(3)}
+        d.querySelectorAll('.lap-counter .value').forEach(function (e) {
+            e.style.fontSize = Math.round(54 * s) + 'px';
+        });
 
-function tC(t){return t<60?'cold':t<90?'optimal':t<110?'hot':'overheat'}
+        d.querySelectorAll('.rpm').forEach(function (e) {
+            e.style.padding = Math.round(15 * s) + 'px';
+        });
 
-OpenGrid.onTelemetry=function(d){
- tR=d.engineRpm||0;mR=d.maxRpm||8000;tS=d.speedKmh||0;
- document.getElementById('gearDisp').textContent=d.gear||'N';
- document.getElementById('curLap').textContent=fm(d.lapTimeMs);
- document.getElementById('lastLap').textContent=fm(d.lastLapTimeMs);
- document.getElementById('bestLap').textContent=fm(d.bestLapTimeMs);
- var de=document.getElementById('deltaTime');
- if(d.deltaLapTimeMs&&d.deltaLapTimeMs>0){de.textContent=(d.isDeltaPositive?'+':'-')+fm(d.deltaLapTimeMs);de.className='v '+(d.isDeltaPositive?'red':'grn')}else{de.textContent='--:--';de.className='v'}
- document.getElementById('gasBar').style.width=(d.gas*100)+'%';
- document.getElementById('brakeBar').style.width=(d.brake*100)+'%';
- document.getElementById('clutchBar').style.width=((d.clutch||0)*100)+'%';
- document.getElementById('fuelDisp').textContent=(d.fuel||0).toFixed(1);
- document.getElementById('posDisp').textContent=d.position||'--';
- document.getElementById('lapDisp').textContent=d.currentLap||'--';
- if(d.tireTemps){var t=d.tireTemps;document.getElementById('tfL').textContent=Math.round(t.fl)+'°';document.getElementById('tfL').className='temp '+tC(t.fl);document.getElementById('tfR').textContent=Math.round(t.fr)+'°';document.getElementById('tfR').className='temp '+tC(t.fr);document.getElementById('trL').textContent=Math.round(t.rl)+'°';document.getElementById('trL').className='temp '+tC(t.rl);document.getElementById('trR').textContent=Math.round(t.rr)+'°';document.getElementById('trR').className='temp '+tC(t.rr)}
- document.getElementById('gForceDisp').textContent=Math.max(Math.abs(d.gForceLat||0),Math.abs(d.gForceLon||0)).toFixed(2);
- document.getElementById('sessDisp').textContent=d.sessionType||'--';
- document.getElementById('sessDisp2').textContent=d.sessionType||'--';
- if(d.car){document.getElementById('carDisp').textContent=d.car.displayName||'--';document.getElementById('carDisp2').textContent=d.car.displayName||'--'}
- if(d.track)document.getElementById('trkDisp').textContent=d.track.displayName||'--'
-};
+        d.querySelectorAll('.rpm-scale').forEach(function (e) {
+            e.style.gap = Math.round(5 * s) + 'px';
+            e.style.marginTop = Math.round(10 * s) + 'px';
+        });
 
-OpenGrid.onConnected=function(){var e=document.getElementById('status');e.textContent='CONNECTED';e.className='status on'};
-OpenGrid.onDisconnected=function(){var e=document.getElementById('status');e.textContent='DISCONNECTED';e.className='status'};
-OpenGrid.connect({port:8190});anim();
+        d.querySelectorAll('.rpm-scale span').forEach(function (e) {
+            e.style.height = Math.round(14 * s) + 'px';
+            e.style.borderRadius = Math.round(3 * s) + 'px';
+        });
+
+        d.querySelectorAll('.gear').forEach(function (e) {
+            e.style.width = Math.round(290 * s) + 'px';
+            e.style.height = Math.round(260 * s) + 'px';
+            e.style.fontSize = Math.round(150 * s) + 'px';
+            e.style.borderRadius = Math.round(8 * s) + 'px';
+        });
+
+        d.querySelectorAll('.tile, .lap-counter, .bbal, .speed, .rpm, .footer-box').forEach(function (e) {
+            e.style.borderRadius = Math.round(8 * s) + 'px';
+            e.style.borderWidth = Math.round(2 * s) + 'px';
+        });
+
+        d.querySelectorAll('.footer-box').forEach(function (e) {
+            e.style.padding = Math.round(10 * s) + 'px';
+        });
+
+        d.querySelectorAll('.footer-value').forEach(function (e) {
+            e.style.fontSize = Math.round(48 * s) + 'px';
+        });
+
+        var dte = document.getElementById('deltaTime');
+        if (dte) dte.style.fontSize = Math.round(36 * s) + 'px';
+    }
+
+    function fitToViewport() {
+        let s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+        scaleAll(s);
+    }
+
+    window.addEventListener('resize', fitToViewport);
+    fitToViewport();
+
+    function updateShiftLights(rp) {
+        let lights = document.getElementById('shiftLights');
+        let spans = lights.getElementsByTagName('span');
+        for (let i = 0; i < numShiftLights && i < spans.length; i++) {
+            let th = .6 + (i / numShiftLights) * .4;
+            let on = rp >= th;
+            if (i < 8) {
+                spans[i].style.background = on ? '#0f0' : '#060';
+            } else if (i < 10) {
+                spans[i].style.background = on ? '#ff0' : '#660';
+            } else {
+                spans[i].style.background = on ? '#f00' : '#600';
+            }
+        }
+    }
+
+    function renderFrame() {
+        let rp = Math.min(currentRpm / maxRpm, 1);
+        document.getElementById('speedDisp').textContent = Math.round(currentSpeed).toString();
+        updateShiftLights(rp);
+    }
+
+    function animationLoop() {
+        currentRpm += (targetRpm - currentRpm) * .12;
+        currentSpeed += (targetSpeed - currentSpeed) * .12;
+        if (Math.abs(currentRpm - targetRpm) < 1) currentRpm = targetRpm;
+        if (Math.abs(currentSpeed - targetSpeed) < .5) currentSpeed = targetSpeed;
+        renderFrame();
+        requestAnimationFrame(animationLoop);
+    }
+
+    function formatTime(ms) {
+        if (!ms || ms <= 0) return '--:--';
+        let s = ms / 1e3, m = Math.floor(s / 60);
+        return m + ':' + ((s % 60) < 10 ? '0' : '') + (s % 60).toFixed(3);
+    }
+
+    OpenGrid.onTelemetry = function (d) {
+        targetRpm = d.engineRpm || 0;
+        maxRpm = d.maxRpm || 8000;
+        targetSpeed = d.speedKmh || 0;
+        document.getElementById('gearDisp').textContent = d.gear || 'N';
+        document.getElementById('lapCntr').textContent = d.currentLap || '--';
+        document.getElementById('prevLap').textContent = formatTime(d.lastLapTimeMs);
+        document.getElementById('lastLap').textContent = formatTime(d.lapTimeMs);
+
+        let de = document.getElementById('deltaTime');
+        let dt = de.parentNode;
+        if (d.deltaLapTimeMs !== undefined && d.deltaLapTimeMs !== null && !isNaN(d.deltaLapTimeMs)) {
+            let sec = Math.abs(d.deltaLapTimeMs) / 1000;
+            de.textContent = (d.deltaLapTimeMs >= 0 ? '+' : '-') + sec.toFixed(2);
+            dt.className = d.deltaLapTimeMs >= 0 ? 'tile red' : 'tile green';
+        } else {
+            de.textContent = '--:--';
+            dt.className = 'tile gray';
+        }
+        document.getElementById('fuelDisp').textContent = (d.fuel || 0).toFixed(1);
+        document.getElementById('posDisp').textContent = d.position || '--';
+        if (d.tireTemps) {
+            const t = d.tireTemps;
+            document.getElementById('tfL').textContent = Math.round(t.fl).toString();
+            document.getElementById('tfR').textContent = Math.round(t.fr).toString();
+            document.getElementById('trL').textContent = Math.round(t.rl).toString();
+            document.getElementById('trR').textContent = Math.round(t.rr).toString();
+        }
+        if (d.tirePressures) {
+            const p = d.tirePressures;
+            document.getElementById('pfL').textContent = Math.round(p.fl).toString();
+            document.getElementById('pfR').textContent = Math.round(p.fr).toString();
+            document.getElementById('prL').textContent = Math.round(p.rl).toString();
+            document.getElementById('prR').textContent = Math.round(p.rr).toString();
+        }
+        document.getElementById('sessDisp').textContent = d.sessionType || 'RACE';
+        document.getElementById('bbalDisp').textContent = (d.brakeBias || 0).toFixed(1);
+
+        function setTile(id, val) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            var p = el.parentNode;
+            if (val === undefined || val === null || val === 0 || val === '0' || val === 'OFF') {
+                el.textContent = 'OFF';
+                p.className = 'tile red';
+            } else {
+                el.textContent = val;
+                p.className = 'tile green';
+            }
+        }
+        setTile('absDisp', d.absSetting);
+        setTile('tc1Disp', d.tc1Setting);
+        setTile('tc2Disp', d.tc2Setting);
+        setTile('tc3Disp', d.tc3Setting);
+    };
+
+    OpenGrid.onConnected = function () {
+    };
+    OpenGrid.onDisconnected = function () {
+    };
+    OpenGrid.connect({port: 8190});
+    animationLoop();
 </script>
 </body>
 </html>
