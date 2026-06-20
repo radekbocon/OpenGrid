@@ -142,8 +142,11 @@
             display: flex;
             justify-content: center;
             gap: 5px;
-            margin-top: 10px;
+            margin-top: 5px;
             width: 100%;
+            border-top: 2px solid #444;
+            border-bottom: 2px solid #444;
+            padding: 5px 0;
         }
 
         .rpm-scale span {
@@ -153,10 +156,49 @@
             background: #a00;
         }
 
+        .rpm-labels {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            width: 100%;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .rpm-labels span {
+            flex: 1;
+            text-align: center;
+        }
+
+        .rpm-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 5px;
+        }
+
         .center {
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        .pressure-group {
+            grid-column: 1 / 4;
+            grid-row: 2 / 4;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 1fr 1fr;
+            grid-auto-rows: 1fr;
+        }
+
+        .temp-group {
+            grid-column: 7 / 10;
+            grid-row: 2 / 4;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 1fr 1fr;
+            grid-auto-rows: 1fr;
         }
 
         .gear {
@@ -208,6 +250,20 @@
     </div>
 
     <div class="rpm" style="grid-column:4/7;grid-row:1">
+        <div class="rpm-labels" id="shiftLabels">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
         <div class="rpm-scale" id="shiftLights">
             <span style="background:#0f0"></span>
             <span style="background:#0f0"></span>
@@ -222,6 +278,7 @@
             <span style="background:#600"></span>
             <span style="background:#600"></span>
         </div>
+        <div class="rpm-value" id="rpmValue">0</div>
     </div>
 
     <div class="speed gray" style="grid-column:7/10;grid-row:1">
@@ -229,48 +286,46 @@
         <div class="value" id="speedDisp">134.4</div>
     </div>
 
-    <div class="tile red" style="grid-column:1;grid-row:2">
-        <div class="label">P_FL</div>
-        <div class="value" id="pfL">31.2</div>
+    <div class="pressure-group">
+        <div class="tile red">
+            <div class="label">P_FL</div>
+            <div class="value" id="pfL">31.2</div>
+        </div>
+        <div class="tile blue">
+            <div class="label">P_FR</div>
+            <div class="value" id="pfR">25.2</div>
+        </div>
+        <div class="tile blue">
+            <div class="label">P_RL</div>
+            <div class="value" id="prL">27.6</div>
+        </div>
+        <div class="tile black">
+            <div class="label">P_RR</div>
+            <div class="value" id="prR">24.9</div>
+        </div>
     </div>
 
-    <div class="tile blue" style="grid-column:2;grid-row:2">
-        <div class="label">P_FR</div>
-        <div class="value" id="pfR">25.2</div>
-    </div>
-
-    <div class="tile black" style="grid-column:1;grid-row:3">
-        <div class="label">P_RL</div>
-        <div class="value" id="prL">27.6</div>
-    </div>
-
-    <div class="tile black" style="grid-column:2;grid-row:3">
-        <div class="label">P_RR</div>
-        <div class="value" id="prR">24.9</div>
-    </div>
-
-    <div class="center" style="grid-column:3/8;grid-row:2/4">
+    <div class="center" style="grid-column:4/7;grid-row:2/4">
         <div class="gear" id="gearDisp">3</div>
     </div>
 
-    <div class="tile blue" style="grid-column:8;grid-row:2">
-        <div class="label">T_FL</div>
-        <div class="value" id="tfL">77</div>
-    </div>
-
-    <div class="tile black" style="grid-column:9;grid-row:2">
-        <div class="label">T_FR</div>
-        <div class="value" id="tfR">85</div>
-    </div>
-
-    <div class="tile blue" style="grid-column:8;grid-row:3">
-        <div class="label">T_RL</div>
-        <div class="value" id="trL">78</div>
-    </div>
-
-    <div class="tile red" style="grid-column:9;grid-row:3">
-        <div class="label">T_RR</div>
-        <div class="value" id="trR">111</div>
+    <div class="temp-group">
+        <div class="tile blue">
+            <div class="label">T_FL</div>
+            <div class="value" id="tfL">77</div>
+        </div>
+        <div class="tile blue">
+            <div class="label">T_FR</div>
+            <div class="value" id="tfR">85</div>
+        </div>
+        <div class="tile blue">
+            <div class="label">T_RL</div>
+            <div class="value" id="trL">78</div>
+        </div>
+        <div class="tile red">
+            <div class="label">T_RR</div>
+            <div class="value" id="trR">111</div>
+        </div>
     </div>
 
     <div class="tile" style="grid-column:1;grid-row:4">
@@ -283,7 +338,7 @@
         <div class="value" id="posDisp">15</div>
     </div>
 
-    <div class="tile" style="grid-column:3;grid-row:4">
+    <div class="tile red" style="grid-column:3;grid-row:4">
         <div class="label">ABS</div>
         <div class="value" id="absDisp">OFF</div>
     </div>
@@ -303,17 +358,17 @@
         <div class="value" id="bbalDisp">65.4</div>
     </div>
 
-    <div class="tile" style="grid-column:7;grid-row:4">
+    <div class="tile green" style="grid-column:7;grid-row:4">
         <div class="label">TC1</div>
-        <div class="value" id="tc1Disp">OFF</div>
+        <div class="value" id="tc1Disp">2</div>
     </div>
 
-    <div class="tile" style="grid-column:8;grid-row:4">
+    <div class="tile green" style="grid-column:8;grid-row:4">
         <div class="label">TC2</div>
-        <div class="value" id="tc2Disp">OFF</div>
+        <div class="value" id="tc2Disp">5</div>
     </div>
 
-    <div class="tile" style="grid-column:9;grid-row:4">
+    <div class="tile red" style="grid-column:9;grid-row:4">
         <div class="label">TC3</div>
         <div class="value" id="tc3Disp">OFF</div>
     </div>
@@ -329,8 +384,8 @@
     </div>
 
     <div class="footer-box" style="grid-column:7/10;grid-row:5">
-        <div class="footer-title">PREDICTED LAP</div>
-        <div class="footer-value" id="predLap">01:46.47</div>
+        <div class="footer-title">BEST LAP</div>
+        <div class="footer-value" id="bestLap">01:46.47</div>
     </div>
 
 </div>
@@ -374,7 +429,11 @@
 
         d.querySelectorAll('.rpm-scale').forEach(function (e) {
             e.style.gap = Math.round(5 * s) + 'px';
-            e.style.marginTop = Math.round(10 * s) + 'px';
+            e.style.marginTop = Math.round(5 * s) + 'px';
+            e.style.borderTopWidth = Math.round(2 * s) + 'px';
+            e.style.borderBottomWidth = Math.round(2 * s) + 'px';
+            e.style.paddingTop = Math.round(5 * s) + 'px';
+            e.style.paddingBottom = Math.round(5 * s) + 'px';
         });
 
         d.querySelectorAll('.rpm-scale span').forEach(function (e) {
@@ -382,11 +441,25 @@
             e.style.borderRadius = Math.round(3 * s) + 'px';
         });
 
+        d.querySelectorAll('.rpm-labels').forEach(function (e) {
+            e.style.gap = Math.round(5 * s) + 'px';
+            e.style.fontSize = Math.round(11 * s) + 'px';
+        });
+
+        d.querySelectorAll('.rpm-value').forEach(function (e) {
+            e.style.fontSize = Math.round(20 * s) + 'px';
+            e.style.marginTop = Math.round(5 * s) + 'px';
+        });
+
         d.querySelectorAll('.gear').forEach(function (e) {
             e.style.width = Math.round(290 * s) + 'px';
             e.style.height = Math.round(260 * s) + 'px';
             e.style.fontSize = Math.round(150 * s) + 'px';
             e.style.borderRadius = Math.round(8 * s) + 'px';
+        });
+
+        d.querySelectorAll('.pressure-group, .temp-group').forEach(function (e) {
+            e.style.gap = Math.round(10 * s) + 'px';
         });
 
         d.querySelectorAll('.tile, .lap-counter, .bbal, .speed, .rpm, .footer-box').forEach(function (e) {
@@ -430,10 +503,26 @@
         }
     }
 
+    function updateShiftLabels(mr) {
+        let labels = document.getElementById('shiftLabels');
+        if (!labels) return;
+        let spans = labels.getElementsByTagName('span');
+        for (let i = 0; i < numShiftLights && i < spans.length; i++) {
+            if (i === 0 || i === 3 || i === 6 || i === 9 || i === numShiftLights - 1) {
+                let rpm = Math.round((i / (numShiftLights - 1)) * mr);
+                spans[i].textContent = rpm >= 1000 ? (rpm / 1000).toFixed(1) : rpm.toString();
+            } else {
+                spans[i].textContent = '';
+            }
+        }
+    }
+
     function renderFrame() {
         let rp = Math.min(currentRpm / maxRpm, 1);
-        document.getElementById('speedDisp').textContent = Math.round(currentSpeed).toString();
+        document.getElementById('speedDisp').textContent = currentSpeed.toFixed(1);
+        document.getElementById('rpmValue').textContent = Math.round(currentRpm).toString();
         updateShiftLights(rp);
+        updateShiftLabels(maxRpm);
     }
 
     function animationLoop() {
@@ -454,11 +543,13 @@
     OpenGrid.onTelemetry = function (d) {
         targetRpm = d.engineRpm || 0;
         maxRpm = d.maxRpm || 8000;
+        updateShiftLabels(maxRpm);
         targetSpeed = d.speedKmh || 0;
         document.getElementById('gearDisp').textContent = d.gear || 'N';
         document.getElementById('lapCntr').textContent = d.currentLap || '--';
         document.getElementById('prevLap').textContent = formatTime(d.lastLapTimeMs);
         document.getElementById('lastLap').textContent = formatTime(d.lapTimeMs);
+        document.getElementById('bestLap').textContent = formatTime(d.bestLapTimeMs);
 
         let de = document.getElementById('deltaTime');
         let dt = de.parentNode;
@@ -472,20 +563,6 @@
         }
         document.getElementById('fuelDisp').textContent = (d.fuel || 0).toFixed(1);
         document.getElementById('posDisp').textContent = d.position || '--';
-        if (d.tireTemps) {
-            const t = d.tireTemps;
-            document.getElementById('tfL').textContent = Math.round(t.fl).toString();
-            document.getElementById('tfR').textContent = Math.round(t.fr).toString();
-            document.getElementById('trL').textContent = Math.round(t.rl).toString();
-            document.getElementById('trR').textContent = Math.round(t.rr).toString();
-        }
-        if (d.tirePressures) {
-            const p = d.tirePressures;
-            document.getElementById('pfL').textContent = Math.round(p.fl).toString();
-            document.getElementById('pfR').textContent = Math.round(p.fr).toString();
-            document.getElementById('prL').textContent = Math.round(p.rl).toString();
-            document.getElementById('prR').textContent = Math.round(p.rr).toString();
-        }
         document.getElementById('sessDisp').textContent = d.sessionType || 'RACE';
         document.getElementById('bbalDisp').textContent = (d.brakeBias || 0).toFixed(1);
 
@@ -501,10 +578,40 @@
                 p.className = 'tile green';
             }
         }
+
+        function updateTempTile(id, v) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = v.toFixed(1);
+            el.parentNode.className = v < 70 ? 'tile black' : v <= 100 ? 'tile blue' : 'tile red';
+        }
+
+        function updatePressureTile(id, v) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = v.toFixed(1);
+            el.parentNode.className = v < 26 ? 'tile black' : v <= 28 ? 'tile blue' : 'tile red';
+        }
+
         setTile('absDisp', d.absSetting);
         setTile('tc1Disp', d.tc1Setting);
         setTile('tc2Disp', d.tc2Setting);
         setTile('tc3Disp', d.tc3Setting);
+
+        if (d.tireTemps) {
+            var t = d.tireTemps;
+            updateTempTile('tfL', t.fl);
+            updateTempTile('tfR', t.fr);
+            updateTempTile('trL', t.rl);
+            updateTempTile('trR', t.rr);
+        }
+        if (d.tirePressures) {
+            var p = d.tirePressures;
+            updatePressureTile('pfL', p.fl);
+            updatePressureTile('pfR', p.fr);
+            updatePressureTile('prL', p.rl);
+            updatePressureTile('prR', p.rr);
+        }
     };
 
     OpenGrid.onConnected = function () {
