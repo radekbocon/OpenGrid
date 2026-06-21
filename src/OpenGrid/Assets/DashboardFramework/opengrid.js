@@ -1,11 +1,15 @@
 var OpenGrid = (function () {
     'use strict';
 
-    const port = 8190;
-    const hostName = 'localhost';
+    let wsHost = location.hostname;
+    let wsPort = location.port;
     let ws = null;
     let reconnectTimer = null;
     let isConnected = false;
+
+    function buildWsUrl(host, port) {
+        return port ? 'ws://' + host + ':' + port + '/ws/telemetry' : 'ws://' + host + '/ws/telemetry';
+    }
 
     function connectWs(host, p) {
         if (ws) {
@@ -14,7 +18,7 @@ var OpenGrid = (function () {
         }
 
         try {
-            ws = new WebSocket('ws://' + host + ':' + p + '/ws/telemetry');
+            ws = new WebSocket(buildWsUrl(host, p));
         } catch (e) {
             scheduleReconnect(host, p);
             return;
@@ -103,9 +107,9 @@ var OpenGrid = (function () {
 
     function connect(options) {
         options = options || {};
-        const p = options.port || port;
-        const h = options.host || location.hostname;
-        connectWs(h, p);
+        if (options.host) wsHost = options.host;
+        if (options.port) wsPort = options.port;
+        connectWs(wsHost, wsPort);
     }
 
     function disconnect() {
@@ -132,7 +136,7 @@ var OpenGrid = (function () {
             ws = null;
         }
         isConnected = false;
-        connectWs(hostName, port);
+        connectWs(wsHost, wsPort);
     }
 
     function fetchApi(path, callback) {
