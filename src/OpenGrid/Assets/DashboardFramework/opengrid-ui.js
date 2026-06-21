@@ -3,9 +3,9 @@
 
     const style = document.createElement('style');
     style.textContent =
-        '#og-handle{position:fixed;top:0;left:50%;z-index:9999;width:48px;height:4px;margin-left:-24px;background:rgba(255,255,255,0.1);border-radius:0 0 3px 3px;cursor:pointer;transition:background .15s,height .15s;touch-action:none}' +
-        '#og-handle:hover{background:rgba(255,255,255,0.25);height:6px}' +
-        '#og-handle::after{content:"";position:absolute;top:-12px;left:-24px;right:-24px;bottom:-12px}' +
+        '#og-handle{position:fixed;top:0;left:50%;z-index:9999;width:72px;height:10px;margin-left:-36px;background:rgba(255,255,255,0.12);border-radius:0 0 4px 4px;cursor:pointer;transition:background .15s,height .15s;touch-action:none}' +
+        '#og-handle:hover{background:rgba(255,255,255,0.3);height:14px}' +
+        '#og-handle::after{content:"";position:absolute;top:-16px;left:-30px;right:-30px;bottom:-16px}' +
         '#og-drawer{position:fixed;top:0;left:0;right:0;background:#0a0a0a;border-bottom:1px solid #1a1a1a;z-index:9998;transform:translateY(-100%);transition:transform .2s ease;font-family:"Segoe UI",system-ui,sans-serif;font-size:13px;line-height:1;padding:18px 16px 10px;touch-action:none}' +
         '#og-drawer.og-open{transform:translateY(0)}' +
         '#og-drawer .og-bar{width:28px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 12px;display:block}' +
@@ -25,6 +25,8 @@
     let isOpen = false;
     let touchStartY = 0;
     let isDragging = false;
+    let autoHideTimer = null;
+    let hasAutoShown = false;
 
     function buildUI() {
         handle = document.createElement('div');
@@ -80,6 +82,18 @@
             closeDrawer();
             OpenGrid.reconnect();
         });
+
+        autoShow();
+    }
+
+    function autoShow() {
+        if (hasAutoShown) return;
+        hasAutoShown = true;
+        openDrawer();
+        autoHideTimer = setTimeout(function () {
+            closeDrawer();
+            autoHideTimer = null;
+        }, 5000);
     }
 
     function updateFsLabel() {
@@ -88,14 +102,23 @@
         lbl.textContent = OpenGrid.isFullscreen() ? 'Exit Fullscreen' : 'Enter Fullscreen';
     }
 
+    function clearAutoHide() {
+        if (autoHideTimer) {
+            clearTimeout(autoHideTimer);
+            autoHideTimer = null;
+        }
+    }
+
     function openDrawer() {
+        clearAutoHide();
         isOpen = true;
         if (drawer) drawer.classList.add('og-open');
         updateFsLabel();
-        updateStatusUI();
+        OpenGrid.updateStatusUI();
     }
 
     function closeDrawer() {
+        clearAutoHide();
         isOpen = false;
         if (drawer) {
             drawer.classList.remove('og-open');
@@ -106,23 +129,29 @@
     document.addEventListener('touchstart', function (e) {
         if (!drawer) return;
         if (e.touches.length !== 1) return;
-        const y = e.touches[0].clientY;
-        if (y > 50 && !isOpen) return;
-        touchStartY = y;
-        isDragging = true;
+        touchStartY = e.touches[0].clientY;
+        isDragging = false;
         drawer.style.transition = 'none';
-        if (!isOpen) {
-            drawer.style.transform = 'translateY(-100%)';
-        }
     }, { passive: true });
 
     document.addEventListener('touchmove', function (e) {
-        if (!isDragging || !drawer) return;
+        if (!drawer) return;
         const y = e.touches[0].clientY;
         const dy = y - touchStartY;
+        if (Math.abs(dy) < 10) return;
+
+        if (!isDragging) {
+            isDragging = true;
+            if (!isOpen) {
+                drawer.style.transform = 'translateY(-100%)';
+            }
+        }
+
         if (!isOpen) {
-            const pct = Math.max(-100, Math.min(0, -100 + (dy / 120) * 100));
-            drawer.style.transform = 'translateY(' + pct + '%)';
+            if (dy > 0) {
+                const pct = Math.max(-100, Math.min(0, -100 + (dy / 120) * 100));
+                drawer.style.transform = 'translateY(' + pct + '%)';
+            }
         } else {
             const pct = Math.min(0, dy);
             drawer.style.transform = 'translateY(' + pct + 'px)';
@@ -152,6 +181,13 @@
 
     document.addEventListener('keydown', function (e) {
         if (e.key === 'F11') { e.preventDefault(); OpenGrid.toggleFullscreen(); }
+        if (e.key === 'o' || e.key === 'O') {
+            if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+                e.preventDefault();
+                if (isOpen) closeDrawer();
+                else openDrawer();
+            }
+        }
     });
 
     document.addEventListener('fullscreenchange', updateFsLabel);

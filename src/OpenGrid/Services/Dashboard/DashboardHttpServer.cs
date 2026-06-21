@@ -414,9 +414,6 @@ public sealed class DashboardHttpServer : IDisposable
             if (dir is not null)
                 Directory.CreateDirectory(dir);
 
-            if (File.Exists(filePath))
-                continue;
-
             using var stream = Assembly.GetManifestResourceStream(resourceName);
             if (stream is null)
                 continue;

@@ -157,6 +157,7 @@ var OpenGrid = (function () {
         fetchApi: fetchApi,
         toggleFullscreen: toggleFullscreen,
         isFullscreen: isFullscreen,
+        updateStatusUI: updateStatusUI,
         onTelemetry: null,
         onConnected: null,
         onDisconnected: null,
