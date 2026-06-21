@@ -85,7 +85,7 @@
             background: #050505;
         }
 
-        .lap-counter {
+        .lap-counter, .bbal {
             border-radius: 8px;
             border: 2px solid #555;
             background: #999;
@@ -99,18 +99,6 @@
 
         .lap-counter .value {
             font-size: 54px;
-        }
-
-        .bbal {
-            border-radius: 8px;
-            border: 2px solid #555;
-            background: #999;
-            color: white;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
         }
 
         .speed {
@@ -202,12 +190,12 @@
         }
 
         .gear {
-            width: 290px;
-            height: 260px;
+            width: 250px;
+            height: 290px;
             border-radius: 8px;
             background: linear-gradient(#ddd, #aaa);
             color: black;
-            font-size: 150px;
+            font-size: 170px;
             font-weight: bold;
             display: flex;
             justify-content: center;
@@ -397,90 +385,91 @@
     let targetRpm = 0, currentRpm = 0, targetSpeed = 0, currentSpeed = 0, maxRpm = 8000;
 
     function scaleAll(s) {
+        const px = (v) => Math.round(v * s) + 'px';
         const d = document.querySelector('.dash');
         if (!d) return;
-        d.style.width = Math.round(1280 * s) + 'px';
-        d.style.height = Math.round(720 * s) + 'px';
-        d.style.gap = Math.round(10 * s) + 'px';
-        d.style.padding = Math.round(12 * s) + 'px';
+        d.style.width = px(1280);
+        d.style.height = px(720);
+        d.style.gap = px(10);
+        d.style.padding = px(12);
         d.style.gridTemplateRows =
-            Math.round(120 * s) + 'px ' +
-            Math.round(140 * s) + 'px ' +
-            Math.round(140 * s) + 'px ' +
-            Math.round(140 * s) + 'px ' +
-            Math.round(120 * s) + 'px';
+            px(120) + ' ' +
+            px(140) + ' ' +
+            px(140) + ' ' +
+            px(140) + ' ' +
+            px(120);
 
         d.querySelectorAll('.label, .footer-title').forEach(function (e) {
-            e.style.fontSize = Math.round(28 * s) + 'px';
-            e.style.letterSpacing = Math.round(2 * s) + 'px';
+            e.style.fontSize = px(28);
+            e.style.letterSpacing = px(2);
         });
 
         d.querySelectorAll('.value').forEach(function (e) {
-            e.style.fontSize = Math.round(48 * s) + 'px';
+            e.style.fontSize = px(48);
         });
 
         d.querySelectorAll('.lap-counter .value').forEach(function (e) {
-            e.style.fontSize = Math.round(54 * s) + 'px';
+            e.style.fontSize = px(54);
         });
 
         d.querySelectorAll('.rpm').forEach(function (e) {
-            e.style.padding = Math.round(15 * s) + 'px';
+            e.style.padding = px(15);
         });
 
         d.querySelectorAll('.rpm-scale').forEach(function (e) {
-            e.style.gap = Math.round(5 * s) + 'px';
-            e.style.marginTop = Math.round(5 * s) + 'px';
-            e.style.borderTopWidth = Math.round(2 * s) + 'px';
-            e.style.borderBottomWidth = Math.round(2 * s) + 'px';
-            e.style.paddingTop = Math.round(5 * s) + 'px';
-            e.style.paddingBottom = Math.round(5 * s) + 'px';
+            e.style.gap = px(5);
+            e.style.marginTop = px(5);
+            e.style.borderTopWidth = px(2);
+            e.style.borderBottomWidth = px(2);
+            e.style.paddingTop = px(5);
+            e.style.paddingBottom = px(5);
         });
 
         d.querySelectorAll('.rpm-scale span').forEach(function (e) {
-            e.style.height = Math.round(14 * s) + 'px';
-            e.style.borderRadius = Math.round(3 * s) + 'px';
+            e.style.height = px(14);
+            e.style.borderRadius = px(3);
         });
 
         d.querySelectorAll('.rpm-labels').forEach(function (e) {
-            e.style.gap = Math.round(5 * s) + 'px';
-            e.style.fontSize = Math.round(11 * s) + 'px';
+            e.style.gap = px(5);
+            e.style.fontSize = px(11);
         });
 
         d.querySelectorAll('.rpm-value').forEach(function (e) {
-            e.style.fontSize = Math.round(20 * s) + 'px';
-            e.style.marginTop = Math.round(5 * s) + 'px';
+            e.style.fontSize = px(20);
+            e.style.marginTop = px(5);
         });
 
         d.querySelectorAll('.gear').forEach(function (e) {
-            e.style.width = Math.round(290 * s) + 'px';
-            e.style.height = Math.round(260 * s) + 'px';
-            e.style.fontSize = Math.round(150 * s) + 'px';
-            e.style.borderRadius = Math.round(8 * s) + 'px';
+            e.style.width = px(250);
+            e.style.height = px(290);
+            e.style.fontSize = px(170);
+            e.style.borderRadius = px(8);
         });
 
         d.querySelectorAll('.pressure-group, .temp-group').forEach(function (e) {
-            e.style.gap = Math.round(10 * s) + 'px';
+            e.style.gap = px(10);
         });
 
         d.querySelectorAll('.tile, .lap-counter, .bbal, .speed, .rpm, .footer-box').forEach(function (e) {
-            e.style.borderRadius = Math.round(8 * s) + 'px';
-            e.style.borderWidth = Math.round(2 * s) + 'px';
+            e.style.borderRadius = px(8);
+            e.style.borderWidth = px(2);
         });
 
         d.querySelectorAll('.footer-box').forEach(function (e) {
-            e.style.padding = Math.round(10 * s) + 'px';
+            e.style.padding = px(10);
         });
 
         d.querySelectorAll('.footer-value').forEach(function (e) {
-            e.style.fontSize = Math.round(48 * s) + 'px';
+            e.style.fontSize = px(48);
         });
 
-        var dte = document.getElementById('deltaTime');
-        if (dte) dte.style.fontSize = Math.round(36 * s) + 'px';
+        const dte = document.getElementById('deltaTime');
+        if (dte) dte.style.fontSize = px(36);
     }
 
     function fitToViewport() {
-        let s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+        const s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
         scaleAll(s);
     }
 
@@ -488,11 +477,11 @@
     fitToViewport();
 
     function updateShiftLights(rp) {
-        let lights = document.getElementById('shiftLights');
-        let spans = lights.getElementsByTagName('span');
+        const lights = document.getElementById('shiftLights');
+        const spans = lights.getElementsByTagName('span');
         for (let i = 0; i < numShiftLights && i < spans.length; i++) {
-            let th = .6 + (i / numShiftLights) * .4;
-            let on = rp >= th;
+            const th = .6 + (i / numShiftLights) * .4;
+            const on = rp >= th;
             if (i < 8) {
                 spans[i].style.background = on ? '#0f0' : '#060';
             } else if (i < 10) {
@@ -504,12 +493,12 @@
     }
 
     function updateShiftLabels(mr) {
-        let labels = document.getElementById('shiftLabels');
+        const labels = document.getElementById('shiftLabels');
         if (!labels) return;
-        let spans = labels.getElementsByTagName('span');
+        const spans = labels.getElementsByTagName('span');
         for (let i = 0; i < numShiftLights && i < spans.length; i++) {
             if (i === 0 || i === 3 || i === 6 || i === 9 || i === numShiftLights - 1) {
-                let rpm = Math.round((i / (numShiftLights - 1)) * mr);
+                const rpm = Math.round((i / (numShiftLights - 1)) * mr);
                 spans[i].textContent = rpm >= 1000 ? (rpm / 1000).toFixed(1) : rpm.toString();
             } else {
                 spans[i].textContent = '';
@@ -518,7 +507,7 @@
     }
 
     function renderFrame() {
-        let rp = Math.min(currentRpm / maxRpm, 1);
+        const rp = Math.min(currentRpm / maxRpm, 1);
         document.getElementById('speedDisp').textContent = currentSpeed.toFixed(1);
         document.getElementById('rpmValue').textContent = Math.round(currentRpm).toString();
         updateShiftLights(rp);
@@ -536,8 +525,36 @@
 
     function formatTime(ms) {
         if (!ms || ms <= 0) return '--:--';
-        let s = ms / 1e3, m = Math.floor(s / 60);
+        const s = ms / 1e3;
+        const m = Math.floor(s / 60);
         return m + ':' + ((s % 60) < 10 ? '0' : '') + (s % 60).toFixed(3);
+    }
+
+    function setTile(id, val) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const p = el.parentNode;
+        if (val === undefined || val === null || val === 0 || val === '0' || val === 'OFF') {
+            el.textContent = 'OFF';
+            p.className = 'tile red';
+        } else {
+            el.textContent = val;
+            p.className = 'tile green';
+        }
+    }
+
+    function updateTempTile(id, v) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = v.toFixed(1);
+        el.parentNode.className = v < 70 ? 'tile black' : v <= 100 ? 'tile blue' : 'tile red';
+    }
+
+    function updatePressureTile(id, v) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = v.toFixed(1);
+        el.parentNode.className = v < 26 ? 'tile black' : v <= 28 ? 'tile blue' : 'tile red';
     }
 
     OpenGrid.onTelemetry = function (d) {
@@ -551,10 +568,10 @@
         document.getElementById('lastLap').textContent = formatTime(d.lapTimeMs);
         document.getElementById('bestLap').textContent = formatTime(d.bestLapTimeMs);
 
-        let de = document.getElementById('deltaTime');
-        let dt = de.parentNode;
+        const de = document.getElementById('deltaTime');
+        const dt = de.parentNode;
         if (d.deltaLapTimeMs !== undefined && d.deltaLapTimeMs !== null && !isNaN(d.deltaLapTimeMs)) {
-            let sec = Math.abs(d.deltaLapTimeMs) / 1000;
+            const sec = Math.abs(d.deltaLapTimeMs) / 1000;
             de.textContent = (d.deltaLapTimeMs >= 0 ? '+' : '-') + sec.toFixed(2);
             dt.className = d.deltaLapTimeMs >= 0 ? 'tile red' : 'tile green';
         } else {
@@ -566,47 +583,20 @@
         document.getElementById('sessDisp').textContent = d.sessionType || 'RACE';
         document.getElementById('bbalDisp').textContent = (d.brakeBias || 0).toFixed(1);
 
-        function setTile(id, val) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            var p = el.parentNode;
-            if (val === undefined || val === null || val === 0 || val === '0' || val === 'OFF') {
-                el.textContent = 'OFF';
-                p.className = 'tile red';
-            } else {
-                el.textContent = val;
-                p.className = 'tile green';
-            }
-        }
-
-        function updateTempTile(id, v) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            el.textContent = v.toFixed(1);
-            el.parentNode.className = v < 70 ? 'tile black' : v <= 100 ? 'tile blue' : 'tile red';
-        }
-
-        function updatePressureTile(id, v) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            el.textContent = v.toFixed(1);
-            el.parentNode.className = v < 26 ? 'tile black' : v <= 28 ? 'tile blue' : 'tile red';
-        }
-
         setTile('absDisp', d.absSetting);
         setTile('tc1Disp', d.tc1Setting);
         setTile('tc2Disp', d.tc2Setting);
         setTile('tc3Disp', d.tc3Setting);
 
         if (d.tireTemps) {
-            var t = d.tireTemps;
+            const t = d.tireTemps;
             updateTempTile('tfL', t.fl);
             updateTempTile('tfR', t.fr);
             updateTempTile('trL', t.rl);
             updateTempTile('trR', t.rr);
         }
         if (d.tirePressures) {
-            var p = d.tirePressures;
+            const p = d.tirePressures;
             updatePressureTile('pfL', p.fl);
             updatePressureTile('pfR', p.fr);
             updatePressureTile('prL', p.rl);
