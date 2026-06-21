@@ -52,7 +52,7 @@ public class DebugTelemetryClient : ITelemetryClient
 
         var currentLap = (_tick / 1000) + 1;
         var currentGear = (Gear)(_tick % 8);
-        var engineRpm = 5000f + (float)(Math.Abs(Math.Sin(_tick * 0.2)) * 7000f);
+        var engineRpm = 0f + (float)(Math.Abs(Math.Sin(_tick * 0.01)) * 12000f);
         float[] temps = [
             85f + (float)_random.NextDouble() * 15f,
             87f + (float)_random.NextDouble() * 15f, 

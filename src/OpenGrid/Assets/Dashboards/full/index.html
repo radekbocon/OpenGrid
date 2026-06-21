@@ -208,7 +208,7 @@
             border-radius: 8px;
             background: linear-gradient(#ddd, #aaa);
             color: black;
-            font-size: 170px;
+            font-size: 200px;
             font-weight: bold;
             display: flex;
             justify-content: center;
@@ -395,7 +395,7 @@
 
 <script>
     const numShiftLights = 12;
-    let targetRpm = 0, currentRpm = 0, targetSpeed = 0, currentSpeed = 0, maxRpm = 8000;
+    let targetRpm = 0, currentRpm = 0, maxRpm = 8000;
 
     function fitToViewport() {
         const d = document.querySelector('.dash');
@@ -407,18 +407,23 @@
     window.addEventListener('resize', fitToViewport);
     fitToViewport();
 
-    function updateShiftLights(rp) {
+    function updateShiftLights(rpmRatio) {
         const lights = document.getElementById('shiftLights');
         const spans = lights.getElementsByTagName('span');
+        const flicker = rpmRatio >= 0.95 && Math.sin(Date.now() * 0.02) > 0;
         for (let i = 0; i < numShiftLights && i < spans.length; i++) {
-            const th = .6 + (i / numShiftLights) * .4;
-            const on = rp >= th;
-            if (i < 8) {
-                spans[i].style.background = on ? '#0f0' : '#060';
-            } else if (i < 10) {
-                spans[i].style.background = on ? '#ff0' : '#660';
+            if (flicker) {
+                spans[i].style.background = '#f00';
             } else {
-                spans[i].style.background = on ? '#f00' : '#600';
+                const threshold = (i / (numShiftLights - 1)) * 0.95;
+                const on = rpmRatio >= threshold;
+                if (i < 8) {
+                    spans[i].style.background = on ? '#0f0' : '#060';
+                } else if (i < 10) {
+                    spans[i].style.background = on ? '#ff0' : '#660';
+                } else {
+                    spans[i].style.background = on ? '#f00' : '#600';
+                }
             }
         }
     }
@@ -438,100 +443,97 @@
     }
 
     function renderFrame() {
-        const rp = Math.min(currentRpm / maxRpm, 1);
-        document.getElementById('speedDisp').textContent = currentSpeed.toFixed(1);
+        const rpmRatio = Math.min(currentRpm / maxRpm, 1);
         document.getElementById('rpmValue').textContent = Math.round(currentRpm).toString();
-        updateShiftLights(rp);
+        updateShiftLights(rpmRatio);
         updateShiftLabels(maxRpm);
     }
 
     function animationLoop() {
         currentRpm += (targetRpm - currentRpm) * .12;
-        currentSpeed += (targetSpeed - currentSpeed) * .12;
         if (Math.abs(currentRpm - targetRpm) < 1) currentRpm = targetRpm;
-        if (Math.abs(currentSpeed - targetSpeed) < .5) currentSpeed = targetSpeed;
         renderFrame();
         requestAnimationFrame(animationLoop);
     }
 
-    function formatTime(ms) {
-        if (!ms || ms <= 0) return '--:--';
-        const s = ms / 1e3;
-        const m = Math.floor(s / 60);
-        return m + ':' + ((s % 60) < 10 ? '0' : '') + (s % 60).toFixed(3);
+    function formatTime(milliseconds) {
+        if (!milliseconds || milliseconds <= 0) return '--:--';
+        const seconds = milliseconds / 1000;
+        const minutes = Math.floor(seconds / 60);
+        return minutes + ':' + ((seconds % 60) < 10 ? '0' : '') + (seconds % 60).toFixed(3);
     }
 
-    function setTile(id, val) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const p = el.parentNode;
-        if (val === undefined || val === null || val === 0 || val === '0' || val === 'OFF') {
-            el.textContent = 'OFF';
-            p.className = 'tile red';
+    function setTile(id, value) {
+        const element = document.getElementById(id);
+        if (!element) return;
+        const parentNode = element.parentNode;
+        if (value === undefined || value === null || value === 0 || value === '0' || value === 'OFF') {
+            element.textContent = 'OFF';
+            parentNode.className = 'tile red';
         } else {
-            el.textContent = val;
-            p.className = 'tile green';
+            element.textContent = value;
+            parentNode.className = 'tile green';
         }
     }
 
-    function updateTempTile(id, v) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.textContent = v.toFixed(1);
-        el.parentNode.className = v < 70 ? 'tile black' : v <= 100 ? 'tile blue' : 'tile red';
+    function updateTempTile(id, value) {
+        const element = document.getElementById(id);
+        if (!element) return;
+        element.textContent = value.toFixed(1);
+        element.parentNode.className = value < 70 ? 'tile black' : value <= 100 ? 'tile blue' : 'tile red';
     }
 
-    function updatePressureTile(id, v) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.textContent = v.toFixed(1);
-        el.parentNode.className = v < 26 ? 'tile black' : v <= 28 ? 'tile blue' : 'tile red';
+    function updatePressureTile(id, value) {
+        const element = document.getElementById(id);
+        if (!element) return;
+        element.textContent = value.toFixed(1);
+        element.parentNode.className = value < 26 ? 'tile black' : value <= 28 ? 'tile blue' : 'tile red';
     }
 
-    OpenGrid.onTelemetry = function (d) {
-        targetRpm = d.engineRpm || 0;
-        maxRpm = d.maxRpm || 8000;
+    OpenGrid.onTelemetry = function (record) {
+        targetRpm = record.engineRpm || 0;
+        maxRpm = record.maxRpm || 8000;
         updateShiftLabels(maxRpm);
-        targetSpeed = d.speedKmh || 0;
-        document.getElementById('gearDisp').textContent = d.gear || 'N';
-        document.getElementById('lapCntr').textContent = d.currentLap || '--';
-        document.getElementById('prevLap').textContent = formatTime(d.lastLapTimeMs);
-        document.getElementById('lastLap').textContent = formatTime(d.lapTimeMs);
-        document.getElementById('bestLap').textContent = formatTime(d.bestLapTimeMs);
+        document.getElementById('speedDisp').textContent = record.speedKmh.toFixed(1);
+        document.getElementById('gearDisp').textContent = record.gear || 'N';
+        document.getElementById('lapCntr').textContent = record.currentLap || '--';
+        document.getElementById('prevLap').textContent = formatTime(record.lastLapTimeMs);
+        document.getElementById('lastLap').textContent = formatTime(record.lapTimeMs);
+        document.getElementById('bestLap').textContent = formatTime(record.bestLapTimeMs);
 
         const de = document.getElementById('deltaTime');
         const dt = de.parentNode;
-        if (d.deltaLapTimeMs !== undefined && d.deltaLapTimeMs !== null && !isNaN(d.deltaLapTimeMs)) {
-            const sec = Math.abs(d.deltaLapTimeMs) / 1000;
-            de.textContent = (d.deltaLapTimeMs >= 0 ? '+' : '-') + sec.toFixed(2);
-            dt.className = d.deltaLapTimeMs >= 0 ? 'tile red' : 'tile green';
+        if (record.deltaLapTimeMs !== undefined && record.deltaLapTimeMs !== null && !isNaN(record.deltaLapTimeMs)) {
+            const sec = Math.abs(record.deltaLapTimeMs) / 1000;
+            de.textContent = (record.deltaLapTimeMs >= 0 ? '+' : '-') + sec.toFixed(2);
+            dt.className = record.deltaLapTimeMs >= 0 ? 'tile red' : 'tile green';
         } else {
             de.textContent = '--:--';
             dt.className = 'tile gray';
         }
-        document.getElementById('fuelDisp').textContent = (d.fuel || 0).toFixed(1);
-        document.getElementById('posDisp').textContent = d.position || '--';
-        document.getElementById('sessDisp').textContent = d.sessionType || 'RACE';
-        document.getElementById('bbalDisp').textContent = (d.brakeBias || 0).toFixed(1);
+        document.getElementById('fuelDisp').textContent = (record.fuel || 0).toFixed(1);
+        document.getElementById('posDisp').textContent = record.position || '--';
+        document.getElementById('sessDisp').textContent = record.sessionType || 'RACE';
+        document.getElementById('bbalDisp').textContent = (record.brakeBias || 0).toFixed(1);
 
-        setTile('absDisp', d.absSetting);
-        setTile('tc1Disp', d.tc1Setting);
-        setTile('tc2Disp', d.tc2Setting);
-        setTile('tc3Disp', d.tc3Setting);
+        setTile('absDisp', record.absSetting);
+        setTile('tc1Disp', record.tc1Setting);
+        setTile('tc2Disp', record.tc2Setting);
+        setTile('tc3Disp', record.tc3Setting);
 
-        if (d.tireTemps) {
-            const t = d.tireTemps;
-            updateTempTile('tfL', t.fl);
-            updateTempTile('tfR', t.fr);
-            updateTempTile('trL', t.rl);
-            updateTempTile('trR', t.rr);
+        if (record.tireTemps) {
+            const temps = record.tireTemps;
+            updateTempTile('tfL', temps.fl);
+            updateTempTile('tfR', temps.fr);
+            updateTempTile('trL', temps.rl);
+            updateTempTile('trR', temps.rr);
         }
-        if (d.tirePressures) {
-            const p = d.tirePressures;
-            updatePressureTile('pfL', p.fl);
-            updatePressureTile('pfR', p.fr);
-            updatePressureTile('prL', p.rl);
-            updatePressureTile('prR', p.rr);
+        if (record.tirePressures) {
+            const pressures = record.tirePressures;
+            updatePressureTile('pfL', pressures.fl);
+            updatePressureTile('pfR', pressures.fr);
+            updatePressureTile('prL', pressures.rl);
+            updatePressureTile('prR', pressures.rr);
         }
     };
 

@@ -71,8 +71,6 @@ public sealed class DashboardService : IDashboardService
             foreach (var (resourceName, fileName) in files)
             {
                 var filePath = Path.Combine(targetDir, fileName);
-                if (File.Exists(filePath))
-                    continue;
 
                 using var stream = Assembly.GetManifestResourceStream(resourceName);
                 if (stream is null)
