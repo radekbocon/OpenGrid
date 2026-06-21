@@ -30,6 +30,8 @@
 
         .dash {
             flex-shrink: 0;
+            width: 1280px;
+            height: 720px;
             background: #000;
             padding: 12px;
             display: grid;
@@ -384,93 +386,11 @@
     const numShiftLights = 12;
     let targetRpm = 0, currentRpm = 0, targetSpeed = 0, currentSpeed = 0, maxRpm = 8000;
 
-    function scaleAll(s) {
-        const px = (v) => Math.round(v * s) + 'px';
-        const d = document.querySelector('.dash');
-        if (!d) return;
-        d.style.width = px(1280);
-        d.style.height = px(720);
-        d.style.gap = px(10);
-        d.style.padding = px(12);
-        d.style.gridTemplateRows =
-            px(120) + ' ' +
-            px(140) + ' ' +
-            px(140) + ' ' +
-            px(140) + ' ' +
-            px(120);
-
-        d.querySelectorAll('.label, .footer-title').forEach(function (e) {
-            e.style.fontSize = px(28);
-            e.style.letterSpacing = px(2);
-        });
-
-        d.querySelectorAll('.value').forEach(function (e) {
-            e.style.fontSize = px(48);
-        });
-
-        d.querySelectorAll('.lap-counter .value').forEach(function (e) {
-            e.style.fontSize = px(54);
-        });
-
-        d.querySelectorAll('.rpm').forEach(function (e) {
-            e.style.padding = px(15);
-        });
-
-        d.querySelectorAll('.rpm-scale').forEach(function (e) {
-            e.style.gap = px(5);
-            e.style.marginTop = px(5);
-            e.style.borderTopWidth = px(2);
-            e.style.borderBottomWidth = px(2);
-            e.style.paddingTop = px(5);
-            e.style.paddingBottom = px(5);
-        });
-
-        d.querySelectorAll('.rpm-scale span').forEach(function (e) {
-            e.style.height = px(14);
-            e.style.borderRadius = px(3);
-        });
-
-        d.querySelectorAll('.rpm-labels').forEach(function (e) {
-            e.style.gap = px(5);
-            e.style.fontSize = px(11);
-        });
-
-        d.querySelectorAll('.rpm-value').forEach(function (e) {
-            e.style.fontSize = px(20);
-            e.style.marginTop = px(5);
-        });
-
-        d.querySelectorAll('.gear').forEach(function (e) {
-            e.style.width = px(250);
-            e.style.height = px(290);
-            e.style.fontSize = px(170);
-            e.style.borderRadius = px(8);
-        });
-
-        d.querySelectorAll('.pressure-group, .temp-group').forEach(function (e) {
-            e.style.gap = px(10);
-        });
-
-        d.querySelectorAll('.tile, .lap-counter, .bbal, .speed, .rpm, .footer-box').forEach(function (e) {
-            e.style.borderRadius = px(8);
-            e.style.borderWidth = px(2);
-        });
-
-        d.querySelectorAll('.footer-box').forEach(function (e) {
-            e.style.padding = px(10);
-        });
-
-        d.querySelectorAll('.footer-value').forEach(function (e) {
-            e.style.fontSize = px(48);
-        });
-
-        const dte = document.getElementById('deltaTime');
-        if (dte) dte.style.fontSize = px(36);
-    }
-
     function fitToViewport() {
+        const d = document.querySelector('.dash');
         const s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
-        scaleAll(s);
+        d.style.transform = 'scale(' + s + ')';
+        d.style.transformOrigin = 'center';
     }
 
     window.addEventListener('resize', fitToViewport);
