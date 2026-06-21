@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:controls="clr-namespace:OpenGrid.Controls"
+    xmlns:controls1="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:OpenGrid.ViewModels"
@@ -29,14 +30,13 @@
             <ItemsControl ItemsSource="{Binding Dashboards}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <WrapPanel />
+                        <WrapPanel ItemSpacing="16" LineSpacing="16" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:DashboardCardViewModel">
-                        <Border
+                        <controls1:Card
                             Width="240"
-                            Margin="8"
                             Padding="0"
                             Background="{DynamicResource MaterialCardBackgroundBrush}"
                             CornerRadius="8">
@@ -46,11 +46,7 @@
                                     Height="120"
                                     Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}"
                                     CornerRadius="8,8,0,0">
-                                    <Image
-                                        Width="240"
-                                        Height="120"
-                                        Source="{Binding Dashboard.Image}"
-                                        Stretch="UniformToFill" />
+                                    <Image Source="{Binding Dashboard.Image}" Stretch="UniformToFill" />
                                 </Border>
 
                                 <!--  Info  -->
@@ -87,14 +83,14 @@
                                             Classes="Flat"
                                             Command="{Binding ShowOnDeviceCommand}">
                                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <avalonia:MaterialIconExt IconSize="14" Kind="Qrcode" />
+                                                <avalonia:MaterialIconExt IconSize="14" Kind="Devices" />
                                                 <TextBlock FontSize="12" Text="Device" />
                                             </StackPanel>
                                         </Button>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
-                        </Border>
+                        </controls1:Card>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
