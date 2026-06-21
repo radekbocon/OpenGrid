@@ -6,6 +6,75 @@ var OpenGrid = (function () {
     let ws = null;
     let reconnectTimer = null;
     let isConnected = false;
+    let wakeLock = null;
+    let sleepVideo = null;
+    let sleepVideoAttempted = false;
+
+    function keepAwake() {
+        requestWakeLock();
+        startSleepVideo();
+    }
+
+    function requestWakeLock() {
+        if (!navigator.wakeLock) return;
+        if (wakeLock) return;
+        navigator.wakeLock.request('screen').then(function (lock) {
+            wakeLock = lock;
+            console.log('OpenGrid: wake lock ACQUIRED');
+            lock.addEventListener('release', function () {
+                wakeLock = null;
+                if (isConnected) requestWakeLock();
+            });
+        }).catch(function () { });
+    }
+
+    function startSleepVideo() {
+        if (sleepVideo) return;
+        var canvas = document.createElement('canvas');
+        canvas.width = 2; canvas.height = 2;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 2, 2);
+        var stream = canvas.captureStream();
+        sleepVideo = document.createElement('video');
+        sleepVideo.srcObject = stream;
+        sleepVideo.loop = true;
+        sleepVideo.muted = true;
+        sleepVideo.playsInline = true;
+        sleepVideo.style.cssText = 'position:fixed;bottom:0;left:0;width:2px;height:2px;opacity:0.01;z-index:-1';
+        sleepVideo.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(sleepVideo);
+        tryPlayVideo();
+    }
+
+    function tryPlayVideo() {
+        if (!sleepVideo || sleepVideoAttempted) return;
+        sleepVideo.play().then(function () {
+            console.log('OpenGrid: sleep video playing');
+            sleepVideoAttempted = true;
+        }).catch(function () { });
+    }
+
+    function stopSleepVideo() {
+        if (!sleepVideo) return;
+        sleepVideo.pause();
+        sleepVideo.srcObject = null;
+        try { document.body.removeChild(sleepVideo); } catch { }
+        sleepVideo = null;
+        sleepVideoAttempted = false;
+    }
+
+    function releaseWakeLock() {
+        if (wakeLock) {
+            wakeLock.release().catch(function () { });
+            wakeLock = null;
+        }
+        stopSleepVideo();
+    }
+
+    document.addEventListener('click', function () { if (isConnected) { requestWakeLock(); tryPlayVideo(); } });
+    document.addEventListener('touchstart', function () { if (isConnected) { requestWakeLock(); tryPlayVideo(); } });
+    document.addEventListener('keydown', function () { if (isConnected) { requestWakeLock(); tryPlayVideo(); } });
 
     function buildWsUrl(host, port) {
         return port ? 'ws://' + host + ':' + port + '/ws/telemetry' : 'ws://' + host + '/ws/telemetry';
@@ -30,6 +99,7 @@ var OpenGrid = (function () {
                 clearTimeout(reconnectTimer);
                 reconnectTimer = null;
             }
+            keepAwake();
             if (OpenGrid.onConnected) OpenGrid.onConnected();
             updateStatusUI();
         };
@@ -45,12 +115,14 @@ var OpenGrid = (function () {
 
         ws.onerror = function () {
             isConnected = false;
+            releaseWakeLock();
             if (OpenGrid.onError) OpenGrid.onError();
             updateStatusUI();
         };
 
         ws.onclose = function () {
             isConnected = false;
+            releaseWakeLock();
             if (OpenGrid.onDisconnected) OpenGrid.onDisconnected();
             updateStatusUI();
             scheduleReconnect(host, p);
@@ -104,6 +176,12 @@ var OpenGrid = (function () {
         if (isFullscreen()) exitFullscreen();
         else requestFullscreen();
     }
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible' && isConnected) {
+            keepAwake();
+        }
+    });
 
     function connect(options) {
         options = options || {};
