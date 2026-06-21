@@ -1,7 +1,0 @@
-{
-  "name": "Track Map",
-  "description": "Racing HUD-style track map with live car position, sector splits, and lap timing",
-  "version": "1.0",
-  "type": "dashboard",
-  "author": "OpenGrid"
-}
