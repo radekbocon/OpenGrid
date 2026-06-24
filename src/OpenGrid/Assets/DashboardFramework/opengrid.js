@@ -1,4 +1,4 @@
-var OpenGrid = (function () {
+const OpenGrid = (function () {
     'use strict';
 
     let wsHost = location.hostname;
@@ -25,13 +25,15 @@ var OpenGrid = (function () {
                 wakeLock = null;
                 if (isConnected) requestWakeLock();
             });
-        }).catch(function () { });
+        }).catch(function () {
+        });
     }
 
     function startSleepVideo() {
         if (sleepVideo) return;
         var canvas = document.createElement('canvas');
-        canvas.width = 2; canvas.height = 2;
+        canvas.width = 2;
+        canvas.height = 2;
         var ctx = canvas.getContext('2d');
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, 2, 2);
@@ -52,29 +54,49 @@ var OpenGrid = (function () {
         sleepVideo.play().then(function () {
             console.log('OpenGrid: sleep video playing');
             sleepVideoAttempted = true;
-        }).catch(function () { });
+        }).catch(function () {
+        });
     }
 
     function stopSleepVideo() {
         if (!sleepVideo) return;
         sleepVideo.pause();
         sleepVideo.srcObject = null;
-        try { document.body.removeChild(sleepVideo); } catch { }
+        try {
+            document.body.removeChild(sleepVideo);
+        } catch {
+        }
         sleepVideo = null;
         sleepVideoAttempted = false;
     }
 
     function releaseWakeLock() {
         if (wakeLock) {
-            wakeLock.release().catch(function () { });
+            wakeLock.release().catch(function () {
+            });
             wakeLock = null;
         }
         stopSleepVideo();
     }
 
-    document.addEventListener('click', function () { if (isConnected) { requestWakeLock(); tryPlayVideo(); } });
-    document.addEventListener('touchstart', function () { if (isConnected) { requestWakeLock(); tryPlayVideo(); } });
-    document.addEventListener('keydown', function () { if (isConnected) { requestWakeLock(); tryPlayVideo(); } });
+    document.addEventListener('click', function () {
+        if (isConnected) {
+            requestWakeLock();
+            tryPlayVideo();
+        }
+    });
+    document.addEventListener('touchstart', function () {
+        if (isConnected) {
+            requestWakeLock();
+            tryPlayVideo();
+        }
+    });
+    document.addEventListener('keydown', function () {
+        if (isConnected) {
+            requestWakeLock();
+            tryPlayVideo();
+        }
+    });
 
     function buildWsUrl(host, port) {
         return port ? 'ws://' + host + ':' + port + '/ws/telemetry' : 'ws://' + host + '/ws/telemetry';
