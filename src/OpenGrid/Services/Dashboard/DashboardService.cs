@@ -6,15 +6,13 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using OpenGrid.Models;
 
-namespace OpenGrid.Services;
+namespace OpenGrid.Services.Dashboard;
 
 public sealed class DashboardService : IDashboardService
 {
     private static readonly Assembly Assembly = Assembly.GetExecutingAssembly();
-    private static readonly string BuiltinExtractPath =
-        Path.Combine(Program.AppDataDirectory, "dashboards-builtin");
-    private static readonly string UserDashboardsPath =
-        Path.Combine(Program.AppDataDirectory, "dashboards");
+    private static readonly string BuiltinExtractPath = Path.Combine(Program.AppDataDirectory, "dashboards-builtin");
+    private static readonly string UserDashboardsPath = Path.Combine(Program.AppDataDirectory, "dashboards");
 
     private static readonly Regex DashboardResourceRegex = new(
         @"^OpenGrid\.Assets\.Dashboards\.([\w.-]+?)\.(.+)$",
@@ -36,9 +34,6 @@ public sealed class DashboardService : IDashboardService
         ExtractAndScanBuiltin();
         ScanUserDashboards();
     }
-
-    public IEnumerable<DashboardInfo> GetByType(DashboardType type)
-        => Dashboards.Where(d => d.Type == type);
 
     public DashboardInfo? GetById(string id)
         => Dashboards.FirstOrDefault(d =>
@@ -124,9 +119,6 @@ public sealed class DashboardService : IDashboardService
             return null;
 
         var id = Path.GetFileName(dir);
-        var type = string.Equals(metadata.Type, "overlay", StringComparison.OrdinalIgnoreCase)
-            ? DashboardType.Overlay
-            : DashboardType.Dashboard;
 
         IImage? image = null;
         var previewPath = Path.Combine(dir, "preview.png");
@@ -149,7 +141,6 @@ public sealed class DashboardService : IDashboardService
             Description = metadata.Description,
             DirectoryPath = dir,
             IsSystem = isSystem,
-            Type = type,
             Image = image
         };
     }

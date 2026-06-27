@@ -258,7 +258,6 @@ public sealed class DashboardHttpServer : IDisposable
             id = d.Id,
             name = d.Name,
             description = d.Description,
-            type = d.Type.ToString().ToLowerInvariant(),
             isSystem = d.IsSystem,
             url = d.Url
         });
