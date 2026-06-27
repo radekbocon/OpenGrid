@@ -66,6 +66,7 @@
                                 <!--  Actions  -->
                                 <Border
                                     Padding="8"
+                                    VerticalAlignment="Bottom"
                                     BorderBrush="{DynamicResource MaterialCardBorderBrush}"
                                     BorderThickness="0,1,0,0">
                                     <StackPanel Orientation="Horizontal" Spacing="4">

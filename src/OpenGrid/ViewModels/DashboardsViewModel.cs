@@ -28,6 +28,7 @@ public partial class DashboardsViewModel : ViewModelBase
     [RelayCommand]
     private void Refresh()
     {
+        Dashboards.Clear();
         _dashboardService.Scan();
         foreach (var item in _dashboardService.Dashboards)
         {

@@ -1,7 +1,7 @@
 using System.Net;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using Avalonia.Platform;
 using OpenGrid.Services.Telemetry;
 using Serilog;
 
@@ -9,8 +9,7 @@ namespace OpenGrid.Services.Dashboard;
 
 public sealed class DashboardHttpServer : IDisposable
 {
-    private static readonly Assembly Assembly = Assembly.GetExecutingAssembly();
-    private static readonly string FrameworkExtractPath = Path.Combine(Program.AppDataDirectory, "dashboard-framework");
+    private const string FrameworkAssetPrefix = "avares://OpenGrid/Assets/DashboardFramework/";
 
     private static readonly Dictionary<string, string> MimeTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -58,7 +57,6 @@ public sealed class DashboardHttpServer : IDisposable
         _listener.Prefixes.Add($"http://localhost:{Port}/");
         _listener.Prefixes.Add($"http://*:{Port}/");
 
-        ExtractFramework();
         UpdateDashboardUrls();
     }
 
@@ -209,7 +207,11 @@ public sealed class DashboardHttpServer : IDisposable
 
             if (path.StartsWith("framework/", StringComparison.OrdinalIgnoreCase))
             {
-                await ServeStaticFile(ctx.Response, FrameworkExtractPath, path["framework/".Length..], ct);
+                var file = path["framework/".Length..];
+                var extension = Path.GetExtension(file);
+                var contentType = MimeTypes.GetValueOrDefault(extension, "application/octet-stream");
+                await using var stream = AssetLoader.Open(new Uri($"{FrameworkAssetPrefix}{file}"));
+                await ServeFile(ctx.Response, stream, contentType, ct);
                 return;
             }
 
@@ -282,7 +284,6 @@ public sealed class DashboardHttpServer : IDisposable
 
     private async Task ServeDashboardFile(HttpListenerResponse res, string relativePath, CancellationToken ct)
     {
-        // relativePath format: "{dashboardId}/..." or "{dashboardId}"
         var slashIndex = relativePath.IndexOf('/');
         string dashboardId;
         string filePath;
@@ -310,13 +311,35 @@ public sealed class DashboardHttpServer : IDisposable
             filePath = "index.html";
         }
 
-        await ServeStaticFile(res, dashboard.DirectoryPath, filePath, ct);
+        if (dashboard.IsSystem)
+        {
+            try
+            {
+                var stream = GetDashboardStream(dashboard.DirectoryPath, filePath);
+                var contentType = MimeTypes.GetValueOrDefault(Path.GetExtension(filePath), "application/octet-stream");
+                await ServeFile(res, stream, contentType, ct);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error serving builtin file: {Id}/{File}", dashboard.Id, filePath);
+                await WriteStringResponse(res, 500, "Error reading file", "text/plain");
+            }
+        }
+        else
+        {
+            await ServeFileSystemFile(res, dashboard.DirectoryPath, filePath, ct);
+        }
     }
 
-    private static async Task ServeStaticFile(HttpListenerResponse res, string basePath, string relativePath,
+    private static Stream GetDashboardStream(string baseUri, string relativePath)
+    {
+        var uri = new Uri($"{baseUri.TrimEnd('/')}/{relativePath}");
+        return AssetLoader.Open(uri);
+    }
+
+    private static async Task ServeFileSystemFile(HttpListenerResponse res, string basePath, string relativePath,
         CancellationToken ct)
     {
-        // Security: prevent path traversal
         var fullPath = Path.GetFullPath(Path.Combine(basePath, relativePath));
         if (!fullPath.StartsWith(Path.GetFullPath(basePath), StringComparison.Ordinal))
         {
@@ -332,30 +355,29 @@ public sealed class DashboardHttpServer : IDisposable
 
         try
         {
-            var extension = Path.GetExtension(fullPath);
-            var contentType = MimeTypes.GetValueOrDefault(extension, "application/octet-stream");
+            await using var fileStream = File.OpenRead(fullPath);
+            var contentType = MimeTypes.GetValueOrDefault(Path.GetExtension(fullPath), "application/octet-stream");
+            await ServeFile(res, fileStream, contentType, ct);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error serving file: {Path}", fullPath);
+            await WriteStringResponse(res, 500, "Error reading file", "text/plain");
+        }
+    }
 
+    private static async Task ServeFile(HttpListenerResponse res, Stream stream, string contentType,
+        CancellationToken ct)
+    {
+        try
+        {
             res.ContentType = contentType;
             res.StatusCode = 200;
-
-            await using var fileStream = File.OpenRead(fullPath);
-            await fileStream.CopyToAsync(res.OutputStream, ct);
+            await stream.CopyToAsync(res.OutputStream, ct);
         }
         catch (OperationCanceledException)
         {
             // client disconnected
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error serving static file: {Path}", fullPath);
-            try
-            {
-                await WriteStringResponse(res, 500, "Error reading file", "text/plain");
-            }
-            catch
-            {
-                // ignore
-            }
         }
         finally
         {
@@ -370,8 +392,7 @@ public sealed class DashboardHttpServer : IDisposable
         }
     }
 
-    private static async Task WriteStringResponse(HttpListenerResponse res, int statusCode, string body,
-        string contentType)
+    private static async Task WriteStringResponse(HttpListenerResponse res, int statusCode, string body, string contentType)
     {
         try
         {
@@ -395,30 +416,6 @@ public sealed class DashboardHttpServer : IDisposable
             {
                 // ignore
             }
-        }
-    }
-
-    private static void ExtractFramework()
-    {
-        var resourcePrefix = "OpenGrid.Assets.DashboardFramework.";
-        var resources = Assembly.GetManifestResourceNames()
-            .Where(r => r.StartsWith(resourcePrefix, StringComparison.OrdinalIgnoreCase));
-
-        foreach (var resourceName in resources)
-        {
-            var relativePath = resourceName[resourcePrefix.Length..];
-            var filePath = Path.Combine(FrameworkExtractPath, relativePath);
-
-            var dir = Path.GetDirectoryName(filePath);
-            if (dir is not null)
-                Directory.CreateDirectory(dir);
-
-            using var stream = Assembly.GetManifestResourceStream(resourceName);
-            if (stream is null)
-                continue;
-
-            using var fileStream = File.Create(filePath);
-            stream.CopyTo(fileStream);
         }
     }
 }

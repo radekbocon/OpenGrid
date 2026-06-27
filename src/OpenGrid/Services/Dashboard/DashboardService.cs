@@ -1,28 +1,21 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using OpenGrid.Models;
 
 namespace OpenGrid.Services.Dashboard;
 
 public sealed class DashboardService : IDashboardService
 {
-    private static readonly Assembly Assembly = Assembly.GetExecutingAssembly();
-    private static readonly string BuiltinExtractPath = Path.Combine(Program.AppDataDirectory, "dashboards-builtin");
     private static readonly string UserDashboardsPath = Path.Combine(Program.AppDataDirectory, "dashboards");
-
-    private static readonly Regex DashboardResourceRegex = new(
-        @"^OpenGrid\.Assets\.Dashboards\.([\w.-]+?)\.(.+)$",
-        RegexOptions.IgnoreCase);
 
     public ObservableCollection<DashboardInfo> Dashboards { get; } = [];
 
     public DashboardService()
     {
-        Directory.CreateDirectory(BuiltinExtractPath);
         Directory.CreateDirectory(UserDashboardsPath);
         Scan();
     }
@@ -31,7 +24,7 @@ public sealed class DashboardService : IDashboardService
     {
         Dashboards.Clear();
 
-        ExtractAndScanBuiltin();
+        ScanBuiltinDashboards();
         ScanUserDashboards();
     }
 
@@ -39,49 +32,85 @@ public sealed class DashboardService : IDashboardService
         => Dashboards.FirstOrDefault(d =>
             string.Equals(d.Id, id, StringComparison.OrdinalIgnoreCase));
 
-    private void ExtractAndScanBuiltin()
+    private void ScanBuiltinDashboards()
     {
-        var resourceNames = Assembly.GetManifestResourceNames();
-        var dashboardFiles = new Dictionary<string, List<(string resourceName, string fileName)>>();
+        var assembly = Assembly.GetExecutingAssembly();
+        const string prefix = "OpenGrid.Assets.Dashboards.";
+        var dashboardFiles = new Dictionary<string, List<(string resourceName, string relativePath)>>();
 
-        foreach (var name in resourceNames)
+        foreach (var name in assembly.GetManifestResourceNames())
         {
-            var match = DashboardResourceRegex.Match(name);
-            if (!match.Success)
+            if (!name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            var id = match.Groups[1].Value;
-            var fileName = match.Groups[2].Value;
+            var rest = name[prefix.Length..];
+            var dotIndex = rest.IndexOf('.');
+            if (dotIndex <= 0)
+                continue;
+
+            var id = rest[..dotIndex];
+            var relativePath = rest[(dotIndex + 1)..];
 
             if (!dashboardFiles.ContainsKey(id))
                 dashboardFiles[id] = [];
-            dashboardFiles[id].Add((name, fileName));
+            dashboardFiles[id].Add((name, relativePath));
         }
 
         foreach (var (id, files) in dashboardFiles)
         {
-            var targetDir = Path.Combine(BuiltinExtractPath, id);
-            Directory.CreateDirectory(targetDir);
+            var metadataPath = files.FirstOrDefault(f =>
+                string.Equals(f.relativePath, "metadata.json", StringComparison.OrdinalIgnoreCase)).resourceName;
+            if (metadataPath is null)
+                continue;
 
-            foreach (var (resourceName, fileName) in files)
+            DashboardMetadata? metadata;
+            try
             {
-                var filePath = Path.Combine(targetDir, fileName);
-
-                using var stream = Assembly.GetManifestResourceStream(resourceName);
+                using var stream = assembly.GetManifestResourceStream(metadataPath);
                 if (stream is null)
                     continue;
-
-                var dir = Path.GetDirectoryName(filePath);
-                if (dir is not null)
-                    Directory.CreateDirectory(dir);
-
-                using var fileStream = File.Create(filePath);
-                stream.CopyTo(fileStream);
+                using var reader = new StreamReader(stream);
+                metadata = JsonSerializer.Deserialize<DashboardMetadata>(reader.ReadToEnd());
+            }
+            catch
+            {
+                continue;
             }
 
-            var dashboard = LoadDashboardFromDirectory(targetDir, isSystem: true);
-            if (dashboard is not null)
-                Dashboards.Add(dashboard);
+            if (metadata is null)
+                continue;
+
+            IImage? image = null;
+            var previewResource = files.FirstOrDefault(f =>
+                string.Equals(f.relativePath, "preview.png", StringComparison.OrdinalIgnoreCase)).resourceName;
+            if (previewResource is not null)
+            {
+                try
+                {
+                    using var stream = assembly.GetManifestResourceStream(previewResource);
+                    if (stream is not null)
+                    {
+                        using var ms = new MemoryStream();
+                        stream.CopyTo(ms);
+                        ms.Position = 0;
+                        image = new Bitmap(ms);
+                    }
+                }
+                catch
+                {
+                    // ignore broken preview
+                }
+            }
+
+            Dashboards.Add(new DashboardInfo
+            {
+                Id = id,
+                Name = metadata.Name,
+                Description = metadata.Description,
+                DirectoryPath = $"avares://OpenGrid/Assets/Dashboards/{id}/",
+                IsSystem = true,
+                Image = image,
+            });
         }
     }
 
@@ -141,7 +170,7 @@ public sealed class DashboardService : IDashboardService
             Description = metadata.Description,
             DirectoryPath = dir,
             IsSystem = isSystem,
-            Image = image
+            Image = image,
         };
     }
 }
