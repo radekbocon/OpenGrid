@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using CsvHelper;
 using Serilog;
 using OpenGrid.Models.Telemetry;
@@ -13,14 +8,16 @@ namespace OpenGrid.Services.SessionPersist;
 public class SessionRepository
 {
     private readonly string _telemetryFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "OpenGrid", "Telemetry");
-
     private readonly ITelemetryService _telemetryService;
     private readonly ISettingsService _settingsService;
     private readonly SessionWriter _sessionWriter;
-    private TimeSpan RecordInterval => TimeSpan.FromMilliseconds(1000.0 / _settingsService.RecordingRateHz);
+    
     private DateTime _lastRecordTimestamp;
     private CsvWriter? _currentFileWriter;
+    private TelemetryRecord? _lastReceived;
 
+    private TimeSpan RecordInterval => TimeSpan.FromMilliseconds(1000.0 / _settingsService.RecordingRateHz);
+    
     public SessionDetails? CurrentSession { get; private set; }
 
     public bool IsRecording
@@ -89,17 +86,17 @@ public class SessionRepository
     {
         if (IsRecording && e == TelemetryConnectionStatus.Disconnected)
         {
-            _ = StopRecordingAsync();
+            StopRecording();
         }
     }
 
-    public async Task StartRecordingAsync()
+    public void StartRecording()
     {
         IsRecording = true;
         _telemetryService.TelemetryReceived += TelemetryServiceOnTelemetryReceived;
     }
 
-    public async Task StopRecordingAsync()
+    public void StopRecording()
     {
         try
         {
@@ -124,6 +121,7 @@ public class SessionRepository
             CurrentSession = new SessionDetails(e.Game, e.Telemetry);
             _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
             _lastRecordTimestamp = e.Telemetry.Timestamp;
+            _lastReceived = null;
             return;
         }
 
@@ -133,16 +131,34 @@ public class SessionRepository
             CurrentSession = new SessionDetails(e.Game, e.Telemetry);
             _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
             _lastRecordTimestamp = e.Telemetry.Timestamp;
+            _lastReceived = null;
             return;
         }
 
         var now = e.Telemetry.Timestamp;
+
+        if (_lastReceived != null && e.Telemetry.CurrentLap != _lastReceived.CurrentLap)
+        {
+            CurrentSession.AddRecord(_lastReceived);
+            _sessionWriter.AppendRecord(_currentFileWriter!, _lastReceived);
+            CurrentSession.AddRecord(e.Telemetry);
+            _sessionWriter.AppendRecord(_currentFileWriter!, e.Telemetry);
+            _lastRecordTimestamp = now;
+            _lastReceived = null;
+            return;
+        }
+
+        // Make sure last record of the lap is not skipped 
         if (now - _lastRecordTimestamp >= RecordInterval)
         {
             CurrentSession.AddRecord(e.Telemetry);
             _sessionWriter.AppendRecord(_currentFileWriter!, e.Telemetry);
             _lastRecordTimestamp = now;
+            _lastReceived = null;
+            return;
         }
+
+        _lastReceived = e.Telemetry;
     }
 
     private void CloseCurrentFile()

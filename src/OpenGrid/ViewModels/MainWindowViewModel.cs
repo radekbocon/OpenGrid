@@ -1,7 +1,4 @@
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
@@ -40,10 +37,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanStartRecording))]
     [NotifyPropertyChangedFor(nameof(CanStopRecording))]
-    public partial TelemetryConnectionStatus ConnectionStatus { get; set; }
-
-    [ObservableProperty]
-    public partial string TelemetryStatusText { get; set; } = "Not connected";
+    private partial TelemetryConnectionStatus ConnectionStatus { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanStartRecording))]
@@ -80,13 +74,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus status)
     {
         ConnectionStatus = status;
-        var gameName = _telemetryService.CurrentGame?.Name;
-        TelemetryStatusText = status switch
-        {
-            TelemetryConnectionStatus.Connecting => $"Connecting to {gameName}",
-            TelemetryConnectionStatus.Connected => $"Connected to {gameName}",
-            _ => "",
-        };
     }
 
     private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryEventArgs e)
@@ -102,26 +89,15 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task StartRecordingAsync()
     {
-        await _sessionRepository.StartRecordingAsync();
+        _sessionRepository.StartRecording();
         IsRecording = true;
     }
 
     [RelayCommand]
-    private async Task StopRecordingAsync()
+    private void StopRecording()
     {
-        await _sessionRepository.StopRecordingAsync();
+        _sessionRepository.StopRecording();
         IsRecording = false;
-    }
-
-    [RelayCommand]
-    private void Disconnect()
-    {
-        if (IsRecording)
-        {
-            _ = _sessionRepository.StopRecordingAsync();
-            IsRecording = false;
-        }
-        _telemetryService.StopReading();
     }
     
     [RelayCommand]

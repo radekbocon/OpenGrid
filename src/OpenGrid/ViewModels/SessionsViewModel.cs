@@ -1,6 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
@@ -79,16 +77,16 @@ public partial class SessionsViewModel : ViewModelBase
     }
 
     [RelayCommand(CanExecute = nameof(CanStartRecording))]
-    private async Task StartSessionAsync()
+    private void StartSession()
     {
-        await _sessionRepository.StartRecordingAsync();
+        _sessionRepository.StartRecording();
         OnPropertyChanged(nameof(IsRecording));
     }
 
     [RelayCommand]
-    private async Task StopSessionAsync()
+    private void StopSession()
     {
-        await _sessionRepository.StopRecordingAsync();
+        _sessionRepository.StopRecording();
         OnPropertyChanged(nameof(IsRecording));
     }
 

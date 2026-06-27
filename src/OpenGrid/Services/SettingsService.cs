@@ -33,16 +33,6 @@ public sealed class SettingsService : ISettingsService
         }
     }
 
-    public int? DashboardPort
-    {
-        get => _userSettings.DashboardPort;
-        set
-        {
-            _userSettings.DashboardPort = value;
-            Save();
-        }
-    }
-
     public string? SelectedTheme
     {
         get => _userSettings.SelectedTheme;
