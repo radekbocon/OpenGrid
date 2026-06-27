@@ -1,0 +1,7 @@
+{
+  "name": "GT3",
+  "description": "RPM, gear, speed, tire temps, pressures, and lap times, TC, ABS and more.",
+  "version": "1.0",
+  "type": "dashboard",
+  "author": "OpenGrid"
+}

@@ -3,6 +3,7 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <Version>0.1.0.0</Version>
@@ -13,8 +14,13 @@
         <AvaloniaResource Include="Assets\**" />
     <EmbeddedResource Include="Assets\Dashboards\**\*.html" />
     <EmbeddedResource Include="Assets\Dashboards\**\*.json" />
+    <EmbeddedResource Include="Assets\Dashboards\**\*.js" />
+    <EmbeddedResource Include="Assets\Dashboards\**\*.css" />
     <EmbeddedResource Include="Assets\Dashboards\**\*.png" />
+    <EmbeddedResource Include="Assets\Dashboards\**\*.svg" />
     <EmbeddedResource Include="Assets\DashboardFramework\**\*.html" />
+    <EmbeddedResource Include="Assets\DashboardFramework\**\*.js" />
+    <EmbeddedResource Include="Assets\DashboardFramework\**\*.css" />
     <EmbeddedResource Include="Themes\Default\*.json" />
     <Content Include="Assets\Dashboards\Template\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -24,6 +30,7 @@
     <ItemGroup>
         <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.8.0" />
         <PackageReference Include="Avalonia" Version="12.0.4" />
+        <PackageReference Include="Avalonia.Controls.WebView" Version="12.0.1" />
         <PackageReference Include="Avalonia.Desktop" Version="12.0.4" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.4" />
         <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.2">

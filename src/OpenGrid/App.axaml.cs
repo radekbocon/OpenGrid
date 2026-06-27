@@ -9,6 +9,7 @@ using OpenGrid.ViewModels;
 using OpenGrid.Views;
 using Microsoft.Extensions.DependencyInjection;
 using OpenGrid.Services;
+using OpenGrid.Services.Dashboard;
 using OpenGrid.Services.Telemetry;
 
 namespace OpenGrid;
@@ -46,6 +47,9 @@ public class App : Application
 
             mainWindow.Closing += MainWindowOnClosing;
             desktop.Exit += DesktopOnExit;
+
+            var dashboardServer = Program.ServiceProvider.GetRequiredService<DashboardHttpServer>();
+            _ = dashboardServer.StartAsync();
             
 
             using var iconStream = AssetLoader.Open(new Uri("avares://OpenGrid/Assets/icon.png"));
@@ -88,6 +92,16 @@ public class App : Application
 
     private void DesktopOnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
+        try
+        {
+            var dashboardServer = Program.ServiceProvider.GetService<DashboardHttpServer>();
+            dashboardServer?.StopAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Error stopping dashboard server");
+        }
+
         try
         {
             var telemetryService = Program.ServiceProvider.GetService<ITelemetryService>();

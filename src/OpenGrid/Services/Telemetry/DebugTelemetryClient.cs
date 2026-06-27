@@ -52,7 +52,7 @@ public class DebugTelemetryClient : ITelemetryClient
 
         var currentLap = (_tick / 1000) + 1;
         var currentGear = (Gear)(_tick % 8);
-        var engineRpm = 5000f + (float)(Math.Abs(Math.Sin(_tick * 0.2)) * 7000f);
+        var engineRpm = 0f + (float)(Math.Abs(Math.Sin(_tick * 0.01)) * 12000f);
         float[] temps = [
             85f + (float)_random.NextDouble() * 15f,
             87f + (float)_random.NextDouble() * 15f, 
@@ -65,6 +65,12 @@ public class DebugTelemetryClient : ITelemetryClient
             82f + (float)_random.NextDouble() * 10f, 
             84f + (float)_random.NextDouble() * 10f
         ];
+
+        var lapTime = TimeSpan.FromSeconds(75 + (_tick % 30));
+        var lastLapTime = TimeSpan.FromSeconds(85 + (_tick % 10));
+        var bestLapTime = TimeSpan.FromSeconds(82);
+        var deltaMs = (float)(Math.Sin(_tick * 0.1) * 3000);
+        var deltaLapTime = TimeSpan.FromMilliseconds(deltaMs);
 
         var snapshot = new TelemetryRecord
         {
@@ -82,7 +88,17 @@ public class DebugTelemetryClient : ITelemetryClient
             CurrentGear = currentGear,
             EngineRpm = engineRpm,
             TireTemperatures = TireValues.FromArray(temps),
-            LapTime = TimeSpan.FromSeconds(75 + (_tick % 30)),
+            LapTime = lapTime,
+            LastLapTime = lastLapTime,
+            BestLapTime = bestLapTime,
+            DeltaLapTime = deltaLapTime,
+            IsDeltaPositive = deltaMs > 0,
+            Position = (_tick / 100) % 20 + 1,
+            AbsSetting = (_tick / 50) % 4,
+            Tc1Setting = (_tick / 30) % 12,
+            Tc2Setting = (_tick / 30) % 12,
+            EngineMap = (_tick / 100) % 8 + 1,
+            BrakeBias = 58f + (float)Math.Sin(_tick * 0.05) * 10f,
             Distance = (float)(_tick * 1.5),
             MaxRpm = 12000f,
             TirePressures = TireValues.FromArray(pressures),
