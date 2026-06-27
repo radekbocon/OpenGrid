@@ -27,8 +27,7 @@ Follows the **MVVM pattern** using `CommunityToolkit.Mvvm` with dependency injec
 
 ### Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) - OpenGrid
-- [.NET 8 SDK](https://dotnet.microsoft.com/download) - OpenGridBridge
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Avalonia UI](https://docs.avaloniaui.net/docs/get-started/)
 
 ### Build & Run
