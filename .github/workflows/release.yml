@@ -32,11 +32,7 @@ jobs:
       - name: Determine version
         id: version
         run: |
-          BASE_VER=$(grep -oP '(?<=<InformationalVersion>).*(?=</InformationalVersion>)' src/OpenGrid/OpenGrid.csproj)
-          if [ -z "$BASE_VER" ]; then
-            BASE_VER=$(grep -oP '(?<=<Version>).*(?=</Version>)' src/OpenGrid/OpenGrid.csproj | head -1)
-          fi
-          VERSION="${BASE_VER}.${{ github.run_number }}"
+          VERSION=$(grep -oP '(?<=<Version>).*(?=</Version>)' src/OpenGrid/OpenGrid.csproj | head -1)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
