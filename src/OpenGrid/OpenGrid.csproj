@@ -74,8 +74,6 @@
       </Compile>
     </ItemGroup>
 
-
-
     <Target Name="PublishOpenGridBridge" AfterTargets="Build">
         <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\..\OpenGridBridge\OpenGridBridge.csproj&quot; -c $(Configuration) -r win-x64 --output &quot;$(TargetDir)&quot; --nologo" />
     </Target>

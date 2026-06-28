@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -95,7 +96,7 @@ public class App : Application
         try
         {
             var dashboardServer = Program.ServiceProvider.GetService<DashboardHttpServer>();
-            dashboardServer?.StopAsync().GetAwaiter().GetResult();
+            dashboardServer?.StopAsync().FireAndForgetSafe();
         }
         catch (Exception ex)
         {

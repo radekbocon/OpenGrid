@@ -3,13 +3,13 @@ set -euo pipefail
 
 APP_ID="io.github.radekbocon.OpenGrid"
 APP_NAME="OpenGrid"
-APP_DIRNAME="simlab"
+APP_DIRNAME="opengrid"
 LINUX_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(dirname "$LINUX_DIR")"
 SRC_DIR="$REPO_DIR/src"
 
 BUILD_DIR="$REPO_DIR/_build/appimage"
-PUBLISH_DIR="$BUILD_DIR/publish"
+PUBLISH_DIR="$REPO_DIR/_build/publish"
 APPDIR="$BUILD_DIR/$APP_NAME-x86_64.AppDir"
 OUTPUT_DIR="$REPO_DIR/_build"
 
@@ -39,31 +39,6 @@ check_deps() {
     fi
 
     echo "All prerequisites satisfied."
-}
-
-# ------------------------------------------------------------------
-publish_app() {
-    print_step "Publishing $APP_NAME for linux-x64..."
-    dotnet publish "$SRC_DIR/OpenGrid/OpenGrid.csproj" \
-        -c Release \
-        -r linux-x64 \
-        --self-contained true \
-        -p:DebugType=embedded \
-        -p:PublishTrimmed=false \
-        -o "$PUBLISH_DIR" \
-        --nologo
-
-    print_step "Publishing OpenGridBridge for win-x64..."
-    dotnet publish "$SRC_DIR/OpenGridBridge/OpenGridBridge.csproj" \
-        -c Release \
-        -r win-x64 \
-        --self-contained true \
-        -p:DebugType=embedded \
-        -o "$PUBLISH_DIR" \
-        --nologo
-
-    # Clean up debug symbols
-    rm -f "$PUBLISH_DIR"/*.pdb "$PUBLISH_DIR"/*.dbg 2>/dev/null || true
 }
 
 # ------------------------------------------------------------------
@@ -151,7 +126,7 @@ usage() {
 Usage: $0 [command]
 
 Commands:
-  build       Build the AppImage (default)
+  build       Package AppImage from existing published binaries in _build/publish (default)
   clean       Remove build artifacts
   deps        Check prerequisites only
 
@@ -163,8 +138,6 @@ EOF
 # ------------------------------------------------------------------
 case "${1:-build}" in
     build)
-        check_deps
-        publish_app
         create_appdir
         build_appimage
         ;;
