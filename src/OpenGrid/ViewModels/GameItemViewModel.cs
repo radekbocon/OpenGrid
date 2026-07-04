@@ -1,9 +1,5 @@
-using System.Threading;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DialogHostAvalonia;
-using OpenGrid.Controls;
 using OpenGrid.Models;
 using OpenGrid.Services;
 using OpenGrid.Services.Telemetry;
@@ -14,8 +10,8 @@ public partial class GameItemViewModel : ViewModelBase
 {
     private readonly SteamGameManager _gameManager;
     private readonly ITelemetryService _telemetryService;
+    private readonly ISettingsService _settingsService;
     private SteamGameProcess? _game;
-    private CancellationTokenSource? _cts;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
@@ -32,8 +28,11 @@ public partial class GameItemViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(ShowDisconnectButton))]
     [NotifyPropertyChangedFor(nameof(ShowCancelButton))]
     public partial TelemetryConnectionStatus TelemetryStatus { get; set; }
+    
     public string? ImagePath => _game?.SteamGame.ImagePath;
+    
     public string? Name => _game?.SteamGame.Name;
+    
     public string StatusText => (IsRunning, TelemetryStatus) switch
     {
         (true, TelemetryConnectionStatus.Connected) => "Connected",
@@ -57,11 +56,18 @@ public partial class GameItemViewModel : ViewModelBase
     public bool ShowCancelButton => TelemetryStatus == TelemetryConnectionStatus.Connecting;
 
     public bool ShowSetupButton => TelemetrySetupHelper.AdditionalSetupNeeded(_game?.SteamGame);
-    
-    public GameItemViewModel(SteamGameManager gameManager, ITelemetryService telemetryService)
+
+    [ObservableProperty]
+    public partial bool IsAutoConnectEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsAutoRecordingEnabled { get; set; }
+
+    public GameItemViewModel(SteamGameManager gameManager, ITelemetryService telemetryService, ISettingsService settingsService)
     {
         _gameManager = gameManager;
         _telemetryService = telemetryService;
+        _settingsService = settingsService;
         _telemetryService.TelemetryStatusChanged += OnTelemetryStatusChanged;
     }
 
@@ -71,6 +77,8 @@ public partial class GameItemViewModel : ViewModelBase
     {
         _game = game;
         IsRunning = _gameManager.IsRunning(game);
+        IsAutoConnectEnabled = _settingsService.AutoConnectGameAppIds.Contains(_game.SteamGame.AppId);
+        IsAutoRecordingEnabled = _settingsService.AutoRecordingGameAppIds.Contains(_game.SteamGame.AppId);
         
         if (_telemetryService.CurrentGame?.AppId == game.SteamGame.AppId)
         {
@@ -96,12 +104,7 @@ public partial class GameItemViewModel : ViewModelBase
             return;
         }
         
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = new CancellationTokenSource();
-        
-        await _telemetryService.ConnectAsync(_game.SteamGame, _cts.Token);
-        _telemetryService.StartReading();
+        await _telemetryService.ConnectAsync(_game.SteamGame);
     }
 
     [RelayCommand]
@@ -131,20 +134,54 @@ public partial class GameItemViewModel : ViewModelBase
     [RelayCommand]
     private void Disconnect()
     {
-        _telemetryService.StopReading();
+        _telemetryService.Disconnect();
     }
     
     [RelayCommand]
     private void Cancel()
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
+        _telemetryService.Disconnect();
     }
 
     [RelayCommand]
     private async Task ShowTelemetrySetupAsync()
     {
         await TelemetrySetupHelper.HandleTelemetrySetupAsync(_game?.SteamGame);
+    }
+
+    partial void OnIsAutoConnectEnabledChanged(bool value)
+    {
+        if (_game?.SteamGame.AppId is not {} appId)
+        {
+            return;
+        }
+        
+        if (value)
+        {
+            _settingsService.AutoConnectGameAppIds.Add(appId);
+        }
+        else
+        {
+            _settingsService.AutoConnectGameAppIds.Remove(appId);
+            IsAutoRecordingEnabled = false;
+        }
+    }
+
+    partial void OnIsAutoRecordingEnabledChanged(bool value)
+    {
+        if (_game?.SteamGame.AppId is not {} appId)
+        {
+            return;
+        }
+        
+        if (value)
+        {
+            _settingsService.AutoRecordingGameAppIds.Add(appId);
+            IsAutoConnectEnabled = true;
+        }
+        else
+        {
+            _settingsService.AutoRecordingGameAppIds.Remove(appId);
+        }
     }
 }

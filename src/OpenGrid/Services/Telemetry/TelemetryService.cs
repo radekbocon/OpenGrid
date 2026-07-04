@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Serilog;
 using OpenGrid.Models;
 
@@ -22,7 +17,7 @@ public class TelemetryService : ITelemetryService
 
     private ITelemetryClient? _telemetryClient;
 
-    private CancellationTokenSource? _cancellationTokenSource;
+    private CancellationTokenSource? _cts;
     private bool _disposed;
 
     public event EventHandler<TelemetryEventArgs>? TelemetryReceived;
@@ -50,11 +45,12 @@ public class TelemetryService : ITelemetryService
         _steamWatcher.GameStopped += SteamWatcherOnGameStopped;
     }
 
-    public async Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken)
+    public async Task<bool> ConnectAsync(SteamGame game)
     {
         try
         {
             _disposed = false;
+            _cts = new CancellationTokenSource();
             CurrentGame = game;
             ConnectionStatus = TelemetryConnectionStatus.Connecting;
 
@@ -62,13 +58,15 @@ public class TelemetryService : ITelemetryService
 
             if (game.RequiresSharedMemoryBridge)
             {
-                await _sharedMemoryBridgeLauncher.LaunchBridgeAsync(game, cancellationToken);
+                await _sharedMemoryBridgeLauncher.LaunchBridgeAsync(game, _cts.Token);
             }
 
-            var result = await _telemetryClient.ConnectAsync(cancellationToken);
+            var result = await _telemetryClient.ConnectAsync(_cts.Token);
             ConnectionStatus = result ? TelemetryConnectionStatus.Connected : TelemetryConnectionStatus.Disconnected;
+            
+            StartReading();
 
-            return result;
+            return ConnectionStatus == TelemetryConnectionStatus.Connected;
         }
         catch (Exception e)
         {
@@ -77,36 +75,23 @@ public class TelemetryService : ITelemetryService
             return false;
         }
     }
-
-    public void StartReading()
+    
+    public void Disconnect()
     {
-        if (ConnectionStatus != TelemetryConnectionStatus.Connected)
-        {
-            Log.Warning("Cannot start reading telemetry: not connected");
-            return;
-        }
-
         try
         {
-            _cancellationTokenSource = new CancellationTokenSource();
-            _ = ReadPollingLoopAsync(_cancellationTokenSource.Token);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error starting reading telemetry: {0}", ex.Message);
             ConnectionStatus = TelemetryConnectionStatus.Disconnected;
+            _sharedMemoryBridgeLauncher.StopBridge();
+            _telemetryClient?.Stop();
+            _telemetryClient = null;
+            _cts?.Cancel();
+            _cts?.Dispose();
+            _cts = null;
         }
-    }
-
-    public void StopReading()
-    {
-        ConnectionStatus = TelemetryConnectionStatus.Disconnected;
-        _sharedMemoryBridgeLauncher.StopBridge();
-        _telemetryClient?.Stop();
-        _telemetryClient = null;
-        _cancellationTokenSource?.Cancel();
-        _cancellationTokenSource?.Dispose();
-        _cancellationTokenSource = null;
+        catch (ObjectDisposedException)
+        {
+            // ignore
+        }
     }
 
     public void Dispose()
@@ -116,8 +101,27 @@ public class TelemetryService : ITelemetryService
             return;
         }
 
-        StopReading();
+        Disconnect();
         _disposed = true;
+    }
+
+    private void StartReading()
+    {
+        if (ConnectionStatus != TelemetryConnectionStatus.Connected)
+        {
+            Log.Warning("Cannot start reading telemetry: not connected");
+            return;
+        }
+
+        try
+        {
+            _ = ReadPollingLoopAsync(_cts.Token);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error starting reading telemetry: {0}", ex.Message);
+            ConnectionStatus = TelemetryConnectionStatus.Disconnected;
+        }
     }
 
     private void SteamWatcherOnGameStopped(SteamGameProcess gameProcess)
