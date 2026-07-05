@@ -1,4 +1,4 @@
-using System;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using OpenGrid.Models.Telemetry;
 
@@ -79,23 +79,31 @@ public enum GameStatus
 
 [StructLayout(LayoutKind.Sequential)]
 [Serializable]
-public struct Coordinates
+public struct AcVector3
 {
     public float X;
     public float Y;
     public float Z;
+
+    public static implicit operator AcVector3(Vector3 vector3) =>
+        new() { X = vector3.X, Y = vector3.Y, Z = vector3.Z };
+    public static implicit operator Vector3(AcVector3 acVector3) => 
+        new() { X = acVector3.X, Y = acVector3.Y, Z = acVector3.Z };
 }
 
 [StructLayout(LayoutKind.Sequential)]
 [Serializable]
-public struct TyreStat
+public struct AcTireStat
 {
     public float FrontLeft;
     public float FrontRight;
     public float RearLeft;
     public float RearRight;
     
-    public float[] ToArray() => [FrontLeft, FrontRight, RearLeft, RearRight];
+    public static implicit operator TireStats(AcTireStat value) =>
+        new() { FrontLeft = value.FrontLeft, FrontRight = value.FrontRight, RearLeft = value.RearLeft, RearRight = value.RearRight };
+    public static implicit operator AcTireStat(TireStats value) => 
+        new() { FrontLeft = value.FrontLeft, FrontRight = value.FrontRight, RearLeft = value.RearLeft, RearRight = value.RearRight };
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -109,17 +117,17 @@ public struct SPageFilePhysics
     public int Rpms;
     public float SteerAngle;
     public float SpeedKmh;
-    public Coordinates Velocity;
-    public Coordinates AccG;
-    public TyreStat WheelSlip;
-    public TyreStat WheelLoad;
-    public TyreStat WheelsPressure;
-    public TyreStat WheelAngularSpeed;
-    public TyreStat TyreWear;
-    public TyreStat TyreDirtyLevel;
-    public TyreStat TyreCoreTemperature;
-    public TyreStat CamberRad;
-    public TyreStat SuspensionTravel;
+    public AcVector3 Velocity;
+    public AcVector3 AccG;
+    public AcTireStat WheelSlip;
+    public AcTireStat WheelLoad;
+    public AcTireStat WheelsPressure;
+    public AcTireStat WheelAngularSpeed;
+    public AcTireStat TyreWear;
+    public AcTireStat TyreDirtyLevel;
+    public AcTireStat TyreCoreTemperature;
+    public AcTireStat CamberRad;
+    public AcTireStat SuspensionTravel;
     public float Drs;
     public float TC;
     public float Heading;
@@ -145,7 +153,7 @@ public struct SPageFilePhysics
     public float AirDensity;
     public float AirTemp;
     public float RoadTemp;
-    public Coordinates LocalAngularVelocity;
+    public AcVector3 LocalAngularVelocity;
     public float FinalFF;
     public float PerformanceMeter;
     public int EngineBrake;
@@ -156,42 +164,42 @@ public struct SPageFilePhysics
     public float KersCurrentKJ;
     public int DrsAvailable;
     public int DrsEnabled;
-    public TyreStat BrakeTemp;
+    public AcTireStat BrakeTemp;
     public float Clutch;
-    public TyreStat TyreTempI;
-    public TyreStat TyreTempM;
-    public TyreStat TyreTempO;
+    public AcTireStat TyreTempI;
+    public AcTireStat TyreTempM;
+    public AcTireStat TyreTempO;
     public int IsAIControlled;
 
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public Coordinates[] TyreContactPoint;
+    public AcVector3[] TyreContactPoint;
 
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public Coordinates[] TyreContactNormal;
+    public AcVector3[] TyreContactNormal;
 
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-    public Coordinates[] TyreContactHeading;
+    public AcVector3[] TyreContactHeading;
 
     public float BrakeBias;
-    public Coordinates LocalVelocity;
+    public AcVector3 LocalVelocity;
     public int P2PActivation;
     public int P2PStatus;
     public float CurrentMaxRpm;
-    public TyreStat Mz;
-    public TyreStat Fx;
-    public TyreStat Fy;
-    public TyreStat SlipRatio;
-    public TyreStat SlipAngle;
+    public AcTireStat Mz;
+    public AcTireStat Fx;
+    public AcTireStat Fy;
+    public AcTireStat SlipRatio;
+    public AcTireStat SlipAngle;
     public int TcinAction;
     public int AbsInAction;
-    public TyreStat SuspensionDamage;
-    public TyreStat TyreTemp;
+    public AcTireStat SuspensionDamage;
+    public AcTireStat TyreTemp;
     public float WaterTemp;
-    public TyreStat BrakePressure;
+    public AcTireStat BrakePressure;
     public int FrontBrakeCompound;
     public int RearBrakeCompound;
-    public TyreStat PadLife;
-    public TyreStat DiscLife;
+    public AcTireStat PadLife;
+    public AcTireStat DiscLife;
     public int IgnitionOn;
     public int StarterEngineOn;
     public int IsEngineRunning;
@@ -240,7 +248,7 @@ public struct SPageFileGraphic
     public int ActiveCars;
 
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 60)]
-    public Coordinates[] CarCoordinates;
+    public AcVector3[] CarCoordinates;
 
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 60)]
     public int[] CarIDs;
@@ -344,8 +352,8 @@ public struct SPageFileStatic
     public float MaxPower;
     public int MaxRpm;
     public float MaxFuel;
-    public TyreStat SuspensionMaxTravel;
-    public TyreStat TyreRadius;
+    public AcTireStat SuspensionMaxTravel;
+    public AcTireStat TyreRadius;
     public float MaxTurboBoost;
     public float Deprecated1;
     public float Deprecated2;

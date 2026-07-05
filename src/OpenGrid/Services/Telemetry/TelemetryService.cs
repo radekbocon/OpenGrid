@@ -49,6 +49,18 @@ public class TelemetryService : ITelemetryService
     {
         try
         {
+            if (CurrentGame is {} currentGame)
+            {
+                if (currentGame == game)
+                {
+                    Log.Information("Game {game} is already connected", currentGame.AppId);
+                    return true;    
+                }
+                
+                Log.Information("Disconnecting {game}", currentGame.AppId);
+                Disconnect();
+            }
+            
             _disposed = false;
             _cts = new CancellationTokenSource();
             CurrentGame = game;

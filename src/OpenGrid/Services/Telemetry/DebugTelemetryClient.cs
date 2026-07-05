@@ -1,9 +1,5 @@
-using System;
-using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
-using OpenGrid.Models;
 using OpenGrid.Models.Telemetry;
+using Vector3 = System.Numerics.Vector3;
 
 namespace OpenGrid.Services.Telemetry;
 
@@ -87,7 +83,7 @@ public class DebugTelemetryClient : ITelemetryClient
             Fuel = fuel,
             CurrentGear = currentGear,
             EngineRpm = engineRpm,
-            TireTemperatures = TireValues.FromArray(temps),
+            TireTemperatures = TireStats.FromArray(temps),
             LapTime = lapTime,
             LastLapTime = lastLapTime,
             BestLapTime = bestLapTime,
@@ -101,7 +97,7 @@ public class DebugTelemetryClient : ITelemetryClient
             BrakeBias = 58f + (float)Math.Sin(_tick * 0.05) * 10f,
             Distance = (float)(_tick * 1.5),
             MaxRpm = 12000f,
-            TirePressures = TireValues.FromArray(pressures),
+            TirePressures = TireStats.FromArray(pressures),
             IsValidLap = true,
             SectorIndex = currentLap % 3 + 1,
             LastSectorTime = TimeSpan.FromSeconds((_tick % 1000) switch

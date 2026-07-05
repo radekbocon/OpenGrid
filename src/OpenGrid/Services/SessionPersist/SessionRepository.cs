@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CsvHelper;
 using Serilog;
 using OpenGrid.Models.Telemetry;
@@ -136,7 +137,8 @@ public class SessionRepository
         }
 
         var now = e.Telemetry.Timestamp;
-
+        
+        // Make sure last record of the lap is not skipped 
         if (_lastReceived != null && e.Telemetry.CurrentLap != _lastReceived.CurrentLap)
         {
             CurrentSession.AddRecord(_lastReceived);
@@ -148,7 +150,6 @@ public class SessionRepository
             return;
         }
 
-        // Make sure last record of the lap is not skipped 
         if (now - _lastRecordTimestamp >= RecordInterval)
         {
             CurrentSession.AddRecord(e.Telemetry);

@@ -1,44 +1,43 @@
-using System;
 using System.Numerics;
 
 namespace OpenGrid.Models.Telemetry;
 
 public record TelemetryRecord
 {
-    public DateTime Timestamp { get; set; }
-    public Car Car { get; set; }
-    public Track Track { get; set; }
-    public SessionType SessionType { get; set; }
-    public int CurrentLap { get; set; }
-    public float SpeedKmh { get; set; }
-    public float Gas { get; set; }
-    public float Brake { get; set; }
-    public float Clutch { get; set; }
-    public float SteerAngle { get; set; }
-    public float Fuel { get; set; }
-    public Gear CurrentGear { get; set; }
-    public float EngineRpm { get; set; }
-    public TireValues TireTemperatures { get; set; }
-    public TimeSpan LapTime { get; set; }
-    public float Distance { get; set; }
-    public float MaxRpm { get; set; }
-    public TireValues TirePressures { get; set; }
-    public TimeSpan LastLapTime { get; set; }
-    public TimeSpan BestLapTime { get; set; }
-    public int AbsSetting { get; set; }
-    public int Tc1Setting { get; set; }
-    public int Tc2Setting { get; set; }
-    public TimeSpan DeltaLapTime { get; set; }
-    public int Position { get; set; }
-    public int EngineMap { get; set; }
-    public float BrakeBias { get; set; }
-    public bool IsDeltaPositive { get; set; }
-    public bool IsValidLap { get; set; }
-    public int SectorIndex { get; set; }
-    public TimeSpan LastSectorTime { get; set; }
-    public Vector3 CarPosition { get; set; }
-    public float GForceLat { get; set; }
-    public float GForceLon { get; set; }
+    public DateTime Timestamp { get; init; }
+    public Car Car { get; init; }
+    public Track Track { get; init; }
+    public SessionType SessionType { get; init; }
+    public int CurrentLap { get; init; }
+    public float SpeedKmh { get; init; }
+    public float Gas { get; init; }
+    public float Brake { get; init; }
+    public float Clutch { get; init; }
+    public float SteerAngle { get; init; }
+    public float Fuel { get; init; }
+    public Gear CurrentGear { get; init; }
+    public float EngineRpm { get; init; }
+    public TireStats TireTemperatures { get; init; }
+    public TimeSpan LapTime { get; init; }
+    public float Distance { get; init; }
+    public float MaxRpm { get; init; }
+    public TireStats TirePressures { get; init; }
+    public TimeSpan LastLapTime { get; init; }
+    public TimeSpan BestLapTime { get; init; }
+    public int AbsSetting { get; init; }
+    public int Tc1Setting { get; init; }
+    public int Tc2Setting { get; init; }
+    public TimeSpan DeltaLapTime { get; init; }
+    public int Position { get; init; }
+    public int EngineMap { get; init; }
+    public float BrakeBias { get; init; }
+    public bool IsDeltaPositive { get; init; }
+    public bool IsValidLap { get; init; }
+    public int SectorIndex { get; init; }
+    public TimeSpan LastSectorTime { get; init; }
+    public Vector3 CarPosition { get; init; }
+    public float GForceLat { get; init; }
+    public float GForceLon { get; init; }
 }
 
 public enum SessionType
@@ -66,13 +65,13 @@ public enum Gear
     N6 = 7
 }
 
-public record struct TireValues(float FrontLeft, float FrontRight, float RearLeft, float RearRight)
+public record struct TireStats(float FrontLeft, float FrontRight, float RearLeft, float RearRight)
 {
-    public static TireValues FromArray(float[] array)
+    public static TireStats FromArray(float[] array)
     {
         return array.Length != 4 
-            ? new TireValues(0, 0, 0, 0) 
-            : new TireValues(array[0], array[1], array[2], array[3]);
+            ? new TireStats(0, 0, 0, 0) 
+            : new TireStats(array[0], array[1], array[2], array[3]);
     }
 }
 
