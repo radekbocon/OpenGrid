@@ -82,6 +82,15 @@
                                         <Button
                                             Padding="8,4"
                                             Classes="Flat"
+                                            Command="{Binding OpenInAppCommand}">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <avalonia:MaterialIconExt IconSize="14" Kind="Application" />
+                                                <TextBlock FontSize="12" Text="App" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            Padding="8,4"
+                                            Classes="Flat"
                                             Command="{Binding ShowOnDeviceCommand}">
                                             <StackPanel Orientation="Horizontal" Spacing="4">
                                                 <avalonia:MaterialIconExt IconSize="14" Kind="Devices" />

@@ -36,6 +36,13 @@ public partial class DashboardCardViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void OpenInApp()
+    {
+        var window = new DashboardWindow(DashboardUrl, Dashboard.Name);
+        window.Show();
+    }
+
+    [RelayCommand]
     private async Task ShowOnDeviceAsync()
     {
         var url = DeviceDashboardUrlFor(Dashboard);
