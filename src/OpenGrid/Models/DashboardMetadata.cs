@@ -14,4 +14,8 @@ public class DashboardMetadata
     public string Type { get; set; } = "dashboard";
     [JsonPropertyName("author")]
     public string Author { get; set; } = "";
+    [JsonPropertyName("width")]
+    public double Width { get; set; } = 1280.0;
+    [JsonPropertyName("height")]
+    public double Height { get; set; } = 720.0;
 }

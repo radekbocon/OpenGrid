@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Text.Json;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using OpenGrid.Models;
 
 namespace OpenGrid.Services.Dashboard;
@@ -110,6 +109,8 @@ public sealed class DashboardService : IDashboardService
                 DirectoryPath = $"avares://OpenGrid/Assets/Dashboards/{id}/",
                 IsSystem = true,
                 Image = image,
+                Width = metadata.Width,
+                Height = metadata.Height,
             });
         }
     }

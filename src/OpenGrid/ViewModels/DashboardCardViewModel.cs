@@ -38,8 +38,8 @@ public partial class DashboardCardViewModel : ObservableObject
     [RelayCommand]
     private void OpenInApp()
     {
-        var window = new DashboardWindow(DashboardUrl, Dashboard.Name);
-        window.Show();
+        var window = new DashboardWindow(DashboardUrl, Dashboard.Name, Dashboard.Width, Dashboard.Height);
+        window.ShowDialog(App.MainWindow);
     }
 
     [RelayCommand]

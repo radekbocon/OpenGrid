@@ -18,6 +18,8 @@ public class App : Application
     private ISettingsService? _settingsService;
     private IThemeService? _themeService;
 
+    public static Window MainWindow { get; private set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -39,6 +41,7 @@ public class App : Application
             {
                 DataContext = mainVewModel
             };
+            MainWindow = mainWindow;
             desktop.MainWindow = mainWindow;
             Program.ActivateWindowRequested = () => ShowMainWindow(desktop);
             Launcher.Initialize(TopLevel.GetTopLevel(mainWindow)!.Launcher);

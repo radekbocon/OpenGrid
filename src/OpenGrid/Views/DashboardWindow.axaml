@@ -4,14 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Width="1024"
-    Height="768"
-    d:DesignHeight="600"
-    d:DesignWidth="900"
-    Icon="/Assets/icon.png"
+    Background="Transparent"
+    CanResize="True"
+    Topmost="True"
     mc:Ignorable="d">
 
-    <NativeWebView
-        x:Name="WebView" />
+    <NativeWebView x:Name="WebView" />
 
 </Window>

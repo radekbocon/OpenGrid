@@ -3,5 +3,7 @@
   "description": "RPM, gear, speed, tire temps, pressures, and lap times, TC, ABS and more.",
   "version": "1.0",
   "type": "dashboard",
-  "author": "OpenGrid"
+  "author": "OpenGrid",
+  "width": 1280,
+  "height": 720
 }

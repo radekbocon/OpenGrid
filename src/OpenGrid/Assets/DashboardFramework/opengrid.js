@@ -195,6 +195,12 @@ const OpenGrid = (function () {
     }
 
     function toggleFullscreen() {
+        try {
+            invokeCSharpAction("ToggleFullscreen");
+        }
+        catch{
+            // ignored
+        }
         if (isFullscreen()) exitFullscreen();
         else requestFullscreen();
     }
