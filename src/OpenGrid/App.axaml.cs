@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -9,6 +7,7 @@ using OpenGrid.ViewModels;
 using OpenGrid.Views;
 using Microsoft.Extensions.DependencyInjection;
 using OpenGrid.Services;
+using OpenGrid.Services.Dashboard;
 using OpenGrid.Services.Telemetry;
 
 namespace OpenGrid;
@@ -18,6 +17,8 @@ public class App : Application
     private TrayIcon? _trayIcon;
     private ISettingsService? _settingsService;
     private IThemeService? _themeService;
+
+    public static Window MainWindow { get; private set; }
 
     public override void Initialize()
     {
@@ -40,12 +41,16 @@ public class App : Application
             {
                 DataContext = mainVewModel
             };
+            MainWindow = mainWindow;
             desktop.MainWindow = mainWindow;
             Program.ActivateWindowRequested = () => ShowMainWindow(desktop);
             Launcher.Initialize(TopLevel.GetTopLevel(mainWindow)!.Launcher);
 
             mainWindow.Closing += MainWindowOnClosing;
             desktop.Exit += DesktopOnExit;
+
+            var dashboardServer = Program.ServiceProvider.GetRequiredService<DashboardHttpServer>();
+            _ = dashboardServer.StartAsync();
             
 
             using var iconStream = AssetLoader.Open(new Uri("avares://OpenGrid/Assets/icon.png"));
@@ -88,6 +93,16 @@ public class App : Application
 
     private void DesktopOnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
+        try
+        {
+            var dashboardServer = Program.ServiceProvider.GetService<DashboardHttpServer>();
+            dashboardServer?.StopAsync().FireAndForgetSafe();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Error stopping dashboard server");
+        }
+
         try
         {
             var telemetryService = Program.ServiceProvider.GetService<ITelemetryService>();

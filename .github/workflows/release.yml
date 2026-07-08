@@ -26,17 +26,19 @@ jobs:
           sudo apt-get install -y fuse libfuse2
           sudo modprobe fuse || true
 
+      - name: Publish binaries
+        run: bash dotnet-publish.sh
+
       - name: Build AppImage
         run: bash appimage/build-appimage.sh build
+
+      - name: Create tar archive
+        run: tar -czf _build/OpenGrid-x86_64.tar.gz -C _build/publish .
 
       - name: Determine version
         id: version
         run: |
-          BASE_VER=$(grep -oP '(?<=<InformationalVersion>).*(?=</InformationalVersion>)' src/OpenGrid/OpenGrid.csproj)
-          if [ -z "$BASE_VER" ]; then
-            BASE_VER=$(grep -oP '(?<=<Version>).*(?=</Version>)' src/OpenGrid/OpenGrid.csproj | head -1)
-          fi
-          VERSION="${BASE_VER}.${{ github.run_number }}"
+          VERSION=$(grep -oP '(?<=<Version>).*(?=</Version>)' src/OpenGrid/OpenGrid.csproj | head -1)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
@@ -46,6 +48,6 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           gh release create "v$VERSION" \
             --title "OpenGrid v$VERSION" \
-            --generate-notes \
             --latest \
-            _build/OpenGrid-x86_64.AppImage
+            _build/OpenGrid-x86_64.AppImage \
+            _build/OpenGrid-x86_64.tar.gz

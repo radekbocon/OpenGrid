@@ -1,10 +1,7 @@
-using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Serilog;
 using OpenGrid.Models;
 using OpenGrid.Models.Telemetry;
@@ -133,7 +130,7 @@ public class DirtRallyTelemetryClient : ITelemetryClient
                 Distance = packet.Distance,
                 Position = (int)packet.RacePos,
                 SessionType = SessionType.Race,
-                TirePressures = new TireValues(packet.TirePressureFL, packet.TirePressureFR, packet.TirePressureRL, packet.TirePressureRR),
+                TirePressures = new TireStats(packet.TirePressureFL, packet.TirePressureFR, packet.TirePressureRL, packet.TirePressureRR),
                 CarPosition = new Vector3(packet.PosX, packet.PosY, packet.PosZ),
                 GForceLat = packet.GForceLat,
                 GForceLon = packet.GForceLon,

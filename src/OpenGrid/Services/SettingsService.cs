@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
@@ -10,6 +11,8 @@ internal record UserSettings
     public int? DashboardPort { get; set; }
     public string? SelectedTheme { get; set; }
     public int RecordingRateHz { get; set; } = 30;
+    public HashSet<int> AutoConnectGameAppIds { get; set; } = [];
+    public HashSet<int> AutoRecordingGameAppIds { get; set; } = [];
 }
 
 public sealed class SettingsService : ISettingsService
@@ -33,16 +36,6 @@ public sealed class SettingsService : ISettingsService
         }
     }
 
-    public int? DashboardPort
-    {
-        get => _userSettings.DashboardPort;
-        set
-        {
-            _userSettings.DashboardPort = value;
-            Save();
-        }
-    }
-
     public string? SelectedTheme
     {
         get => _userSettings.SelectedTheme;
@@ -59,6 +52,26 @@ public sealed class SettingsService : ISettingsService
         set
         {
             _userSettings.RecordingRateHz = value;
+            Save();
+        }
+    }
+
+    public HashSet<int> AutoConnectGameAppIds
+    {
+        get => _userSettings.AutoConnectGameAppIds;
+        set
+        {
+            _userSettings.AutoConnectGameAppIds = value;
+            Save();
+        }
+    }
+
+    public HashSet<int> AutoRecordingGameAppIds
+    {
+        get => _userSettings.AutoRecordingGameAppIds;
+        set
+        {
+            _userSettings.AutoRecordingGameAppIds = value;
             Save();
         }
     }

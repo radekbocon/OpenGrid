@@ -10,4 +10,7 @@ public class DashboardInfo
     public required string Id { get; init; }
     public bool IsSystem { get; init; }
     public required string DirectoryPath { get; init; }
+    public string Url { get; set; } = "";
+    public double Width { get; set; }
+    public double Height { get; set; }
 }

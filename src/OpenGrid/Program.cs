@@ -110,8 +110,7 @@ sealed class Program
 
     private static async Task ActivationListenerLoopAsync()
     {
-        var listener = _activationListener;
-        if (listener is null)
+        if (_activationListener is not {} listener)
         {
             return;
         }

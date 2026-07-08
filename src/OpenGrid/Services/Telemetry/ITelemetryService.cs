@@ -9,9 +9,8 @@ public interface ITelemetryService : IDisposable
 {
     TelemetryConnectionStatus ConnectionStatus { get; }
     SteamGame? CurrentGame { get; }
-    Task<bool> ConnectAsync(SteamGame game, CancellationToken cancellationToken);
-    void StartReading();
-    void StopReading();
+    Task<bool> ConnectAsync(SteamGame game);
+    void Disconnect();
     event EventHandler<TelemetryEventArgs>? TelemetryReceived;
     event EventHandler<TelemetryConnectionStatus>? TelemetryStatusChanged;
 }

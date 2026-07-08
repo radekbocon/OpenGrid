@@ -1,9 +1,4 @@
-using System;
-using System.IO;
-using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Serilog;
 using OpenGrid.Models;
 using OpenGrid.Models.Telemetry;
@@ -82,6 +77,11 @@ public class AcTelemetryClient : ITelemetryClient
                 return null;
             }
 
+            if (graphicsData.Value.Status == GameStatus.OFF)
+            {
+                return null;
+            }
+
             // Create telemetry snapshot
             var snapshot = new TelemetryRecord
             {
@@ -98,11 +98,11 @@ public class AcTelemetryClient : ITelemetryClient
                 Clutch = physicsData.Value.Clutch,
                 CurrentGear = (Gear)physicsData.Value.Gear,
                 EngineRpm = physicsData.Value.Rpms,
-                TireTemperatures = TireValues.FromArray(physicsData.Value.TyreTemp.ToArray()),
+                TireTemperatures = physicsData.Value.TyreTemp,
                 LapTime = TimeSpan.FromMilliseconds(graphicsData.Value.CurrentTime),
                 Distance = graphicsData.Value.DistanceTraveled,
                 MaxRpm = staticData.Value.MaxRpm,
-                TirePressures = TireValues.FromArray(physicsData.Value.WheelsPressure.ToArray()),
+                TirePressures = physicsData.Value.WheelsPressure,
                 LastLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.LastTime),
                 BestLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.BestTime),
                 AbsSetting = graphicsData.Value.ABS,
@@ -118,10 +118,7 @@ public class AcTelemetryClient : ITelemetryClient
                 LastSectorTime = TimeSpan.FromMilliseconds(graphicsData.Value.LastSectorTime),
                 GForceLat = physicsData.Value.AccG.X,
                 GForceLon = physicsData.Value.AccG.Z,
-                CarPosition = new Vector3(
-                    graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID].X,
-                    graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID].Y,
-                    graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID].Z)
+                CarPosition = graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID],
             };
             
             return snapshot;

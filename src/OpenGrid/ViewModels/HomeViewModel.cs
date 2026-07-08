@@ -1,6 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using OpenGrid.Controls;
@@ -14,13 +12,15 @@ public partial class HomeViewModel : ViewModelBase
 {
     private readonly ITelemetryService _telemetryService;
     private readonly SteamGameManager _steamGameManager;
+    private readonly ISettingsService _settingsService;
 
     public ObservableCollection<GameItemViewModel> Games { get; } = [];
 
-    public HomeViewModel(ITelemetryService telemetryService, SteamGameManager steamGameManager)
+    public HomeViewModel(ITelemetryService telemetryService, SteamGameManager steamGameManager, ISettingsService settingsService)
     {
         _telemetryService = telemetryService;
         _steamGameManager = steamGameManager;
+        _settingsService = settingsService;
         IsMenuItem = true;
     }
 
@@ -48,13 +48,13 @@ public partial class HomeViewModel : ViewModelBase
         await DialogHost.Show(dialog);
     }
 
-    private void OnSteamGameStarted(SteamGameProcess game)
+    private void OnSteamGameStarted(object? sender, SteamGameProcess game)
     {
         var vm = FindGameViewModel(game);
         vm?.IsRunning = true;
     }
 
-    private void OnSteamGameStopped(SteamGameProcess game)
+    private void OnSteamGameStopped(object? sender,SteamGameProcess game)
     {
         var vm = FindGameViewModel(game);
         vm?.IsRunning = false;
@@ -71,12 +71,12 @@ public partial class HomeViewModel : ViewModelBase
         Games.Clear();
         foreach (var steamGameProcess in games)
         {
-            var vm = new GameItemViewModel(_steamGameManager, _telemetryService);
+            var vm = new GameItemViewModel(_steamGameManager, _telemetryService, _settingsService);
             vm.SetGame(steamGameProcess);
             Games.Add(vm);
         }
 #if DEBUG
-        var debugVm = new GameItemViewModel(_steamGameManager, _telemetryService);
+        var debugVm = new GameItemViewModel(_steamGameManager, _telemetryService, _settingsService);
         debugVm.SetGame(new SteamGameProcess
         {
             SteamGame = SteamGame.Debug
@@ -84,4 +84,5 @@ public partial class HomeViewModel : ViewModelBase
         Games.Add(debugVm);
 #endif
     }
+
 }

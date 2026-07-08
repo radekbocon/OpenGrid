@@ -1,69 +1,38 @@
 using System.Collections.ObjectModel;
-using System.Linq;
 using CommunityToolkit.Mvvm.Input;
-using DialogHostAvalonia;
-using OpenGrid.Models;
 using OpenGrid.Services;
-using OpenGrid.Views;
+using OpenGrid.Services.Dashboard;
 
 namespace OpenGrid.ViewModels;
 
 public partial class DashboardsViewModel : ViewModelBase
 {
-    private readonly IDashboardRepository _repository;
     private readonly IDashboardService _dashboardService;
+    private readonly DashboardHttpServer _dashboardServer;
 
-    public ObservableCollection<DashboardInfo> Dashboards { get; private set; } = [];
-    
-    public string StatusText => _dashboardService.IsRunning ? $"Server running on port {_dashboardService.Port}" : "Server not running";
-    public bool IsServerRunning => _dashboardService.IsRunning;
+    public ObservableCollection<DashboardCardViewModel> Dashboards { get; } = [];
 
-    public DashboardsViewModel(IDashboardRepository repository, IDashboardService dashboardService)
+    public DashboardsViewModel(IDashboardService dashboardService, DashboardHttpServer dashboardServer)
     {
-        _repository = repository;
         _dashboardService = dashboardService;
+        _dashboardServer = dashboardServer;
         IsMenuItem = true;
-        ReloadDashboards();
-        _dashboardService.IsRunningChanged += OnIsRunningChanged;
     }
 
-    private void ReloadDashboards()
+    protected override Task OnLoadedAsync()
     {
-        var dashboards = _repository.GetAllDashboards();
-        Dashboards = new ObservableCollection<DashboardInfo>(dashboards);
-    }
-
-    private void OnIsRunningChanged(object? sender, bool isRunning)
-    {
-        OnPropertyChanged(nameof(StatusText));
-        OnPropertyChanged(nameof(IsServerRunning));
+        Refresh();
+        return base.OnLoadedAsync();
     }
 
     [RelayCommand]
-    private void OpenOnDevice(DashboardInfo dashboard)
+    private void Refresh()
     {
-        _dashboardService.Start(dashboard);
-        var url = _dashboardService.GetUrl(useNetwork: true);
-        var dialog = new DeviceAccessDialog(dashboard.Name, url);
-        DialogHost.Show(dialog);
-    }
-
-    [RelayCommand]
-    private void OpenInBrowser(DashboardInfo dashboard)
-    {
-        _dashboardService.Start(dashboard);
-        _dashboardService.OpenInBrowser();
-    }
-    
-    [RelayCommand]
-    private void StartServer()
-    {
-        _dashboardService.Start(Dashboards.First());
-    }
-
-    [RelayCommand]
-    private void StopServer()
-    {
-        _dashboardService.Stop();
+        Dashboards.Clear();
+        _dashboardService.Scan();
+        foreach (var item in _dashboardService.Dashboards)
+        {
+            Dashboards.Add(new DashboardCardViewModel(item, _dashboardServer));
+        }
     }
 }

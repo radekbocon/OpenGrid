@@ -106,13 +106,13 @@ public class TelemetryCsvRow
             Fuel = (float)Fuel,
             CurrentGear = (Gear)CurrentGear,
             EngineRpm = (float)EngineRpm,
-            TireTemperatures = new TireValues(
+            TireTemperatures = new TireStats(
                 (float)TireTemperatureFL, (float)TireTemperatureFR,
                 (float)TireTemperatureRL, (float)TireTemperatureRR),
             LapTime = TimeSpan.FromSeconds(LapTime),
             Distance = (float)Distance,
             MaxRpm = (float)MaxRpm,
-            TirePressures = new TireValues(
+            TirePressures = new TireStats(
                 (float)TirePressureFL, (float)TirePressureFR,
                 (float)TirePressureRL, (float)TirePressureRR),
             LastLapTime = TimeSpan.FromSeconds(LastLapTime),
