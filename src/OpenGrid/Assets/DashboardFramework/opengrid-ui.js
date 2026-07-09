@@ -33,6 +33,22 @@
         drawer.appendChild(fsRow);
         drawer.appendChild(rcRow);
 
+        if (typeof invokeCSharpAction !== 'undefined') {
+            const wdRow = document.createElement('div');
+            wdRow.className = 'og-row';
+            wdRow.id = 'og-wd-row';
+            wdRow.innerHTML =
+                '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>' +
+                '<span class="og-lbl">Toggle Title Bar</span>';
+            drawer.insertBefore(wdRow, drawer.lastChild);
+
+            wdRow.addEventListener('click', function (e) {
+                e.stopPropagation();
+                closeDrawer();
+                invokeCSharpAction("ToggleWindowDecorations");
+            });
+        }
+
         const statusBar = document.createElement('div');
         statusBar.className = 'og-status';
         statusBar.id = 'og-status-bar';

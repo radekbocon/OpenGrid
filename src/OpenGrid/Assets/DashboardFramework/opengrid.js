@@ -195,14 +195,14 @@ const OpenGrid = (function () {
     }
 
     function toggleFullscreen() {
-        try {
+        if (invokeCSharpAction !== 'undefined') {
             invokeCSharpAction("ToggleFullscreen");
         }
-        catch{
-            // ignored
+        else {
+            if (isFullscreen()) exitFullscreen();
+            else requestFullscreen();    
         }
-        if (isFullscreen()) exitFullscreen();
-        else requestFullscreen();
+        
     }
 
     document.addEventListener('visibilitychange', function () {
