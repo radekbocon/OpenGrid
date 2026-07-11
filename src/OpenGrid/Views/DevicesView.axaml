@@ -2,13 +2,225 @@
     x:Class="OpenGrid.Views.DevicesView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:controls="clr-namespace:OpenGrid.Controls"
+    xmlns:controls1="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:OpenGrid.Models"
     xmlns:vm="using:OpenGrid.ViewModels"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="600"
+    d:DesignWidth="900"
     x:DataType="vm:DevicesViewModel"
     mc:Ignorable="d">
-    Nothing to see here ;)
+
+    <Grid RowDefinitions="Auto, *">
+        <controls:PageHeader
+            Title="Devices"
+            Grid.Row="0"
+            IsBackButtonVisible="False">
+            <Button Command="{Binding AddDeviceCommand}" ToolTip.Tip="Add Device">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <avalonia:MaterialIcon IconSize="20" Kind="Plus" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Text="Add Device"
+                        TextAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </controls:PageHeader>
+
+        <!--  Empty state  -->
+        <StackPanel
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsVisible="{Binding !HasDevices}">
+            <Border Background="Transparent" Opacity="0.3">
+                <avalonia:MaterialIconExt
+                    HorizontalAlignment="Center"
+                    IconSize="64"
+                    Kind="Devices" />
+            </Border>
+            <TextBlock
+                Margin="0,12,0,0"
+                HorizontalAlignment="Center"
+                Classes="Subtitle1"
+                Opacity="0.5"
+                Text="No devices added"
+                TextAlignment="Center" />
+            <TextBlock
+                Margin="0,4,0,0"
+                HorizontalAlignment="Center"
+                Classes="Body2"
+                Opacity="0.35"
+                Text="Click &quot;Add Device&quot; to discover and connect devices"
+                TextAlignment="Center" />
+        </StackPanel>
+
+        <!--  Device list + detail view  -->
+        <Grid
+            Grid.Row="1"
+            Margin="0,0,12,0"
+            ColumnDefinitions="220, *"
+            IsVisible="{Binding HasDevices}">
+
+            <!--  Device list (vertical tabs)  -->
+            <controls1:Card
+                Grid.Column="0"
+                Margin="0,0,12,0"
+                Padding="0"
+                VerticalAlignment="Stretch">
+                <ListBox
+                    x:Name="DeviceList"
+                    ItemsSource="{Binding Devices}"
+                    SelectedItem="{Binding SelectedDevice}"
+                    SelectionMode="Single">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:DeviceInfo">
+                            <StackPanel
+                                Margin="8,10"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <avalonia:MaterialIconExt
+                                    VerticalAlignment="Center"
+                                    IconSize="18"
+                                    Kind="Devices" />
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock
+                                        FontSize="13"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding Name}" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Opacity="0.5"
+                                        Text="{Binding Type}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </controls1:Card>
+
+            <!--  Device detail panel  -->
+            <controls1:Card
+                Grid.Column="1"
+                Padding="0"
+                VerticalAlignment="Stretch">
+                <Panel>
+                    <!--  No selection placeholder  -->
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding !IsDeviceSelected}">
+                        <TextBlock
+                            Classes="Body2"
+                            Opacity="0.4"
+                            Text="Select a device to view its details" />
+                    </StackPanel>
+
+                    <!--  Selected device detail  -->
+                    <ScrollViewer Padding="4" IsVisible="{Binding IsDeviceSelected}">
+                        <StackPanel Margin="20" Spacing="16">
+                            <!--  Device header  -->
+                            <StackPanel Spacing="4">
+                                <TextBlock Classes="Headline6" Text="{Binding SelectedDevice.Name}" />
+                                <TextBlock
+                                    Classes="Body2"
+                                    Opacity="0.6"
+                                    Text="{Binding SelectedDevice.Description}" />
+                            </StackPanel>
+
+                            <!--  Details  -->
+                            <controls1:Card Padding="12">
+                                <Grid
+                                    ColumnDefinitions="140, *"
+                                    RowDefinitions="Auto, Auto, Auto, Auto"
+                                    RowSpacing="8">
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Classes="Body2"
+                                        FontWeight="SemiBold"
+                                        Text="Type" />
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        Text="{Binding SelectedDevice.Type}" />
+
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Classes="Body2"
+                                        FontWeight="SemiBold"
+                                        Text="Connection" />
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        Text="{Binding SelectedDevice.ConnectionString}" />
+
+                                    <TextBlock
+                                        Grid.Row="2"
+                                        Grid.Column="0"
+                                        Classes="Body2"
+                                        FontWeight="SemiBold"
+                                        Text="Status" />
+                                    <TextBlock
+                                        Grid.Row="2"
+                                        Grid.Column="1"
+                                        Text="{Binding SelectedDevice.Status}" />
+
+                                    <TextBlock
+                                        Grid.Row="3"
+                                        Grid.Column="0"
+                                        Classes="Body2"
+                                        FontWeight="SemiBold"
+                                        Text="Enabled" />
+                                    <ToggleSwitch
+                                        Grid.Row="3"
+                                        Grid.Column="1"
+                                        IsChecked="{Binding SelectedDevice.IsEnabled}" />
+                                </Grid>
+                            </controls1:Card>
+
+                            <!--  Configuration  -->
+                            <TextBlock
+                                Classes="Subtitle1"
+                                FontWeight="SemiBold"
+                                Text="Configuration" />
+                            <controls1:Card Padding="16,12">
+                                <Grid
+                                    ColumnDefinitions="140, *"
+                                    ColumnSpacing="12"
+                                    RowDefinitions="Auto"
+                                    RowSpacing="12">
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Body2"
+                                        FontWeight="SemiBold"
+                                        Text="Device Name" />
+                                    <TextBox
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        PlaceholderText="Device name"
+                                        Text="{Binding SelectedDevice.Name, Mode=TwoWay}" />
+                                </Grid>
+                            </controls1:Card>
+
+                            <!--  Remove button  -->
+                            <Button
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Right"
+                                Classes="Flat"
+                                Command="{Binding RemoveDeviceCommand}"
+                                Content="Remove Device"
+                                Foreground="{DynamicResource MaterialValidationErrorBrush}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Panel>
+            </controls1:Card>
+        </Grid>
+    </Grid>
 </controls:PageView>

@@ -24,6 +24,7 @@ public static class ServiceRegistrator
         services.AddSingleton<SteamWatcher>();
         services.AddSingleton<SteamGameManager>();
         services.AddSingleton<IDashboardService, DashboardService>();
+        services.AddSingleton<IDeviceService, DeviceService>();
         services.AddSingleton<TelemetryWebSocketBroadcaster>();
         services.AddSingleton<DashboardHttpServer>();
 
