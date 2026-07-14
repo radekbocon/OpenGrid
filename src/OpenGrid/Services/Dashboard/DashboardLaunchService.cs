@@ -46,23 +46,29 @@ public sealed class DashboardLaunchService : IDisposable
         var devices = _deviceService.GetSavedDevices();
         foreach (var device in devices)
         {
-            if (device is not DisplayDevice displayDevice)
-                continue;
-
-            if (!displayDevice.IsEnabled)
+            if (device is not DisplayDevice { IsEnabled: true, DashboardId: not null } displayDevice)
                 continue;
 
             if (displayDevice.DashboardTrigger != trigger)
                 continue;
-
-            if (string.IsNullOrEmpty(displayDevice.DashboardId))
-                continue;
-
+            
             OpenDashboardForDevice(displayDevice);
         }
     }
 
     public void CloseAll()
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            CloseAllCore();
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(CloseAllCore);
+        }
+    }
+
+    private void CloseAllCore()
     {
         foreach (var window in _openWindows.Values)
         {
