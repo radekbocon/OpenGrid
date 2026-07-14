@@ -20,6 +20,8 @@ public sealed class DashboardLaunchService
 
     private readonly Dictionary<string, (DashboardWindow Window, DashboardLaunchTrigger Trigger)> _openWindows = new(StringComparer.Ordinal);
 
+    public event EventHandler<string>? DashboardStateChanged;
+
     public DashboardLaunchService(
         IDeviceService deviceService,
         IDashboardService dashboardService,
@@ -56,6 +58,49 @@ public sealed class DashboardLaunchService
         }
     }
 
+    public bool IsDeviceDashboardOpen(string deviceId)
+    {
+        return _openWindows.ContainsKey(deviceId);
+    }
+
+    public void OpenDeviceDashboard(DisplayDevice displayDevice)
+    {
+        if (displayDevice.DashboardId is null)
+            return;
+
+        OpenDashboardForDevice(displayDevice, DashboardLaunchTrigger.None);
+    }
+
+    public void CloseDeviceDashboard(string deviceId)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            CloseDeviceDashboardCore(deviceId);
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(() => CloseDeviceDashboardCore(deviceId));
+        }
+    }
+
+    private void CloseDeviceDashboardCore(string deviceId)
+    {
+        if (!_openWindows.TryGetValue(deviceId, out var entry))
+            return;
+
+        try
+        {
+            entry.Window.Closed -= null!;
+            entry.Window.Close();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Error closing dashboard window for device {DeviceId}", deviceId);
+        }
+        _openWindows.Remove(deviceId);
+        DashboardStateChanged?.Invoke(this, deviceId);
+    }
+
     public void CloseForTrigger(DashboardLaunchTrigger trigger)
     {
         if (Dispatcher.UIThread.CheckAccess())
@@ -83,6 +128,7 @@ public sealed class DashboardLaunchService
                 Log.Warning(ex, "Error closing dashboard window");
             }
             _openWindows.Remove(id);
+            DashboardStateChanged?.Invoke(this, id);
         }
     }
 
@@ -145,10 +191,12 @@ public sealed class DashboardLaunchService
                 window.Closed += (_, _) =>
                 {
                     _openWindows.Remove(displayDevice.Id);
+                    DashboardStateChanged?.Invoke(this, displayDevice.Id);
                 };
 
                 _openWindows[displayDevice.Id] = (window, trigger);
                 window.Show();
+                DashboardStateChanged?.Invoke(this, displayDevice.Id);
             }
             catch (Exception ex)
             {

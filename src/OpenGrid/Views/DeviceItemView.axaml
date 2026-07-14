@@ -157,6 +157,27 @@
 
             <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
 
+            <!--  Manual Controls  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Manual Control" />
+                <Button
+                    Grid.Column="1"
+                    HorizontalAlignment="Left"
+                    Command="{Binding ToggleDashboardCommand}"
+                    Content="{Binding DashboardButtonLabel}"
+                    Theme="{StaticResource MaterialOutlineButton}" />
+            </Grid>
+
+            <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
+
             <Button
                 HorizontalAlignment="Left"
                 Command="{Binding RemoveCommand}"

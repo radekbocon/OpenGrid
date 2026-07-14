@@ -13,6 +13,7 @@ public partial class DevicesViewModel : ViewModelBase
 {
     private readonly IDeviceService _deviceService;
     private readonly IDashboardService _dashboardService;
+    private readonly DashboardLaunchService _dashboardLaunchService;
 
     public ObservableCollection<DeviceItemViewModel> Devices { get; }
 
@@ -25,10 +26,11 @@ public partial class DevicesViewModel : ViewModelBase
 
     public bool IsDeviceSelected => SelectedDevice is not null;
 
-    public DevicesViewModel(IDeviceService deviceService, IDashboardService dashboardService)
+    public DevicesViewModel(IDeviceService deviceService, IDashboardService dashboardService, DashboardLaunchService dashboardLaunchService)
     {
         _deviceService = deviceService;
         _dashboardService = dashboardService;
+        _dashboardLaunchService = dashboardLaunchService;
         IsMenuItem = true;
         Devices = [];
     }
@@ -73,7 +75,7 @@ public partial class DevicesViewModel : ViewModelBase
 
     private DeviceItemViewModel CreateDeviceItem(IDevice device)
     {
-        var deviceItem = new DeviceItemViewModel(_deviceService, _dashboardService, OnRemove);
+        var deviceItem = new DeviceItemViewModel(_deviceService, _dashboardService, _dashboardLaunchService, OnRemove);
         deviceItem.Init(device);
         return deviceItem;
     }
