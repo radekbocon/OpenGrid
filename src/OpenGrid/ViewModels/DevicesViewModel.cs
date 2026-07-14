@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using OpenGrid.Controls;
 using OpenGrid.Models;
-using OpenGrid.Services;
 using OpenGrid.Services.Devices;
 
 namespace OpenGrid.ViewModels;

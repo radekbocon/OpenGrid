@@ -15,7 +15,7 @@ public sealed class DeviceService : IDeviceService
     
     private readonly Dictionary<DeviceType, IDeviceSerializer> _serializers;
 
-    private List<IDevice> Devices { get; }
+    private List<IDevice> _devices = [];
 
     public DeviceService()
     {
@@ -24,8 +24,7 @@ public sealed class DeviceService : IDeviceService
         {
             { DeviceType.Display, new DisplayDeviceSerializer() },
         };
-        
-        Devices = LoadSavedDevices();
+        GetSavedDevices();
     }
 
     public IReadOnlyList<IDevice> GetSavedDevices()
@@ -41,6 +40,7 @@ public sealed class DeviceService : IDeviceService
             }
         }
         
+        _devices = saved;
         return saved;
     }
 
@@ -75,10 +75,10 @@ public sealed class DeviceService : IDeviceService
 
     public void AddDevice(IDevice device)
     {
-        if (Devices.Any(d => d.Id == device.Id))
+        if (_devices.Any(d => d.Id == device.Id))
             return;
 
-        Devices.Add(device);
+        _devices.Add(device);
         SaveDevice(device);
     }
 
@@ -89,7 +89,7 @@ public sealed class DeviceService : IDeviceService
 
     public void RemoveDevice(IDevice device)
     {
-        Devices.RemoveAll(d => d.Id == device.Id);
+        _devices.RemoveAll(d => d.Id == device.Id);
         DeleteDeviceFile(device);
     }
 
