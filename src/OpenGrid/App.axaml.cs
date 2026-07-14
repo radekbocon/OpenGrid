@@ -19,8 +19,6 @@ public class App : Application
     private ISettingsService? _settingsService;
     private IThemeService? _themeService;
 
-    public static Window MainWindow { get; private set; }
-
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -42,7 +40,6 @@ public class App : Application
             {
                 DataContext = mainVewModel
             };
-            MainWindow = mainWindow;
             desktop.MainWindow = mainWindow;
             Program.ActivateWindowRequested = () => ShowMainWindow(desktop);
             Launcher.Initialize(TopLevel.GetTopLevel(mainWindow)!.Launcher);
@@ -62,7 +59,7 @@ public class App : Application
             {
                 Icon = new WindowIcon(iconStream),
                 ToolTipText = "OpenGrid",
-                Menu = new NativeMenu()
+                Menu = [],
             };
 
             var showItem = new NativeMenuItem("Show OpenGrid");
@@ -97,16 +94,6 @@ public class App : Application
 
     private void DesktopOnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
-        try
-        {
-            var dashboardLaunchService = Program.ServiceProvider.GetService<DashboardLaunchService>();
-            dashboardLaunchService?.Dispose();
-        }
-        catch (Exception ex)
-        {
-            Serilog.Log.Error(ex, "Error stopping dashboard launch service");
-        }
-
         try
         {
             var dashboardServer = Program.ServiceProvider.GetService<DashboardHttpServer>();

@@ -10,7 +10,7 @@ using Serilog;
 
 namespace OpenGrid.Services.Dashboard;
 
-public sealed class DashboardLaunchService : IDisposable
+public sealed class DashboardLaunchService
 {
     private readonly IDeviceService _deviceService;
     private readonly IDashboardService _dashboardService;
@@ -18,7 +18,7 @@ public sealed class DashboardLaunchService : IDisposable
     private readonly SteamGameManager _steamGameManager;
     private readonly ITelemetryService _telemetryService;
 
-    private readonly Dictionary<string, DashboardWindow> _openWindows = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (DashboardWindow Window, DashboardLaunchTrigger Trigger)> _openWindows = new(StringComparer.Ordinal);
 
     public DashboardLaunchService(
         IDeviceService deviceService,
@@ -52,44 +52,38 @@ public sealed class DashboardLaunchService : IDisposable
             if (displayDevice.DashboardTrigger != trigger)
                 continue;
             
-            OpenDashboardForDevice(displayDevice);
+            OpenDashboardForDevice(displayDevice, trigger);
         }
     }
 
-    public void CloseAll()
+    public void CloseForTrigger(DashboardLaunchTrigger trigger)
     {
         if (Dispatcher.UIThread.CheckAccess())
         {
-            CloseAllCore();
+            CloseForTriggerCore(trigger);
         }
         else
         {
-            Dispatcher.UIThread.Post(CloseAllCore);
+            Dispatcher.UIThread.Post(() => CloseForTriggerCore(trigger));
         }
     }
 
-    private void CloseAllCore()
+    private void CloseForTriggerCore(DashboardLaunchTrigger trigger)
     {
-        foreach (var window in _openWindows.Values)
+        var toClose = _openWindows.Where(kv => kv.Value.Trigger == trigger).ToList();
+        foreach (var (id, (window, _)) in toClose)
         {
             try
             {
+                window.Closed -= null!;
                 window.Close();
             }
             catch (Exception ex)
             {
                 Log.Warning(ex, "Error closing dashboard window");
             }
+            _openWindows.Remove(id);
         }
-        _openWindows.Clear();
-    }
-
-    public void Dispose()
-    {
-        _steamGameManager.GameStarted -= OnGameStarted;
-        _steamGameManager.GameStopped -= OnGameStopped;
-        _telemetryService.TelemetryStatusChanged -= OnTelemetryStatusChanged;
-        CloseAll();
     }
 
     private void OnGameStarted(object? sender, SteamGameProcess e)
@@ -99,7 +93,7 @@ public sealed class DashboardLaunchService : IDisposable
 
     private void OnGameStopped(object? sender, SteamGameProcess e)
     {
-        CloseAll();
+        CloseForTrigger(DashboardLaunchTrigger.OnGameStart);
     }
 
     private void OnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
@@ -108,9 +102,13 @@ public sealed class DashboardLaunchService : IDisposable
         {
             HandleTrigger(DashboardLaunchTrigger.OnTelemetryConnected);
         }
+        else if (e == TelemetryConnectionStatus.Disconnected)
+        {
+            CloseForTrigger(DashboardLaunchTrigger.OnTelemetryConnected);
+        }
     }
 
-    private void OpenDashboardForDevice(DisplayDevice displayDevice)
+    private void OpenDashboardForDevice(DisplayDevice displayDevice, DashboardLaunchTrigger trigger)
     {
         if (_openWindows.ContainsKey(displayDevice.Id))
             return;
@@ -149,7 +147,7 @@ public sealed class DashboardLaunchService : IDisposable
                     _openWindows.Remove(displayDevice.Id);
                 };
 
-                _openWindows[displayDevice.Id] = window;
+                _openWindows[displayDevice.Id] = (window, trigger);
                 window.Show();
             }
             catch (Exception ex)
