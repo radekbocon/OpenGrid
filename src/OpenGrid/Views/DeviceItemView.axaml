@@ -1,8 +1,10 @@
 <UserControl
-    x:Class="OpenGrid.Controls.DeviceDetailsControl"
+    x:Class="OpenGrid.Views.DeviceItemView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    x:Name="Root">
+    xmlns:models="clr-namespace:OpenGrid.Models"
+    xmlns:viewModels="clr-namespace:OpenGrid.ViewModels"
+    x:DataType="viewModels:DeviceItemViewModel">
 
     <ScrollViewer>
         <StackPanel Margin="16" Spacing="16">
@@ -25,7 +27,7 @@
                     Grid.Column="1"
                     VerticalAlignment="Center"
                     Classes="Body1"
-                    Text="{Binding #Root.Device.Name}" />
+                    Text="{Binding Name}" />
             </Grid>
 
             <!--  Description  -->
@@ -43,7 +45,7 @@
                     Grid.Column="1"
                     VerticalAlignment="Center"
                     Classes="Body1"
-                    Text="{Binding #Root.Device.Description, TargetNullValue='No description'}" />
+                    Text="{Binding Description, TargetNullValue='No description'}" />
             </Grid>
 
             <!--  Status  -->
@@ -61,7 +63,7 @@
                     Grid.Column="1"
                     VerticalAlignment="Center"
                     Classes="Body1"
-                    Text="{Binding #Root.Device.Status}" />
+                    Text="{Binding Status}" />
             </Grid>
 
             <!--  Device ID  -->
@@ -80,7 +82,7 @@
                     VerticalAlignment="Center"
                     Classes="Body2"
                     Opacity="0.5"
-                    Text="{Binding #Root.Device.Device.Id}" />
+                    Text="{Binding Device?.Id, TargetNullValue='-'}" />
             </Grid>
 
             <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
@@ -103,15 +105,61 @@
                     Text="Enabled" />
                 <ToggleSwitch
                     Grid.Column="1"
-                    IsChecked="{Binding #Root.Device.IsEnabled}"
-                    VerticalAlignment="Center" />
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding IsEnabled}" />
+            </Grid>
+
+            <!--  Default Dashboard  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Default Dashboard" />
+                <ComboBox
+                    x:Name="DashboardComboBox"
+                    Grid.Column="1"
+                    MinWidth="200"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    SelectionChanged="DashboardComboBox_SelectionChanged">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:DashboardInfo">
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+
+            <!--  Launch Trigger  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Auto-Open Trigger" />
+                <ComboBox
+                    Grid.Column="1"
+                    MinWidth="200"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding AvailableTriggers}"
+                    SelectedItem="{Binding SelectedTrigger}" />
             </Grid>
 
             <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
 
             <Button
                 HorizontalAlignment="Left"
-                Command="{Binding #Root.Device.RemoveCommand}"
+                Command="{Binding RemoveCommand}"
                 Content="Remove Device"
                 Theme="{StaticResource MaterialOutlineButton}" />
         </StackPanel>

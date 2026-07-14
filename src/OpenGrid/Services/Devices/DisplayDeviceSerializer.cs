@@ -19,6 +19,8 @@ public class DisplayDeviceSerializer : IDeviceSerializer
                 Name = dto.Name,
                 Description = dto.Description,
                 IsEnabled = dto.IsEnabled,
+                DashboardId = dto.DashboardId,
+                DashboardTrigger = dto.DashboardTrigger,
             }
         };
     }
@@ -27,6 +29,8 @@ public class DisplayDeviceSerializer : IDeviceSerializer
     {
         ArgumentNullException.ThrowIfNull(device);
 
+        var displayDevice = device as DisplayDevice;
+
         var dto = new DisplayDeviceDto
         {
             Id = device.Id,
@@ -34,6 +38,8 @@ public class DisplayDeviceSerializer : IDeviceSerializer
             Name = device.Name,
             Description = device.Description,
             IsEnabled = device.IsEnabled,
+            DashboardId = displayDevice?.DashboardId,
+            DashboardTrigger = displayDevice?.DashboardTrigger ?? DashboardLaunchTrigger.None,
         };
 
         return JsonSerializer.Serialize(dto);
@@ -46,5 +52,7 @@ public class DisplayDeviceSerializer : IDeviceSerializer
         public required string Name { get; init; }
         public string? Description { get; init; }
         public required bool IsEnabled { get; init; }
+        public string? DashboardId { get; init; }
+        public DashboardLaunchTrigger DashboardTrigger { get; init; }
     }
 }

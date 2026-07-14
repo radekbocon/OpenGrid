@@ -6,6 +6,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Background="Transparent"
     CanResize="True"
+    Icon="/Assets/icon.png"
+    ShowInTaskbar="False"
     Topmost="True"
     mc:Ignorable="d">
 

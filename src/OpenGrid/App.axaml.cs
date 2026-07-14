@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
+using OpenGrid.Models;
 using OpenGrid.ViewModels;
 using OpenGrid.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,6 +52,9 @@ public class App : Application
 
             var dashboardServer = Program.ServiceProvider.GetRequiredService<DashboardHttpServer>();
             _ = dashboardServer.StartAsync();
+
+            var dashboardLaunchService = Program.ServiceProvider.GetRequiredService<DashboardLaunchService>();
+            dashboardLaunchService.HandleTrigger(DashboardLaunchTrigger.OnAppStart);
             
 
             using var iconStream = AssetLoader.Open(new Uri("avares://OpenGrid/Assets/icon.png"));
@@ -93,6 +97,16 @@ public class App : Application
 
     private void DesktopOnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
+        try
+        {
+            var dashboardLaunchService = Program.ServiceProvider.GetService<DashboardLaunchService>();
+            dashboardLaunchService?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Error stopping dashboard launch service");
+        }
+
         try
         {
             var dashboardServer = Program.ServiceProvider.GetService<DashboardHttpServer>();

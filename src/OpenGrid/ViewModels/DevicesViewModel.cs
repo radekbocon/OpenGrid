@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using OpenGrid.Controls;
 using OpenGrid.Models;
+using OpenGrid.Services.Dashboard;
 using OpenGrid.Services.Devices;
 
 namespace OpenGrid.ViewModels;
@@ -11,6 +12,7 @@ namespace OpenGrid.ViewModels;
 public partial class DevicesViewModel : ViewModelBase
 {
     private readonly IDeviceService _deviceService;
+    private readonly IDashboardService _dashboardService;
 
     public ObservableCollection<DeviceItemViewModel> Devices { get; }
 
@@ -23,9 +25,10 @@ public partial class DevicesViewModel : ViewModelBase
 
     public bool IsDeviceSelected => SelectedDevice is not null;
 
-    public DevicesViewModel(IDeviceService deviceService)
+    public DevicesViewModel(IDeviceService deviceService, IDashboardService dashboardService)
     {
         _deviceService = deviceService;
+        _dashboardService = dashboardService;
         IsMenuItem = true;
         Devices = [];
     }
@@ -70,7 +73,7 @@ public partial class DevicesViewModel : ViewModelBase
 
     private DeviceItemViewModel CreateDeviceItem(IDevice device)
     {
-        var deviceItem = new DeviceItemViewModel(_deviceService, OnRemove);
+        var deviceItem = new DeviceItemViewModel(_deviceService, _dashboardService, OnRemove);
         deviceItem.Init(device);
         return deviceItem;
     }

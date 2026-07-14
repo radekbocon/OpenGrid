@@ -28,6 +28,7 @@ public static class ServiceRegistrator
         services.AddSingleton<IDeviceService, DeviceService>();
         services.AddSingleton<TelemetryWebSocketBroadcaster>();
         services.AddSingleton<DashboardHttpServer>();
+        services.AddSingleton<DashboardLaunchService>();
 
         // Register ViewModels
         services.AddSingleton<MainWindowViewModel>();

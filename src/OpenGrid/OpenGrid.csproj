@@ -73,6 +73,10 @@
       <Compile Update="Controls\AddDeviceDialog.axaml.cs">
         <DependentUpon>AddDeviceDialog.axaml</DependentUpon>
       </Compile>
+      <Compile Update="Views\DeviceItemView.axaml.cs">
+        <DependentUpon>DeviceItemView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
     <Target Name="PublishOpenGridBridge" AfterTargets="Build">
