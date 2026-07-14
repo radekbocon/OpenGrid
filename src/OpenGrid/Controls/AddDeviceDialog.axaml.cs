@@ -8,11 +8,11 @@ namespace OpenGrid.Controls;
 
 public partial class AddDeviceDialog : UserControl
 {
-    public DeviceInfo? SelectedDevice { get; private set; }
+    public IDevice? SelectedDevice { get; private set; }
 
-    public List<DeviceInfo> AvailableDevices { get; }
+    public List<IDevice> AvailableDevices { get; }
 
-    public AddDeviceDialog(List<DeviceInfo> devices)
+    public AddDeviceDialog(List<IDevice> devices)
     {
         InitializeComponent();
         AvailableDevices = devices;
@@ -26,7 +26,7 @@ public partial class AddDeviceDialog : UserControl
 
     private void AddClick(object? sender, RoutedEventArgs e)
     {
-        SelectedDevice = DevicesList.SelectedItem as DeviceInfo;
+        SelectedDevice = DevicesList.SelectedItem as IDevice;
         DialogHost.Close(null);
     }
 

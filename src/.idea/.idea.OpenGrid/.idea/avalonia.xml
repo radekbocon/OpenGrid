@@ -10,6 +10,7 @@
         <entry key="OpenGrid/Controls/ChartControl.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/ConfirmDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/DeviceAccessDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
+        <entry key="OpenGrid/Controls/DeviceDetailsControl.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/LapSelectionDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/LapStatsControl.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/LapTableControl.axaml" value="OpenGrid/OpenGrid.csproj" />

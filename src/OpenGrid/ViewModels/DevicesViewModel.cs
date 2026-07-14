@@ -1,12 +1,11 @@
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using OpenGrid.Controls;
 using OpenGrid.Models;
 using OpenGrid.Services;
+using OpenGrid.Services.Devices;
 
 namespace OpenGrid.ViewModels;
 
@@ -14,14 +13,14 @@ public partial class DevicesViewModel : ViewModelBase
 {
     private readonly IDeviceService _deviceService;
 
-    public ObservableCollection<DeviceInfo> Devices => _deviceService.Devices;
+    public ObservableCollection<DeviceItemViewModel> Devices { get; }
 
     public bool HasDevices => Devices.Count > 0;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDeviceSelected))]
-    [NotifyCanExecuteChangedFor(nameof(RemoveDeviceCommand))]
-    public partial DeviceInfo? SelectedDevice { get; set; }
+    [NotifyPropertyChangedFor(nameof(HasDevices))]
+    public partial DeviceItemViewModel? SelectedDevice { get; set; }
 
     public bool IsDeviceSelected => SelectedDevice is not null;
 
@@ -29,47 +28,59 @@ public partial class DevicesViewModel : ViewModelBase
     {
         _deviceService = deviceService;
         IsMenuItem = true;
+        Devices = [];
+    }
+
+    protected override Task OnLoadedAsync()
+    {
+        Devices.Clear();
+        var devices = _deviceService.GetSavedDevices();
+        foreach (var device in devices)
+        {
+            Devices.Add(CreateDeviceItem(device));
+        }
+        OnPropertyChanged(nameof(HasDevices));
+        SelectedDevice = Devices.FirstOrDefault();
+        return base.OnLoadedAsync();
     }
 
     [RelayCommand]
     private async Task AddDeviceAsync()
     {
-        var discovered = _deviceService.ScanForDevices();
-        var existingIds = Devices.Select(d => d.Id).ToHashSet();
-        var available = discovered.Where(d => !existingIds.Contains(d.Id)).ToList();
+        var available = _deviceService.ScanForDevices();
 
-        var dialog = new AddDeviceDialog(available);
+        var dialog = new AddDeviceDialog(available.ToList());
         await DialogHost.Show(dialog);
 
         if (dialog.SelectedDevice is { } device)
         {
             _deviceService.AddDevice(device);
-            SelectedDevice = device;
+            var deviceItem = CreateDeviceItem(device);
+            Devices.Add(deviceItem);
+            SelectedDevice = deviceItem;
+            OnPropertyChanged(nameof(IsDeviceSelected));
             OnPropertyChanged(nameof(HasDevices));
         }
     }
 
-    [RelayCommand(CanExecute = nameof(IsDeviceSelected))]
-    private async Task RemoveDeviceAsync()
+    [RelayCommand]
+    private void DeviceSelected(DeviceItemViewModel? device)
     {
-        if (SelectedDevice is not { } device)
-            return;
-
-        var confirmDialog = new ConfirmDialog($"Remove device \"{device.Name}\"?");
-        await DialogHost.Show(confirmDialog);
-
-        if (confirmDialog.Result)
-        {
-            var wasSelected = device == SelectedDevice;
-            _deviceService.RemoveDevice(device.Id);
-            if (wasSelected)
-                SelectedDevice = Devices.FirstOrDefault();
-            OnPropertyChanged(nameof(HasDevices));
-        }
+        SelectedDevice = device;
     }
 
-    partial void OnSelectedDeviceChanged(DeviceInfo? value)
+    private DeviceItemViewModel CreateDeviceItem(IDevice device)
     {
+        var deviceItem = new DeviceItemViewModel(_deviceService, OnRemove);
+        deviceItem.Init(device);
+        return deviceItem;
+    }
+
+    private void OnRemove(DeviceItemViewModel item)
+    {
+        Devices.Remove(item);
+        SelectedDevice = Devices.FirstOrDefault();
         OnPropertyChanged(nameof(IsDeviceSelected));
+        OnPropertyChanged(nameof(HasDevices));
     }
 }

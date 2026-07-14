@@ -1,0 +1,119 @@
+<UserControl
+    x:Class="OpenGrid.Controls.DeviceDetailsControl"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="Root">
+
+    <ScrollViewer>
+        <StackPanel Margin="16" Spacing="16">
+            <TextBlock Classes="Headline6" Text="Device Details" />
+
+            <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Name  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Name" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body1"
+                    Text="{Binding #Root.Device.Name}" />
+            </Grid>
+
+            <!--  Description  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Description" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body1"
+                    Text="{Binding #Root.Device.Description, TargetNullValue='No description'}" />
+            </Grid>
+
+            <!--  Status  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Status" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body1"
+                    Text="{Binding #Root.Device.Status}" />
+            </Grid>
+
+            <!--  Device ID  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Device ID" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body2"
+                    Opacity="0.5"
+                    Text="{Binding #Root.Device.Device.Id}" />
+            </Grid>
+
+            <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Configuration  -->
+            <TextBlock Classes="Headline6" Text="Configuration" />
+
+            <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Enabled toggle  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Enabled" />
+                <ToggleSwitch
+                    Grid.Column="1"
+                    IsChecked="{Binding #Root.Device.IsEnabled}"
+                    VerticalAlignment="Center" />
+            </Grid>
+
+            <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
+
+            <Button
+                HorizontalAlignment="Left"
+                Command="{Binding #Root.Device.RemoveCommand}"
+                Content="Remove Device"
+                Theme="{StaticResource MaterialOutlineButton}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

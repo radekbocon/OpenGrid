@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using OpenGrid.Services;
 using OpenGrid.Services.Dashboard;
+using OpenGrid.Services.Devices;
 using OpenGrid.Services.SessionPersist;
 using OpenGrid.Services.Telemetry;
 using OpenGrid.ViewModels;
