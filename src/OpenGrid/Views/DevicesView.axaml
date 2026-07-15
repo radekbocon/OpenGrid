@@ -18,9 +18,7 @@
         <controls:PageHeader
             Title="Devices"
             DockPanel.Dock="Top"
-            IsBackButtonVisible="False">
-            <Button Command="{Binding AddDeviceCommand}" Content="Add Device" />
-        </controls:PageHeader>
+            IsBackButtonVisible="False" />
 
         <Panel>
 
@@ -55,41 +53,57 @@
 
                 <!--  Left: Device list (vertical tabs)  -->
                 <materialControls:Card Grid.Column="0" Padding="0">
-                    <ListBox
-                        x:Name="DeviceList"
-                        ItemsSource="{Binding Devices}"
-                        SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
-                        SelectionMode="Single">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="vm:DeviceItemViewModel">
-                                <Grid
-                                    Margin="8"
-                                    ColumnDefinitions="Auto,*"
-                                    ColumnSpacing="8">
-                                    <avalonia:MaterialIcon
-                                        Grid.Column="0"
-                                        VerticalAlignment="Center"
-                                        IconSize="24"
-                                        Kind="Devices" />
-                                    <StackPanel
-                                        Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        Spacing="2">
-                                        <TextBlock
-                                            Classes="Subtitle1"
-                                            Text="{Binding Name}"
-                                            TextTrimming="CharacterEllipsis" />
-                                        <TextBlock
-                                            Classes="Caption"
-                                            MaxLines="1"
-                                            Opacity="0.5"
-                                            Text="{Binding Description}"
-                                            TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <Grid RowDefinitions="Auto, Auto" RowSpacing="4">
+                        <ListBox
+                            x:Name="DeviceList"
+                            Grid.Row="0"
+                            ItemsSource="{Binding Devices}"
+                            SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
+                            SelectionMode="Single">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:DeviceItemViewModel">
+                                    <Grid
+                                        Margin="8"
+                                        ColumnDefinitions="Auto,*"
+                                        ColumnSpacing="8">
+                                        <avalonia:MaterialIcon
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            IconSize="24"
+                                            Kind="Devices" />
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Spacing="2">
+                                            <TextBlock
+                                                Classes="Subtitle1"
+                                                Text="{Binding Name}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock
+                                                Classes="Caption"
+                                                MaxLines="1"
+                                                Opacity="0.5"
+                                                Text="{Binding Description}"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <Button
+                            Grid.Row="1"
+                            Padding="0,16"
+                            Classes="Flat"
+                            Command="{Binding AddDeviceCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <avalonia:MaterialIcon
+                                    VerticalAlignment="Center"
+                                    IconSize="24"
+                                    Kind="Plus" />
+                                <TextBlock VerticalAlignment="Center" Text="Add Device" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
                 </materialControls:Card>
 
                 <!--  Right: Device details  -->

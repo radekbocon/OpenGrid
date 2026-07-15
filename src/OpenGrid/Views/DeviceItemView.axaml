@@ -2,6 +2,7 @@
     x:Class="OpenGrid.Views.DeviceItemView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:OpenGrid.Converters"
     xmlns:models="clr-namespace:OpenGrid.Models"
     xmlns:viewModels="clr-namespace:OpenGrid.ViewModels"
     x:DataType="viewModels:DeviceItemViewModel">
@@ -10,7 +11,7 @@
         <StackPanel Margin="16" Spacing="16">
             <TextBlock Classes="Headline6" Text="Device Details" />
 
-            <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 
             <!--  Name  -->
             <Grid
@@ -85,12 +86,12 @@
                     Text="{Binding Device?.Id, TargetNullValue='-'}" />
             </Grid>
 
-            <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 
             <!--  Configuration  -->
             <TextBlock Classes="Headline6" Text="Configuration" />
 
-            <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 
             <!--  Enabled toggle  -->
             <Grid
@@ -152,10 +153,16 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
                     ItemsSource="{Binding AvailableTriggers}"
-                    SelectedItem="{Binding SelectedTrigger}" />
+                    SelectedItem="{Binding SelectedTrigger}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:DashboardLaunchTrigger">
+                            <TextBlock Text="{Binding ., Converter={x:Static converters:EnumConverters.DashboardLaunchTriggerToString}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
             </Grid>
 
-            <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 
             <!--  Manual Controls  -->
             <Grid
@@ -176,7 +183,7 @@
                     Theme="{StaticResource MaterialOutlineButton}" />
             </Grid>
 
-            <Panel Height="1" Background="{DynamicResource MaterialDividerBrush}" />
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 
             <Button
                 HorizontalAlignment="Left"

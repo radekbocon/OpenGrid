@@ -24,6 +24,7 @@
         <entry key="OpenGrid/Views/DashboardWindow.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/DashboardsView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/DeviceAccessDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
+        <entry key="OpenGrid/Views/DeviceItemView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/DevicesView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/HomeView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/LapComparisonView.axaml" value="OpenGrid/OpenGrid.csproj" />
