@@ -7,6 +7,8 @@ namespace OpenGrid.Views;
 
 public partial class DeviceItemView : UserControl
 {
+    private static readonly DashboardInfo NoneDashboard = new() { Id = "", Name = "None", Description = "", DirectoryPath = "" };
+
     public static readonly StyledProperty<DeviceItemViewModel?> DeviceProperty =
         AvaloniaProperty.Register<DeviceItemView, DeviceItemViewModel?>(nameof(Device));
 
@@ -36,7 +38,9 @@ public partial class DeviceItemView : UserControl
         if (DashboardComboBox is null || Device is null)
             return;
 
-        DashboardComboBox.ItemsSource = Device.AvailableDashboards;
+        var items = new List<DashboardInfo> { NoneDashboard };
+        items.AddRange(Device.AvailableDashboards);
+        DashboardComboBox.ItemsSource = items;
 
         if (!string.IsNullOrEmpty(Device.SelectedDashboard?.Id))
         {
@@ -44,13 +48,13 @@ public partial class DeviceItemView : UserControl
             {
                 if (string.Equals(Device.AvailableDashboards[i].Id, Device.SelectedDashboard.Id, System.StringComparison.Ordinal))
                 {
-                    DashboardComboBox.SelectedIndex = i;
+                    DashboardComboBox.SelectedIndex = i + 1;
                     return;
                 }
             }
         }
 
-        DashboardComboBox.SelectedIndex = -1;
+        DashboardComboBox.SelectedIndex = 0;
     }
 
     private void DashboardComboBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -60,7 +64,7 @@ public partial class DeviceItemView : UserControl
 
         if (DashboardComboBox.SelectedItem is DashboardInfo selected)
         {
-            Device.SelectedDashboard = selected;
+            Device.SelectedDashboard = selected.Id == NoneDashboard.Id ? null : selected;
         }
         else if (DashboardComboBox.SelectedIndex == -1)
         {
