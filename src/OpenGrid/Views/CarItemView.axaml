@@ -1,0 +1,59 @@
+<UserControl
+    x:Class="OpenGrid.Views.CarItemView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:viewModels="clr-namespace:OpenGrid.ViewModels"
+    x:DataType="viewModels:CarItemViewModel">
+
+    <ScrollViewer>
+        <StackPanel Margin="16" Spacing="16">
+            <TextBlock Classes="Headline6" Text="Car Details" />
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Name  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Name" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body1"
+                    Text="{Binding Name}" />
+            </Grid>
+
+            <!--  Description  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Description" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body1"
+                    Text="{Binding Description, TargetNullValue='No description'}" />
+            </Grid>
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <Button
+                HorizontalAlignment="Left"
+                Command="{Binding RemoveCommand}"
+                Content="Remove Car"
+                Theme="{StaticResource MaterialOutlineButton}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

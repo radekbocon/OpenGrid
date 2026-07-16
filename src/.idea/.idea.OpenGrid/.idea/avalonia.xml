@@ -18,6 +18,8 @@
         <entry key="OpenGrid/Controls/PageView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/TrackMapControl.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/UdpTelemetryInstructionsDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
+        <entry key="OpenGrid/Views/CarItemView.axaml" value="OpenGrid/OpenGrid.csproj" />
+        <entry key="OpenGrid/Views/CarsView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/ConfirmDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/DashboardDetailView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/DashboardWebWindow.axaml" value="OpenGrid/OpenGrid.csproj" />
