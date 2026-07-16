@@ -13,6 +13,7 @@
     </Application.DataTemplates>
     <Application.Resources>
         <converters:LapTimeConverter x:Key="LapTimeConverter" />
+        <x:Double x:Key="MaxPageWidth">1200</x:Double>
     </Application.Resources>
 
     <Application.Styles>

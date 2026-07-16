@@ -47,6 +47,7 @@
 
             <!--  Split view: device list (left) + details (right)  -->
             <Grid
+                MaxWidth="{StaticResource MaxPageWidth}"
                 ColumnDefinitions="280,*"
                 ColumnSpacing="16"
                 IsVisible="{Binding HasDevices}">
