@@ -66,6 +66,7 @@ public partial class MainWindowViewModel : ViewModelBase
             new MenuItem { Icon = MaterialIconKind.Home, Label = "Home", ViewModelType = typeof(HomeViewModel) },
             new MenuItem { Icon = MaterialIconKind.ChartLine, Label = "Sessions", ViewModelType = typeof(SessionsViewModel) },
             new MenuItem { Icon = MaterialIconKind.Gauge, Label = "Dashboards", ViewModelType = typeof(DashboardsViewModel) },
+            new MenuItem { Icon = MaterialIconKind.Car, Label = "Cars", ViewModelType = typeof(CarsViewModel) },
             new MenuItem { Icon = MaterialIconKind.Devices, Label = "Devices", ViewModelType = typeof(DevicesViewModel) },
             new MenuItem { Icon = MaterialIconKind.Cog, Label = "Settings", ViewModelType = typeof(SettingsViewModel) },
         ];

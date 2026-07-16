@@ -1,0 +1,22 @@
+<controls:PageView
+    x:Class="OpenGrid.Views.CarsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:OpenGrid.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:OpenGrid.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="900"
+    x:DataType="vm:CarsViewModel"
+    mc:Ignorable="d">
+
+    <DockPanel>
+        <controls:PageHeader
+            Title="Cars"
+            DockPanel.Dock="Top"
+            IsBackButtonVisible="False" />
+
+        <Panel />
+    </DockPanel>
+</controls:PageView>

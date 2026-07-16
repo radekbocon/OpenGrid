@@ -39,6 +39,7 @@ public static class ServiceRegistrator
         services.AddTransient<DevicesViewModel>();
         services.AddTransient<DashboardsViewModel>();
         services.AddTransient<LapSelectionViewModel>();
+        services.AddTransient<CarsViewModel>();
 
         return services;
     }
