@@ -10,7 +10,7 @@ public static class TelemetryJsonSerializer
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public static string Serialize(TelemetryRecord record)
+    public static string Serialize(TelemetryRecord record, int? redlineRpm = null)
     {
         return JsonSerializer.Serialize(new
         {
@@ -36,6 +36,7 @@ public static class TelemetryJsonSerializer
             gear = record.CurrentGear.DisplayName(),
             engineRpm = record.EngineRpm,
             maxRpm = record.MaxRpm,
+            redlineRpm,
             tireTemps = new
             {
                 fl = record.TireTemperatures.FrontLeft,
@@ -69,10 +70,10 @@ public static class TelemetryJsonSerializer
             {
                 x = record.CarPosition.X,
                 y = record.CarPosition.Y,
-                z = record.CarPosition.Z
+                z = record.CarPosition.Z,
             },
             gForceLat = record.GForceLat,
-            gForceLon = record.GForceLon
+            gForceLon = record.GForceLon,
         }, Options);
     }
 }

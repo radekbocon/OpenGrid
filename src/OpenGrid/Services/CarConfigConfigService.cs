@@ -12,8 +12,6 @@ public sealed class CarConfigConfigService : ICarConfigService
     private readonly List<CarProfile> _cars = [];
     private readonly HashSet<string> _knownCarKeys = [];
 
-    public IReadOnlyList<CarProfile> Cars => _cars;
-
     public event EventHandler<CarProfile>? CarAdded;
     public event EventHandler<CarProfile>? CarRemoved;
     public event EventHandler<CarProfile>? CarSaved;

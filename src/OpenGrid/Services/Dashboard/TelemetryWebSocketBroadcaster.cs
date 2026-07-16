@@ -10,9 +10,17 @@ public sealed class TelemetryWebSocketBroadcaster : IDisposable
 
     private readonly Lock _lock = new();
     private readonly List<WebSocket> _connections = [];
+    private readonly ICarConfigService _carConfigService;
 
     private TelemetryRecord? _latestSnapshot;
     private CancellationTokenSource? _cts;
+    private int? _cachedRedlineRpm;
+    private string? _lastCarKey;
+
+    public TelemetryWebSocketBroadcaster(ICarConfigService carConfigService)
+    {
+        _carConfigService = carConfigService;
+    }
 
     public void Start()
     {
@@ -56,6 +64,14 @@ public sealed class TelemetryWebSocketBroadcaster : IDisposable
     public void OnTelemetryReceived(TelemetryRecord record)
     {
         _latestSnapshot = record;
+
+        var carKey = record.Car.Key;
+        if (carKey != _lastCarKey)
+        {
+            _lastCarKey = carKey;
+            var profile = _carConfigService.GetByCarKey(carKey);
+            _cachedRedlineRpm = profile?.RedlineRpm;
+        }
     }
 
     public async Task HandleConnectionAsync(WebSocket webSocket)
@@ -124,7 +140,7 @@ public sealed class TelemetryWebSocketBroadcaster : IDisposable
             var snapshot = Interlocked.Exchange(ref _latestSnapshot, null);
             if (snapshot is not null)
             {
-                var json = TelemetryJsonSerializer.Serialize(snapshot);
+                var json = TelemetryJsonSerializer.Serialize(snapshot, _cachedRedlineRpm);
                 var bytes = Encoding.UTF8.GetBytes(json);
 
                 WebSocket[] connections;

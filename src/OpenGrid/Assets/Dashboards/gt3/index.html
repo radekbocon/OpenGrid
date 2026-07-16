@@ -396,7 +396,7 @@
 
 <script>
     const numShiftLights = 12;
-    let targetRpm = 0, currentRpm = 0, maxRpm = 8000;
+    let targetRpm = 0, currentRpm = 0, maxRpm = 8000, redlineRpm = 7600;
 
     function fitToViewport() {
         const d = document.querySelector('.dash');
@@ -411,20 +411,20 @@
     function updateShiftLights(rpmRatio) {
         const lights = document.getElementById('shiftLights');
         const spans = lights.getElementsByTagName('span');
-        const flicker = rpmRatio >= 0.95 && Math.sin(Date.now() * 0.02) > 0;
+        const redlineRatio = maxRpm > 0 ? redlineRpm / maxRpm : 0.95;
+        const atRedline = rpmRatio >= redlineRatio;
+        const flickerOn = atRedline && Math.sin(Date.now() * 0.02) > 0;
         for (let i = 0; i < numShiftLights && i < spans.length; i++) {
-            if (flicker) {
-                spans[i].style.background = '#f00';
+            const threshold = (i / (numShiftLights - 1));
+            const on = rpmRatio >= threshold;
+            if (atRedline && on) {
+                spans[i].style.background = flickerOn ? '#f00' : '#600';
+            } else if (i < 8) {
+                spans[i].style.background = on ? '#0f0' : '#060';
+            } else if (i < 10) {
+                spans[i].style.background = on ? '#ff0' : '#660';
             } else {
-                const threshold = (i / (numShiftLights - 1)) * 0.95;
-                const on = rpmRatio >= threshold;
-                if (i < 8) {
-                    spans[i].style.background = on ? '#0f0' : '#060';
-                } else if (i < 10) {
-                    spans[i].style.background = on ? '#ff0' : '#660';
-                } else {
-                    spans[i].style.background = on ? '#f00' : '#600';
-                }
+                spans[i].style.background = on ? '#f00' : '#600';
             }
         }
     }
@@ -448,6 +448,15 @@
         document.getElementById('rpmValue').textContent = Math.round(currentRpm).toString();
         updateShiftLights(rpmRatio);
         updateShiftLabels(maxRpm);
+
+        const gearEl = document.getElementById('gearDisp');
+        if (currentRpm >= redlineRpm && Math.sin(Date.now() * 0.02) > 0) {
+            gearEl.style.background = 'linear-gradient(#900, #f00)';
+            gearEl.style.color = '#fff';
+        } else {
+            gearEl.style.background = 'linear-gradient(#ddd, #aaa)';
+            gearEl.style.color = '#000';
+        }
     }
 
     function animationLoop() {
@@ -494,6 +503,7 @@
     OpenGrid.onTelemetry = function (record) {
         targetRpm = record.engineRpm || 0;
         maxRpm = record.maxRpm || 8000;
+        if (record.redlineRpm) redlineRpm = record.redlineRpm;
         updateShiftLabels(maxRpm);
         document.getElementById('speedDisp').textContent = record.speedKmh.toFixed(1);
         document.getElementById('gearDisp').textContent = record.gear || 'N';
