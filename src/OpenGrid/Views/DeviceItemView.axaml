@@ -127,7 +127,8 @@
                     MinWidth="200"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
-                    SelectionChanged="DashboardComboBox_SelectionChanged">
+                    ItemsSource="{Binding DashboardOptions}"
+                    SelectedItem="{Binding SelectedDashboardOption}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="models:DashboardInfo">
                             <TextBlock Text="{Binding Name}" />

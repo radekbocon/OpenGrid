@@ -112,7 +112,7 @@
                     <ContentControl Content="{Binding SelectedDevice}">
                         <ContentControl.DataTemplates>
                             <DataTemplate x:DataType="vm:DeviceItemViewModel">
-                                <views:DeviceItemView Device="{Binding}" />
+                                <views:DeviceItemView DataContext="{Binding}" />
                             </DataTemplate>
                         </ContentControl.DataTemplates>
                     </ContentControl>

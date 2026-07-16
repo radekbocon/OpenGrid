@@ -11,6 +11,8 @@ namespace OpenGrid.ViewModels;
 
 public partial class DeviceItemViewModel : ViewModelBase
 {
+    private static readonly DashboardInfo NoneDashboard = new() { Id = "", Name = "None", Description = "", DirectoryPath = "" };
+
     private readonly IDeviceService _deviceService;
     private readonly IDashboardService _dashboardService;
     private readonly DashboardLaunchService _dashboardLaunchService;
@@ -19,6 +21,8 @@ public partial class DeviceItemViewModel : ViewModelBase
     public IDevice? Device { get; private set; }
 
     public ObservableCollection<DashboardInfo> AvailableDashboards { get; } = [];
+
+    public ObservableCollection<DashboardInfo> DashboardOptions { get; } = [];
 
     public static DashboardLaunchTrigger[] AvailableTriggers { get; } =
         Enum.GetValues<DashboardLaunchTrigger>();
@@ -38,6 +42,9 @@ public partial class DeviceItemViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedDashboard))]
     public partial DashboardInfo? SelectedDashboard { get; set; }
+
+    [ObservableProperty]
+    public partial DashboardInfo? SelectedDashboardOption { get; set; }
 
     [ObservableProperty]
     public partial DashboardLaunchTrigger SelectedTrigger { get; set; }
@@ -71,6 +78,11 @@ public partial class DeviceItemViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasSelectedDashboard));
     }
 
+    partial void OnSelectedDashboardOptionChanged(DashboardInfo? value)
+    {
+        SelectedDashboard = value?.Id == NoneDashboard.Id ? null : value;
+    }
+
     partial void OnSelectedTriggerChanged(DashboardLaunchTrigger value)
     {
         if (Device is not DisplayDevice displayDevice)
@@ -97,9 +109,12 @@ public partial class DeviceItemViewModel : ViewModelBase
         IsEnabled = device.IsEnabled;
 
         AvailableDashboards.Clear();
+        DashboardOptions.Clear();
+        DashboardOptions.Add(NoneDashboard);
         foreach (var dashboard in _dashboardService.Dashboards)
         {
             AvailableDashboards.Add(dashboard);
+            DashboardOptions.Add(dashboard);
         }
 
         if (device is DisplayDevice displayDevice)
@@ -107,8 +122,13 @@ public partial class DeviceItemViewModel : ViewModelBase
             SelectedDashboard = !string.IsNullOrEmpty(displayDevice.DashboardId)
                 ? _dashboardService.GetById(displayDevice.DashboardId)
                 : null;
+            SelectedDashboardOption = SelectedDashboard ?? NoneDashboard;
             SelectedTrigger = displayDevice.DashboardTrigger;
             IsDashboardOpen = _dashboardLaunchService.IsDeviceDashboardOpen(displayDevice.Id);
+        }
+        else
+        {
+            SelectedDashboardOption = NoneDashboard;
         }
 
         _dashboardLaunchService.DashboardStateChanged += OnDashboardStateChanged;
