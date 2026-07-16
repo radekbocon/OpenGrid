@@ -81,6 +81,8 @@ public class AcTelemetryClient : ITelemetryClient
             {
                 return null;
             }
+            
+            var playerCarIndex = graphicsData.Value.CarIDs.IndexOf(graphicsData.Value.PlayerCarID);
 
             // Create telemetry snapshot
             var snapshot = new TelemetryRecord
@@ -118,7 +120,7 @@ public class AcTelemetryClient : ITelemetryClient
                 LastSectorTime = TimeSpan.FromMilliseconds(graphicsData.Value.LastSectorTime),
                 GForceLat = physicsData.Value.AccG.X,
                 GForceLon = physicsData.Value.AccG.Z,
-                CarPosition = graphicsData.Value.CarCoordinates[graphicsData.Value.PlayerCarID],
+                CarPosition = graphicsData.Value.CarCoordinates[playerCarIndex],
             };
             
             return snapshot;
