@@ -37,12 +37,12 @@
                     HorizontalAlignment="Center"
                     Classes="Subtitle1"
                     Opacity="0.5"
-                    Text="No cars added yet" />
+                    Text="No cars detected yet" />
                 <TextBlock
                     HorizontalAlignment="Center"
                     Classes="Body2"
                     Opacity="0.4"
-                    Text="Cars will appear here once detected by OpenGrid." />
+                    Text="Cars will appear here automatically when detected by telemetry." />
             </StackPanel>
 
             <!--  Split view: car list (left) + details (right)  -->
@@ -54,44 +54,35 @@
 
                 <!--  Left: Car list (vertical tabs)  -->
                 <materialControls:Card Grid.Column="0" Padding="0">
-                    <Grid RowDefinitions="Auto, Auto" RowSpacing="4">
-                        <ListBox
-                            x:Name="CarList"
-                            Grid.Row="0"
-                            ItemsSource="{Binding Cars}"
-                            SelectedItem="{Binding SelectedCar, Mode=TwoWay}"
-                            SelectionMode="Single">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate x:DataType="vm:CarItemViewModel">
-                                    <Grid
-                                        Margin="8"
-                                        ColumnDefinitions="Auto,*"
-                                        ColumnSpacing="8">
-                                        <avalonia:MaterialIcon
-                                            Grid.Column="0"
-                                            VerticalAlignment="Center"
-                                            IconSize="24"
-                                            Kind="Car" />
-                                        <StackPanel
-                                            Grid.Column="1"
-                                            VerticalAlignment="Center"
-                                            Spacing="2">
-                                            <TextBlock
-                                                Classes="Subtitle1"
-                                                Text="{Binding Name}"
-                                                TextTrimming="CharacterEllipsis" />
-                                            <TextBlock
-                                                Classes="Caption"
-                                                MaxLines="1"
-                                                Opacity="0.5"
-                                                Text="{Binding Description}"
-                                                TextTrimming="CharacterEllipsis" />
-                                        </StackPanel>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Grid>
+                    <ListBox
+                        x:Name="CarList"
+                        ItemsSource="{Binding Cars}"
+                        SelectedItem="{Binding SelectedCar, Mode=TwoWay}"
+                        SelectionMode="Single">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CarItemViewModel">
+                                <Grid
+                                    Margin="8"
+                                    ColumnDefinitions="Auto,*"
+                                    ColumnSpacing="8">
+                                    <avalonia:MaterialIcon
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        IconSize="24"
+                                        Kind="Car" />
+                                    <StackPanel
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Spacing="2">
+                                        <TextBlock
+                                            Classes="Subtitle1"
+                                            Text="{Binding Name}"
+                                            TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </materialControls:Card>
 
                 <!--  Right: Car details  -->
