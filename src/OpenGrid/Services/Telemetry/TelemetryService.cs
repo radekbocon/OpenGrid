@@ -93,6 +93,7 @@ public class TelemetryService : ITelemetryService
         try
         {
             ConnectionStatus = TelemetryConnectionStatus.Disconnected;
+            CurrentGame = null;
             _sharedMemoryBridgeLauncher.StopBridge();
             _telemetryClient?.Stop();
             _telemetryClient = null;

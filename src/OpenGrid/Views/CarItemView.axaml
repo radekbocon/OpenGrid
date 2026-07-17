@@ -47,11 +47,12 @@
                     Classes="Subtitle1"
                     Opacity="0.6"
                     Text="Max RPM" />
-                <TextBlock
+                <TextBox
                     Grid.Column="1"
-                    VerticalAlignment="Center"
-                    Classes="Body1"
-                    Text="{Binding MaxRpm}" />
+                    Width="120"
+                    HorizontalAlignment="Left"
+                    Text="{Binding MaxRpm}"
+                    Theme="{StaticResource MaterialFilledTextBox}" />
             </Grid>
 
             <!--  Redline RPM  -->
@@ -72,33 +73,6 @@
                     Text="{Binding RedlineRpm}"
                     Theme="{StaticResource MaterialFilledTextBox}" />
             </Grid>
-
-            <!--  Redline Percentage  -->
-            <Grid
-                ColumnDefinitions="140,*"
-                ColumnSpacing="12"
-                RowDefinitions="Auto">
-                <TextBlock
-                    Grid.Column="0"
-                    VerticalAlignment="Center"
-                    Classes="Subtitle1"
-                    Opacity="0.6"
-                    Text="Redline %" />
-                <TextBox
-                    Grid.Column="1"
-                    Width="120"
-                    HorizontalAlignment="Left"
-                    Text="{Binding RedlinePercentage, StringFormat={}{0:F1}}"
-                    Theme="{StaticResource MaterialFilledTextBox}" />
-            </Grid>
-
-            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
-
-            <Button
-                HorizontalAlignment="Left"
-                Command="{Binding RemoveCommand}"
-                Content="Remove Car"
-                Theme="{StaticResource MaterialOutlineButton}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -63,22 +63,29 @@
                             <DataTemplate x:DataType="vm:CarItemViewModel">
                                 <Grid
                                     Margin="8"
-                                    ColumnDefinitions="Auto,*"
+                                    ColumnDefinitions="Auto,*,Auto"
                                     ColumnSpacing="8">
                                     <avalonia:MaterialIcon
                                         Grid.Column="0"
                                         VerticalAlignment="Center"
                                         IconSize="24"
                                         Kind="Car" />
-                                    <StackPanel
+                                    <TextBlock
                                         Grid.Column="1"
                                         VerticalAlignment="Center"
-                                        Spacing="2">
-                                        <TextBlock
-                                            Classes="Subtitle1"
-                                            Text="{Binding Name}"
-                                            TextTrimming="CharacterEllipsis" />
-                                            </StackPanel>
+                                        Classes="Subtitle1"
+                                        Text="{Binding Name}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <Button
+                                        Grid.Column="2"
+                                        Width="24"
+                                        Height="24"
+                                        Padding="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Flat"
+                                        Command="{Binding RemoveCommand}">
+                                        <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
+                                    </Button>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

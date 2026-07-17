@@ -184,13 +184,6 @@
                     Theme="{StaticResource MaterialOutlineButton}" />
             </Grid>
 
-            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
-
-            <Button
-                HorizontalAlignment="Left"
-                Command="{Binding RemoveCommand}"
-                Content="Remove Device"
-                Theme="{StaticResource MaterialOutlineButton}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

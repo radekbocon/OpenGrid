@@ -65,7 +65,7 @@
                                 <DataTemplate x:DataType="vm:DeviceItemViewModel">
                                     <Grid
                                         Margin="8"
-                                        ColumnDefinitions="Auto,*"
+                                        ColumnDefinitions="Auto,*,Auto"
                                         ColumnSpacing="8">
                                         <avalonia:MaterialIcon
                                             Grid.Column="0"
@@ -87,6 +87,16 @@
                                                 Text="{Binding Description}"
                                                 TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
+                                        <Button
+                                            Grid.Column="2"
+                                            Width="24"
+                                            Height="24"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Classes="Flat"
+                                            Command="{Binding RemoveCommand}">
+                                            <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
+                                        </Button>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
