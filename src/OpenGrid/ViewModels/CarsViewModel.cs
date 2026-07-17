@@ -30,38 +30,40 @@ public partial class CarsViewModel : ViewModelBase
     protected override Task OnLoadedAsync()
     {
         _carConfigService.CarAdded += OnCarConfigAdded;
+        _carConfigService.CarRemoved += OnCarConfigRemoved;
         
         Cars.Clear();
         foreach (var car in _carConfigService.GetAll())
         {
-            Cars.Add(new CarItemViewModel(car, _carConfigService, OnRemove));
+            Cars.Add(new CarItemViewModel(car, _carConfigService));
         }
         OnPropertyChanged(nameof(HasCars));
         SelectedCar = Cars.FirstOrDefault();
         return base.OnLoadedAsync();
     }
-    
+
     protected override Task OnUnloadedAsync()
     {
         _carConfigService.CarAdded -= OnCarConfigAdded;
+        _carConfigService.CarRemoved -= OnCarConfigRemoved;
         return base.OnUnloadedAsync();
     }
 
     private void OnCarConfigAdded(object? sender, CarProfile car)
     {
-        var item = new CarItemViewModel(car, _carConfigService, OnRemove);
+        var item = new CarItemViewModel(car, _carConfigService);
         Cars.Add(item);
         OnPropertyChanged(nameof(HasCars));
-        if (SelectedCar is null)
-        {
-            SelectedCar = item;
-        }
+        SelectedCar ??= item;
     }
-
-    private void OnRemove(CarItemViewModel item)
+    
+    private void OnCarConfigRemoved(object? sender, CarProfile e)
     {
-        Cars.Remove(item);
-        SelectedCar = Cars.FirstOrDefault();
+        var toRemove = Cars.FirstOrDefault(x => x.CarKey == e.CarKey);
+        if (toRemove is null) return;
+        
+        Cars.Remove(toRemove);
+        SelectedCar = SelectedCar == toRemove ? Cars.FirstOrDefault() : SelectedCar;
         OnPropertyChanged(nameof(HasCars));
         OnPropertyChanged(nameof(IsCarSelected));
     }

@@ -11,7 +11,8 @@ public partial class CarItemViewModel : ViewModelBase
 {
     private readonly CarProfile _car;
     private readonly ICarConfigService _carConfigService;
-    private readonly Action<CarItemViewModel> _onRemove;
+    
+    public string CarKey => _car.CarKey;
     
     public string Name { get; }
 
@@ -21,11 +22,10 @@ public partial class CarItemViewModel : ViewModelBase
     [ObservableProperty]
     public partial int RedlineRpm { get; set; }
 
-    public CarItemViewModel(CarProfile car, ICarConfigService carConfigService, Action<CarItemViewModel> onRemove)
+    public CarItemViewModel(CarProfile car, ICarConfigService carConfigService)
     {
         _car = car;
         _carConfigService = carConfigService;
-        _onRemove = onRemove;
         Name = car.Name;
         MaxRpm = car.MaxRpm;
         RedlineRpm = car.RedlineRpm;
@@ -52,7 +52,6 @@ public partial class CarItemViewModel : ViewModelBase
         if (confirmDialog.Result)
         {
             _carConfigService.Remove(_car.CarKey);
-            _onRemove.Invoke(this);
         }
     }
 
