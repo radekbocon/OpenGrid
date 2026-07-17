@@ -51,7 +51,7 @@ public partial class CarItemViewModel : ViewModelBase
 
         if (confirmDialog.Result)
         {
-            _carConfigService.Remove(_car.Id);
+            _carConfigService.Remove(_car.CarKey);
             _onRemove.Invoke(this);
         }
     }

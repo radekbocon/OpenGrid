@@ -17,3 +17,12 @@ public class DisplayDevice : IDevice
         ? DeviceConnectionStatus.Connected 
         : DeviceConnectionStatus.Disconnected;
 }
+
+
+public enum DashboardLaunchTrigger
+{
+    None,
+    OnAppStart,
+    OnGameStart,
+    OnTelemetryConnected,
+}

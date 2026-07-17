@@ -26,11 +26,6 @@ public sealed class CarConfigConfigService : ICarConfigService
 
     public IReadOnlyList<CarProfile> GetAll() => _cars;
 
-    public CarProfile? GetById(string id)
-    {
-        return _cars.FirstOrDefault(c => c.Id == id);
-    }
-
     public CarProfile? GetByCarKey(string carKey)
     {
         return _cars.FirstOrDefault(c => c.CarKey == carKey);
@@ -42,9 +37,9 @@ public sealed class CarConfigConfigService : ICarConfigService
         CarUpdated?.Invoke(this, car);
     }
 
-    public void Remove(string id)
+    public void Remove(string carKey)
     {
-        var car = _cars.FirstOrDefault(c => c.Id == id);
+        var car = _cars.FirstOrDefault(c => c.CarKey == carKey);
         if (car is null) return;
 
         _cars.Remove(car);
@@ -122,7 +117,7 @@ public sealed class CarConfigConfigService : ICarConfigService
         }
         catch (Exception ex)
         {
-            Serilog.Log.Warning(ex, "Failed to save car {CarId}", car.Id);
+            Serilog.Log.Warning(ex, "Failed to save car {CarKey}", car.CarKey);
         }
     }
 
@@ -138,9 +133,9 @@ public sealed class CarConfigConfigService : ICarConfigService
         }
         catch (Exception ex)
         {
-            Serilog.Log.Warning(ex, "Failed to delete car file {CarId}", car.Id);
+            Serilog.Log.Warning(ex, "Failed to delete car file {CarKey}", car.CarKey);
         }
     }
 
-    private static string GetCarPath(CarProfile car) => Path.Combine(CarsDirectory, $"{car.Id}.json");
+    private static string GetCarPath(CarProfile car) => Path.Combine(CarsDirectory, $"{car.CarKey}.json");
 }

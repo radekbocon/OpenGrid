@@ -4,7 +4,6 @@ namespace OpenGrid.Models;
 
 public class CarProfile
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string CarKey { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public int MaxRpm { get; set; } = 8000;

@@ -9,3 +9,16 @@ public interface IDevice
     bool IsEnabled { get; set; }
     DeviceConnectionStatus Status { get; }
 }
+
+public enum DeviceConnectionStatus
+{
+    Disconnected,
+    Connected,
+}
+
+public enum DeviceType
+{
+    Display,
+    Serial,
+    Sound,
+}
