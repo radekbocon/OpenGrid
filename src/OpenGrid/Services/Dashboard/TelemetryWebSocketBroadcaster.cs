@@ -20,6 +20,7 @@ public sealed class TelemetryWebSocketBroadcaster : IDisposable
     public TelemetryWebSocketBroadcaster(ICarConfigService carConfigService)
     {
         _carConfigService = carConfigService;
+        _carConfigService.CarUpdated += (_, car) => _cachedRedlineRpm = car.RedlineRpm;
     }
 
     public void Start()

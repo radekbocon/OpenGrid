@@ -396,6 +396,7 @@
 
 <script>
     const numShiftLights = 12;
+    const blink = 0.03;
     let targetRpm = 0, currentRpm = 0, maxRpm = 8000, redlineRpm = 7600;
 
     function fitToViewport() {
@@ -413,7 +414,7 @@
         const spans = lights.getElementsByTagName('span');
         const redlineRatio = maxRpm > 0 ? redlineRpm / maxRpm : 0.95;
         const atRedline = rpmRatio >= redlineRatio;
-        const flickerOn = atRedline && Math.sin(Date.now() * 0.02) > 0;
+        const flickerOn = atRedline && Math.sin(Date.now() * blink) > 0;
         for (let i = 0; i < numShiftLights && i < spans.length; i++) {
             const threshold = (i / (numShiftLights - 1));
             const on = rpmRatio >= threshold;
@@ -450,7 +451,7 @@
         updateShiftLabels(maxRpm);
 
         const gearEl = document.getElementById('gearDisp');
-        if (currentRpm >= redlineRpm && Math.sin(Date.now() * 0.02) > 0) {
+        if (currentRpm >= redlineRpm && Math.sin(Date.now() * blink) > 0) {
             gearEl.style.background = 'linear-gradient(#900, #f00)';
             gearEl.style.color = '#fff';
         } else {

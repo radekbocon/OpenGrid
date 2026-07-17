@@ -14,7 +14,7 @@ public sealed class CarConfigConfigService : ICarConfigService
 
     public event EventHandler<CarProfile>? CarAdded;
     public event EventHandler<CarProfile>? CarRemoved;
-    public event EventHandler<CarProfile>? CarSaved;
+    public event EventHandler<CarProfile>? CarUpdated;
 
     public CarConfigConfigService(ITelemetryService telemetryService)
     {
@@ -39,7 +39,7 @@ public sealed class CarConfigConfigService : ICarConfigService
     public void Save(CarProfile car)
     {
         SaveToFile(car);
-        CarSaved?.Invoke(this, car);
+        CarUpdated?.Invoke(this, car);
     }
 
     public void Remove(string id)

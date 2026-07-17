@@ -13,5 +13,5 @@ public interface ICarConfigService
     void Remove(string id);
     event EventHandler<CarProfile>? CarAdded;
     event EventHandler<CarProfile>? CarRemoved;
-    event EventHandler<CarProfile>? CarSaved;
+    event EventHandler<CarProfile>? CarUpdated;
 }
