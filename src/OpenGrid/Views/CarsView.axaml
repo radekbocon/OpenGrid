@@ -42,7 +42,7 @@
                     HorizontalAlignment="Center"
                     Classes="Body2"
                     Opacity="0.4"
-                    Text="Cars will appear here automatically when detected by telemetry." />
+                    Text="Cars will appear here once detected by OpenGrid for the first time." />
             </StackPanel>
 
             <!--  Split view: car list (left) + details (right)  -->
