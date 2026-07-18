@@ -11,7 +11,8 @@ public partial class CarItemViewModel : ViewModelBase
 {
     private readonly CarProfile _car;
     private readonly ICarConfigService _carConfigService;
-    
+    private float _brakeBiasOffset;
+
     public string CarKey => _car.CarKey;
     
     public string Name { get; }
@@ -22,8 +23,16 @@ public partial class CarItemViewModel : ViewModelBase
     [ObservableProperty]
     public partial int RedlineRpm { get; set; }
 
-    [ObservableProperty]
-    public partial float BrakeBiasOffset { get; set; }
+    public float BrakeBiasOffsetPercentage
+    {
+        get => _brakeBiasOffset * 100;
+        set
+        {
+            SetProperty(ref _brakeBiasOffset, value / 100);
+            _car.BrakeBiasOffset = _brakeBiasOffset;
+            Save();
+        }
+    }
 
     public CarItemViewModel(CarProfile car, ICarConfigService carConfigService)
     {
@@ -32,7 +41,7 @@ public partial class CarItemViewModel : ViewModelBase
         Name = car.Name;
         MaxRpm = car.MaxRpm;
         RedlineRpm = car.RedlineRpm;
-        BrakeBiasOffset = car.BrakeBiasOffset;
+        _brakeBiasOffset = car.BrakeBiasOffset;
     }
 
     partial void OnMaxRpmChanged(int value)
@@ -44,12 +53,6 @@ public partial class CarItemViewModel : ViewModelBase
     partial void OnRedlineRpmChanged(int value)
     {
         _car.RedlineRpm = value;
-        Save();
-    }
-
-    partial void OnBrakeBiasOffsetChanged(float value)
-    {
-        _car.BrakeBiasOffset = value;
         Save();
     }
 

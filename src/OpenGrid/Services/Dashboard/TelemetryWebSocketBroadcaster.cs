@@ -23,6 +23,8 @@ public sealed class TelemetryWebSocketBroadcaster : IDisposable
         _carConfigService = carConfigService;
         _carConfigService.CarUpdated += (_, car) =>
         {
+            if (car.CarKey != _lastCarKey) return;
+            
             _cachedRedlineRpm = car.RedlineRpm;
             _cachedBrakeBiasOffset = car.BrakeBiasOffset;
         };

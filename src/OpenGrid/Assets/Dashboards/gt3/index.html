@@ -526,7 +526,7 @@
         document.getElementById('fuelDisp').textContent = (record.fuel || 0).toFixed(1);
         document.getElementById('posDisp').textContent = record.position || '--';
         document.getElementById('sessDisp').textContent = record.sessionType || 'RACE';
-        document.getElementById('bbalDisp').textContent = (record.brakeBias || 0).toFixed(1);
+        document.getElementById('bbalDisp').textContent = ((record.brakeBias || 0) * 100).toFixed(1);
 
         setTile('absDisp', record.absSetting);
         setTile('tc1Disp', record.tc1Setting);
