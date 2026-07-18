@@ -15,12 +15,17 @@ public sealed class TelemetryWebSocketBroadcaster : IDisposable
     private TelemetryRecord? _latestSnapshot;
     private CancellationTokenSource? _cts;
     private int? _cachedRedlineRpm;
+    private float? _cachedBrakeBiasOffset;
     private string? _lastCarKey;
 
     public TelemetryWebSocketBroadcaster(ICarConfigService carConfigService)
     {
         _carConfigService = carConfigService;
-        _carConfigService.CarUpdated += (_, car) => _cachedRedlineRpm = car.RedlineRpm;
+        _carConfigService.CarUpdated += (_, car) =>
+        {
+            _cachedRedlineRpm = car.RedlineRpm;
+            _cachedBrakeBiasOffset = car.BrakeBiasOffset;
+        };
     }
 
     public void Start()
@@ -72,6 +77,7 @@ public sealed class TelemetryWebSocketBroadcaster : IDisposable
             _lastCarKey = carKey;
             var profile = _carConfigService.GetByCarKey(carKey);
             _cachedRedlineRpm = profile?.RedlineRpm;
+            _cachedBrakeBiasOffset = profile?.BrakeBiasOffset;
         }
     }
 
@@ -141,7 +147,11 @@ public sealed class TelemetryWebSocketBroadcaster : IDisposable
             var snapshot = Interlocked.Exchange(ref _latestSnapshot, null);
             if (snapshot is not null)
             {
-                var json = TelemetryJsonSerializer.Serialize(snapshot, _cachedRedlineRpm);
+                var adjustedSnapshot = _cachedBrakeBiasOffset is { } offset
+                    ? snapshot with { BrakeBias = snapshot.BrakeBias + offset }
+                    : snapshot;
+
+                var json = TelemetryJsonSerializer.Serialize(adjustedSnapshot, _cachedRedlineRpm);
                 var bytes = Encoding.UTF8.GetBytes(json);
 
                 WebSocket[] connections;
