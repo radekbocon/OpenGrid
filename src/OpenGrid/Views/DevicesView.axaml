@@ -2,13 +2,133 @@
     x:Class="OpenGrid.Views.DevicesView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:controls="clr-namespace:OpenGrid.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:OpenGrid.Views"
     xmlns:vm="using:OpenGrid.ViewModels"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="600"
+    d:DesignWidth="900"
     x:DataType="vm:DevicesViewModel"
     mc:Ignorable="d">
-    Nothing to see here ;)
+
+    <DockPanel>
+        <controls:PageHeader
+            Title="Devices"
+            DockPanel.Dock="Top"
+            IsBackButtonVisible="False" />
+
+        <Panel>
+
+            <!--  Empty state  -->
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                IsVisible="{Binding !HasDevices}"
+                Spacing="8">
+                <avalonia:MaterialIcon
+                    HorizontalAlignment="Center"
+                    IconSize="48"
+                    Kind="Devices"
+                    Opacity="0.4" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.5"
+                    Text="No devices added yet" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Classes="Body2"
+                    Opacity="0.4"
+                    Text="Click 'Add Device' to get started" />
+            </StackPanel>
+
+            <!--  Split view: device list (left) + details (right)  -->
+            <Grid
+                MaxWidth="{StaticResource MaxPageWidth}"
+                ColumnDefinitions="280,*"
+                ColumnSpacing="16"
+                IsVisible="{Binding HasDevices}">
+
+                <!--  Left: Device list (vertical tabs)  -->
+                <materialControls:Card Grid.Column="0" Padding="0">
+                    <Grid RowDefinitions="Auto, Auto" RowSpacing="4">
+                        <ListBox
+                            x:Name="DeviceList"
+                            Grid.Row="0"
+                            ItemsSource="{Binding Devices}"
+                            SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
+                            SelectionMode="Single">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:DeviceItemViewModel">
+                                    <Grid
+                                        Margin="8"
+                                        ColumnDefinitions="Auto,*,Auto"
+                                        ColumnSpacing="8">
+                                        <avalonia:MaterialIcon
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            IconSize="24"
+                                            Kind="Devices" />
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Spacing="2">
+                                            <TextBlock
+                                                Classes="Subtitle1"
+                                                Text="{Binding Name}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock
+                                                Classes="Caption"
+                                                MaxLines="1"
+                                                Opacity="0.5"
+                                                Text="{Binding Description}"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <Button
+                                            Grid.Column="2"
+                                            Width="24"
+                                            Height="24"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Classes="Flat"
+                                            Command="{Binding RemoveCommand}">
+                                            <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <Button
+                            Grid.Row="1"
+                            Padding="0,16"
+                            Classes="Flat"
+                            Command="{Binding AddDeviceCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <avalonia:MaterialIcon
+                                    VerticalAlignment="Center"
+                                    IconSize="24"
+                                    Kind="Plus" />
+                                <TextBlock VerticalAlignment="Center" Text="Add Device" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </materialControls:Card>
+
+                <!--  Right: Device details  -->
+                <materialControls:Card Grid.Column="1" IsVisible="{Binding IsDeviceSelected}">
+                    <ContentControl Content="{Binding SelectedDevice}">
+                        <ContentControl.DataTemplates>
+                            <DataTemplate x:DataType="vm:DeviceItemViewModel">
+                                <views:DeviceItemView DataContext="{Binding}" />
+                            </DataTemplate>
+                        </ContentControl.DataTemplates>
+                    </ContentControl>
+                </materialControls:Card>
+            </Grid>
+
+        </Panel>
+    </DockPanel>
 </controls:PageView>

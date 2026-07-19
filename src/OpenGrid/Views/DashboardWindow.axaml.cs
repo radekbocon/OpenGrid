@@ -19,11 +19,23 @@ public partial class DashboardWindow : Window
 
     private void WebViewOnWebMessageReceived(object? sender, WebMessageReceivedEventArgs e)
     {
-        if (e.Body?.Equals("ToggleFullscreen", StringComparison.OrdinalIgnoreCase) == true)
+        if (e.Body is not {} message)
         {
-            WindowState = WindowState == WindowState.FullScreen 
-                ? WindowState.Normal 
-                : WindowState.FullScreen;
+            return;
+        }
+
+        switch (message)
+        {
+            case "ToggleFullscreen":
+                WindowState = WindowState == WindowState.FullScreen 
+                    ? WindowState.Normal 
+                    : WindowState.FullScreen;
+                break;
+            case "ToggleWindowDecorations":
+                WindowDecorations = WindowDecorations == WindowDecorations.Full 
+                    ? WindowDecorations.None 
+                    : WindowDecorations.Full;
+                break;
         }
     }
     

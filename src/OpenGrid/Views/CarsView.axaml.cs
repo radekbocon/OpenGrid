@@ -2,9 +2,9 @@ using OpenGrid.Controls;
 
 namespace OpenGrid.Views;
 
-public partial class DevicesView : PageView
+public partial class CarsView : PageView
 {
-    public DevicesView()
+    public CarsView()
     {
         InitializeComponent();
     }

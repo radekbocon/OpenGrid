@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using OpenGrid.Services;
 using OpenGrid.Services.Dashboard;
+using OpenGrid.Services.Devices;
 using OpenGrid.Services.SessionPersist;
 using OpenGrid.Services.Telemetry;
 using OpenGrid.ViewModels;
@@ -24,8 +25,11 @@ public static class ServiceRegistrator
         services.AddSingleton<SteamWatcher>();
         services.AddSingleton<SteamGameManager>();
         services.AddSingleton<IDashboardService, DashboardService>();
+        services.AddSingleton<IDeviceService, DeviceService>();
+        services.AddSingleton<ICarConfigService, CarConfigConfigService>();
         services.AddSingleton<TelemetryWebSocketBroadcaster>();
         services.AddSingleton<DashboardHttpServer>();
+        services.AddSingleton<DashboardLauncher>();
 
         // Register ViewModels
         services.AddSingleton<MainWindowViewModel>();
@@ -36,6 +40,7 @@ public static class ServiceRegistrator
         services.AddTransient<DevicesViewModel>();
         services.AddTransient<DashboardsViewModel>();
         services.AddTransient<LapSelectionViewModel>();
+        services.AddTransient<CarsViewModel>();
 
         return services;
     }

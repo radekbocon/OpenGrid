@@ -1,0 +1,109 @@
+<controls:PageView
+    x:Class="OpenGrid.Views.CarsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:controls="clr-namespace:OpenGrid.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:OpenGrid.Views"
+    xmlns:vm="using:OpenGrid.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="900"
+    x:DataType="vm:CarsViewModel"
+    mc:Ignorable="d">
+
+    <DockPanel>
+        <controls:PageHeader
+            Title="Cars"
+            DockPanel.Dock="Top"
+            IsBackButtonVisible="False" />
+
+        <Panel>
+
+            <!--  Empty state  -->
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                IsVisible="{Binding !HasCars}"
+                Spacing="8">
+                <avalonia:MaterialIcon
+                    HorizontalAlignment="Center"
+                    IconSize="48"
+                    Kind="Car"
+                    Opacity="0.4" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.5"
+                    Text="No cars detected yet" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Classes="Body2"
+                    Opacity="0.4"
+                    Text="Cars will appear here once detected by OpenGrid for the first time." />
+            </StackPanel>
+
+            <!--  Split view: car list (left) + details (right)  -->
+            <Grid
+                MaxWidth="{StaticResource MaxPageWidth}"
+                ColumnDefinitions="280,*"
+                ColumnSpacing="16"
+                IsVisible="{Binding HasCars}">
+
+                <!--  Left: Car list (vertical tabs)  -->
+                <materialControls:Card Grid.Column="0" Padding="0">
+                    <ListBox
+                        x:Name="CarList"
+                        ItemsSource="{Binding Cars}"
+                        SelectedItem="{Binding SelectedCar, Mode=TwoWay}"
+                        SelectionMode="Single">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CarItemViewModel">
+                                <Grid
+                                    Margin="8"
+                                    ColumnDefinitions="Auto,*,Auto"
+                                    ColumnSpacing="8">
+                                    <avalonia:MaterialIcon
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        IconSize="24"
+                                        Kind="Car" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Classes="Subtitle1"
+                                        Text="{Binding Name}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <Button
+                                        Grid.Column="2"
+                                        Width="24"
+                                        Height="24"
+                                        Padding="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Flat"
+                                        Command="{Binding RemoveCommand}">
+                                        <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </materialControls:Card>
+
+                <!--  Right: Car details  -->
+                <materialControls:Card Grid.Column="1" IsVisible="{Binding IsCarSelected}">
+                    <ContentControl Content="{Binding SelectedCar}">
+                        <ContentControl.DataTemplates>
+                            <DataTemplate x:DataType="vm:CarItemViewModel">
+                                <views:CarItemView DataContext="{Binding}" />
+                            </DataTemplate>
+                        </ContentControl.DataTemplates>
+                    </ContentControl>
+                </materialControls:Card>
+            </Grid>
+
+        </Panel>
+    </DockPanel>
+</controls:PageView>

@@ -40,7 +40,7 @@
         <ScrollViewer Padding="0,0,12,0">
             <ListBox
                 Name="SessionsList"
-                MaxWidth="1000"
+                MaxWidth="{StaticResource MaxPageWidth}"
                 ItemsSource="{Binding Sessions}">
                 <Interaction.Behaviors>
                     <EventTriggerBehavior EventName="SelectionChanged">

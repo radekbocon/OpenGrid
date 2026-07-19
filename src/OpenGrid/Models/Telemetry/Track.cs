@@ -22,8 +22,13 @@ public readonly record struct Track
 
     public override string ToString() => DisplayName;
 
-    private static string CleanTrackName(string key)
+    private static string CleanTrackName(string? key)
     {
+        if (key is null)
+        {
+            return string.Empty;
+        }
+        
         var name = key.Trim();
 
         if (name.StartsWith("ks_", StringComparison.OrdinalIgnoreCase))
