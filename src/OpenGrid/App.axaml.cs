@@ -46,11 +46,14 @@ public class App : Application
 
             mainWindow.Closing += MainWindowOnClosing;
             desktop.Exit += DesktopOnExit;
+            
+            var steamGameManager = Program.ServiceProvider.GetRequiredService<SteamGameManager>();
+            steamGameManager.HandleRunningGamesAsync().FireAndForgetSafe();
 
             var dashboardServer = Program.ServiceProvider.GetRequiredService<DashboardHttpServer>();
-            _ = dashboardServer.StartAsync();
+            dashboardServer.Start();
 
-            var dashboardLaunchService = Program.ServiceProvider.GetRequiredService<DashboardLaunchService>();
+            var dashboardLaunchService = Program.ServiceProvider.GetRequiredService<DashboardLauncher>();
             dashboardLaunchService.HandleTrigger(DashboardLaunchTrigger.OnAppStart);
             
 
@@ -65,7 +68,7 @@ public class App : Application
             var showItem = new NativeMenuItem("Show OpenGrid");
             showItem.Click += (_, _) => ShowMainWindow(desktop);
 
-            var exitItem = new NativeMenuItem("Exit");
+            var exitItem = new NativeMenuItem("Exit OpenGrid");
             exitItem.Click += (_, _) =>
             {
                 _trayIcon?.Dispose();

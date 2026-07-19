@@ -10,7 +10,7 @@ using Serilog;
 
 namespace OpenGrid.Services.Dashboard;
 
-public sealed class DashboardLaunchService
+public sealed class DashboardLauncher
 {
     private readonly IDeviceService _deviceService;
     private readonly IDashboardService _dashboardService;
@@ -22,7 +22,7 @@ public sealed class DashboardLaunchService
 
     public event EventHandler<string>? DashboardStateChanged;
 
-    public DashboardLaunchService(
+    public DashboardLauncher(
         IDeviceService deviceService,
         IDashboardService dashboardService,
         DashboardHttpServer dashboardServer,
@@ -45,7 +45,7 @@ public sealed class DashboardLaunchService
         if (trigger == DashboardLaunchTrigger.None)
             return;
 
-        var devices = _deviceService.GetSavedDevices();
+        var devices = _deviceService.GetPersistedDevices();
         foreach (var device in devices)
         {
             if (device is not DisplayDevice { IsEnabled: true, DashboardId: not null } displayDevice)

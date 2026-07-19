@@ -4,7 +4,7 @@ namespace OpenGrid.Services.Devices;
 
 public interface IDeviceService
 {
-    IReadOnlyList<IDevice> GetSavedDevices();
+    IReadOnlyList<IDevice> GetPersistedDevices();
     IReadOnlyList<IDevice> ScanForDevices();
     void AddDevice(IDevice device);
     void SaveDevice(IDevice device);

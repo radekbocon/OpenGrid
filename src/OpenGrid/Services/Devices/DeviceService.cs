@@ -24,15 +24,15 @@ public sealed class DeviceService : IDeviceService
         {
             { DeviceType.Display, new DisplayDeviceSerializer() },
         };
-        GetSavedDevices();
+        GetPersistedDevices();
     }
 
-    public IReadOnlyList<IDevice> GetSavedDevices()
+    public IReadOnlyList<IDevice> GetPersistedDevices()
     {
         var screens = GetScreens();
-        var saved = LoadSavedDevices();
+        var persistedDevices = LoadPersistedDevices();
 
-        foreach (var device in saved)
+        foreach (var device in persistedDevices)
         {
             if (device is DisplayDevice displayDevice)
             {
@@ -40,14 +40,14 @@ public sealed class DeviceService : IDeviceService
             }
         }
         
-        _devices = saved;
-        return saved;
+        _devices = persistedDevices;
+        return persistedDevices;
     }
 
     public IReadOnlyList<IDevice> ScanForDevices()
     {
         var screens = GetScreens();
-        var saved = LoadSavedDevices();
+        var saved = LoadPersistedDevices();
         var savedIds = new HashSet<string>(saved.Select(d => d.Id));
         var newDevices = new List<IDevice>();
 
@@ -93,19 +93,26 @@ public sealed class DeviceService : IDeviceService
         DeleteDeviceFile(device);
     }
 
-    private List<IDevice> LoadSavedDevices()
+    private List<IDevice> LoadPersistedDevices()
     {
         var devices = new List<IDevice>();
         foreach (var file in Directory.GetFiles(DevicesDirectory, "*.json"))
         {
-            var text = File.ReadAllText(file);
-            var json = JsonDocument.Parse(text);
-            var deviceType = (DeviceType)json.RootElement.GetProperty("DeviceType").GetInt32();
-            var serializer = _serializers[deviceType];
-            var device = serializer.FromJson(text);
-            if (device is not null)
+            try
             {
-                devices.Add(device);
+                var text = File.ReadAllText(file);
+                var json = JsonDocument.Parse(text);
+                var deviceType = (DeviceType)json.RootElement.GetProperty("DeviceType").GetInt32();
+                var serializer = _serializers[deviceType];
+                var device = serializer.FromJson(text);
+                if (device is not null)
+                {
+                    devices.Add(device);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to load device file {Path}", file);
             }
         }
         

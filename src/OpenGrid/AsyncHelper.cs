@@ -1,6 +1,4 @@
-using System;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Serilog;
 
 namespace OpenGrid;
@@ -11,7 +9,10 @@ public static class AsyncHelper
     {
         try
         {
-            await task.ConfigureAwait(false);
+            if (!task.IsCompleted || task.IsFaulted)
+            {
+                await task.ConfigureAwait(false);
+            }
         }
         catch (Exception e)
         {

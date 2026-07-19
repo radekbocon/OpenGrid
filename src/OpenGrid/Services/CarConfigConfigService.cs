@@ -1,6 +1,7 @@
 using System.Text.Json;
 using OpenGrid.Models;
 using OpenGrid.Services.Telemetry;
+using Serilog;
 
 namespace OpenGrid.Services;
 
@@ -103,7 +104,7 @@ public sealed class CarConfigConfigService : ICarConfigService
             }
             catch (Exception ex)
             {
-                Serilog.Log.Warning(ex, "Failed to load car from {File}", file);
+                Log.Error(ex, "Failed to load car from {File}", file);
             }
         }
     }
@@ -117,7 +118,7 @@ public sealed class CarConfigConfigService : ICarConfigService
         }
         catch (Exception ex)
         {
-            Serilog.Log.Warning(ex, "Failed to save car {CarKey}", car.CarKey);
+            Log.Error(ex, "Failed to save car {CarKey}", car.CarKey);
         }
     }
 
@@ -133,7 +134,7 @@ public sealed class CarConfigConfigService : ICarConfigService
         }
         catch (Exception ex)
         {
-            Serilog.Log.Warning(ex, "Failed to delete car file {CarKey}", car.CarKey);
+            Log.Error(ex, "Failed to delete car file {CarKey}", car.CarKey);
         }
     }
 

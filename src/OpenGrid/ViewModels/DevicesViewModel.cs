@@ -13,7 +13,7 @@ public partial class DevicesViewModel : ViewModelBase
 {
     private readonly IDeviceService _deviceService;
     private readonly IDashboardService _dashboardService;
-    private readonly DashboardLaunchService _dashboardLaunchService;
+    private readonly DashboardLauncher _dashboardLauncher;
 
     public ObservableCollection<DeviceItemViewModel> Devices { get; }
 
@@ -26,11 +26,11 @@ public partial class DevicesViewModel : ViewModelBase
 
     public bool IsDeviceSelected => SelectedDevice is not null;
 
-    public DevicesViewModel(IDeviceService deviceService, IDashboardService dashboardService, DashboardLaunchService dashboardLaunchService)
+    public DevicesViewModel(IDeviceService deviceService, IDashboardService dashboardService, DashboardLauncher dashboardLauncher)
     {
         _deviceService = deviceService;
         _dashboardService = dashboardService;
-        _dashboardLaunchService = dashboardLaunchService;
+        _dashboardLauncher = dashboardLauncher;
         IsMenuItem = true;
         Devices = [];
     }
@@ -38,7 +38,7 @@ public partial class DevicesViewModel : ViewModelBase
     protected override Task OnLoadedAsync()
     {
         Devices.Clear();
-        var devices = _deviceService.GetSavedDevices();
+        var devices = _deviceService.GetPersistedDevices();
         foreach (var device in devices)
         {
             Devices.Add(CreateDeviceItem(device));
@@ -75,7 +75,7 @@ public partial class DevicesViewModel : ViewModelBase
 
     private DeviceItemViewModel CreateDeviceItem(IDevice device)
     {
-        var deviceItem = new DeviceItemViewModel(_deviceService, _dashboardService, _dashboardLaunchService, OnRemove);
+        var deviceItem = new DeviceItemViewModel(_deviceService, _dashboardService, _dashboardLauncher, OnRemove);
         deviceItem.Init(device);
         return deviceItem;
     }

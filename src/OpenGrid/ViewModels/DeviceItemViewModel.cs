@@ -15,7 +15,7 @@ public partial class DeviceItemViewModel : ViewModelBase
 
     private readonly IDeviceService _deviceService;
     private readonly IDashboardService _dashboardService;
-    private readonly DashboardLaunchService _dashboardLaunchService;
+    private readonly DashboardLauncher _dashboardLauncher;
     private readonly Action<DeviceItemViewModel> _onRemove;
 
     public IDevice? Device { get; private set; }
@@ -92,11 +92,11 @@ public partial class DeviceItemViewModel : ViewModelBase
         _deviceService.SaveDevice(displayDevice);
     }
 
-    public DeviceItemViewModel(IDeviceService deviceService, IDashboardService dashboardService, DashboardLaunchService dashboardLaunchService, Action<DeviceItemViewModel> onRemove)
+    public DeviceItemViewModel(IDeviceService deviceService, IDashboardService dashboardService, DashboardLauncher dashboardLauncher, Action<DeviceItemViewModel> onRemove)
     {
         _deviceService = deviceService;
         _dashboardService = dashboardService;
-        _dashboardLaunchService = dashboardLaunchService;
+        _dashboardLauncher = dashboardLauncher;
         _onRemove = onRemove;
     }
 
@@ -124,14 +124,14 @@ public partial class DeviceItemViewModel : ViewModelBase
                 : null;
             SelectedDashboardOption = SelectedDashboard ?? NoneDashboard;
             SelectedTrigger = displayDevice.DashboardTrigger;
-            IsDashboardOpen = _dashboardLaunchService.IsDeviceDashboardOpen(displayDevice.Id);
+            IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice.Id);
         }
         else
         {
             SelectedDashboardOption = NoneDashboard;
         }
 
-        _dashboardLaunchService.DashboardStateChanged += OnDashboardStateChanged;
+        _dashboardLauncher.DashboardStateChanged += OnDashboardStateChanged;
     }
 
     [RelayCommand(CanExecute = nameof(HasSelectedDashboard))]
@@ -141,11 +141,11 @@ public partial class DeviceItemViewModel : ViewModelBase
             return;
 
         if (IsDashboardOpen)
-            _dashboardLaunchService.CloseDeviceDashboard(displayDevice.Id);
+            _dashboardLauncher.CloseDeviceDashboard(displayDevice.Id);
         else
-            _dashboardLaunchService.OpenDeviceDashboard(displayDevice);
+            _dashboardLauncher.OpenDeviceDashboard(displayDevice);
 
-        IsDashboardOpen = _dashboardLaunchService.IsDeviceDashboardOpen(displayDevice.Id);
+        IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice.Id);
     }
 
     [RelayCommand]
@@ -172,7 +172,7 @@ public partial class DeviceItemViewModel : ViewModelBase
         if (displayDevice.Id != deviceId)
             return;
 
-        IsDashboardOpen = _dashboardLaunchService.IsDeviceDashboardOpen(displayDevice.Id);
+        IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice.Id);
         OnPropertyChanged(nameof(DashboardButtonLabel));
     }
 }

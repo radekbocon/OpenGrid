@@ -33,6 +33,18 @@ public class SteamGameManager
         _steamWatcher.GameStopped += SteamWatcherOnGameStopped;
     }
 
+    public async Task HandleRunningGamesAsync()
+    {
+        foreach (var game in _steamWatcher.RunningGames)
+        {
+            var result = await OnGameStartedAsync(game);
+            if (result)
+            {
+                return;
+            }
+        }
+    }
+
     private void SteamWatcherOnGameStopped(SteamGameProcess gameProcess)
     {
         GameStopped?.Invoke(this, gameProcess);
@@ -71,29 +83,33 @@ public class SteamGameManager
         });
     }
     
-    private async Task OnGameStartedAsync(SteamGameProcess? game)
+    private async Task<bool> OnGameStartedAsync(SteamGameProcess? game)
     {
         try
         {
             if (game?.SteamGame.AppId is not {} appId || !_settingsService.AutoConnectGameAppIds.Contains(appId))
             {
-                return;
+                return false;
             }
 
             var connected = await _telemetryService.ConnectAsync(game.SteamGame);
             if (!connected)
             {
-                return;
+                return false;
             }
 
             if (_settingsService.AutoRecordingGameAppIds.Contains(appId))
             {
                 _sessionRepository.StartRecording();
             }
+            
+            return true;
         }
         catch (Exception e)
         {
             Log.Error(e, "AutoGameService failed to handle game start for {AppId}", game?.SteamGame.AppId);
         }
+        
+        return false;
     }
 }

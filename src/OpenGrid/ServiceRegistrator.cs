@@ -29,7 +29,7 @@ public static class ServiceRegistrator
         services.AddSingleton<ICarConfigService, CarConfigConfigService>();
         services.AddSingleton<TelemetryWebSocketBroadcaster>();
         services.AddSingleton<DashboardHttpServer>();
-        services.AddSingleton<DashboardLaunchService>();
+        services.AddSingleton<DashboardLauncher>();
 
         // Register ViewModels
         services.AddSingleton<MainWindowViewModel>();

@@ -7,6 +7,8 @@ public class DisplayDeviceSerializer : IDeviceSerializer
 {
     public IDevice? FromJson(string json)
     {
+        ArgumentNullException.ThrowIfNull(json);
+        
         var dto = JsonSerializer.Deserialize<DisplayDeviceDto>(json);
 
         return dto switch

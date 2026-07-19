@@ -60,10 +60,9 @@ public sealed class DashboardHttpServer : IDisposable
         UpdateDashboardUrls();
     }
 
-    public Task StartAsync()
+    public void Start()
     {
-        if (IsRunning)
-            return Task.CompletedTask;
+        if (IsRunning) return;
 
         try
         {
@@ -85,8 +84,6 @@ public sealed class DashboardHttpServer : IDisposable
             Log.Error(ex, "Failed to start dashboard HTTP server on port {Port}", Port);
             IsRunning = false;
         }
-
-        return Task.CompletedTask;
     }
 
     public async Task StopAsync()
