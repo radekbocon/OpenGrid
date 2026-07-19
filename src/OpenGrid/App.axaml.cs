@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
+using OpenGrid.Models;
 using OpenGrid.ViewModels;
 using OpenGrid.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,8 +18,6 @@ public class App : Application
     private TrayIcon? _trayIcon;
     private ISettingsService? _settingsService;
     private IThemeService? _themeService;
-
-    public static Window MainWindow { get; private set; }
 
     public override void Initialize()
     {
@@ -41,16 +40,21 @@ public class App : Application
             {
                 DataContext = mainVewModel
             };
-            MainWindow = mainWindow;
             desktop.MainWindow = mainWindow;
             Program.ActivateWindowRequested = () => ShowMainWindow(desktop);
             Launcher.Initialize(TopLevel.GetTopLevel(mainWindow)!.Launcher);
 
             mainWindow.Closing += MainWindowOnClosing;
             desktop.Exit += DesktopOnExit;
+            
+            var steamGameManager = Program.ServiceProvider.GetRequiredService<SteamGameManager>();
+            steamGameManager.HandleRunningGamesAsync().FireAndForgetSafe();
 
             var dashboardServer = Program.ServiceProvider.GetRequiredService<DashboardHttpServer>();
-            _ = dashboardServer.StartAsync();
+            dashboardServer.Start();
+
+            var dashboardLaunchService = Program.ServiceProvider.GetRequiredService<DashboardLauncher>();
+            dashboardLaunchService.HandleTrigger(DashboardLaunchTrigger.OnAppStart);
             
 
             using var iconStream = AssetLoader.Open(new Uri("avares://OpenGrid/Assets/icon.png"));
@@ -58,13 +62,13 @@ public class App : Application
             {
                 Icon = new WindowIcon(iconStream),
                 ToolTipText = "OpenGrid",
-                Menu = new NativeMenu()
+                Menu = [],
             };
 
             var showItem = new NativeMenuItem("Show OpenGrid");
             showItem.Click += (_, _) => ShowMainWindow(desktop);
 
-            var exitItem = new NativeMenuItem("Exit");
+            var exitItem = new NativeMenuItem("Exit OpenGrid");
             exitItem.Click += (_, _) =>
             {
                 _trayIcon?.Dispose();

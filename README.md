@@ -1,6 +1,7 @@
 # OpenGrid
 
-A Linux desktop telemetry app for sim racing games. Includes and launches shared memory bridge. Veeery much work in progress.
+A Linux desktop telemetry app for sim racing games. It aims to make use of games telemetry based features easy accesible without complicated installation steps and launch commands. 
+Includes and launches shared memory bridge inside games proton prefix.
 
 ### Supported games:
 
@@ -13,15 +14,28 @@ A Linux desktop telemetry app for sim racing games. Includes and launches shared
 
 ### Features:
 
-- Save sessions in to .csv files, show and compare laps on  the charts
-- Show live dashboards in the browser on any device on local network
+- Launch game and connect to telemetry in one click
+- Show live dashboards on the phone, tablet or host machine
+- Save sessions in to .csv files, show and compare laps on the charts
+- Tray icon
+- Color themes
+- Few configuration options such as:
+  - Automatically connect to the game's telemetry when started
+  - Automatically record sessions
+  - Automatically launch dashboards on prefered display
 
+### Screenshots
+
+<img src="screenshots/home-page.png" alt="drawing" width="600"/>
+<img src="screenshots/session-details.png" alt="drawing" width="600"/>
+<img src="screenshots/dash.png" alt="drawing" width="600"/>
 
 ## Architecture
 
 Built with [Avalonia UI](https://avaloniaui.net/) (.NET)
 
 Follows the **MVVM pattern** using `CommunityToolkit.Mvvm` with dependency injection via `Microsoft.Extensions.DependencyInjection`.
+Dashboards are built with html and served via http, live data sent via websockets. Requires gtkwebkit2.
 
 ## Getting Started
 
@@ -34,6 +48,7 @@ Follows the **MVVM pattern** using `CommunityToolkit.Mvvm` with dependency injec
 
 ```bash
 cd src
+dotnet restore
 dotnet build
 dotnet run --project OpenGrid
 ```

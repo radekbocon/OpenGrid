@@ -22,8 +22,13 @@ public readonly record struct Car
 
     public override string ToString() => DisplayName;
 
-    private static string CleanCarName(string key)
+    private static string CleanCarName(string? key)
     {
+        if (key is null)
+        {
+            return string.Empty;
+        }
+        
         var name = key.Trim();
 
         if (name.StartsWith("ks_", StringComparison.OrdinalIgnoreCase))

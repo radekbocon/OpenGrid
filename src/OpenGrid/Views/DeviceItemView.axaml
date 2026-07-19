@@ -1,0 +1,189 @@
+<UserControl
+    x:Class="OpenGrid.Views.DeviceItemView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:OpenGrid.Converters"
+    xmlns:models="clr-namespace:OpenGrid.Models"
+    xmlns:viewModels="clr-namespace:OpenGrid.ViewModels"
+    x:DataType="viewModels:DeviceItemViewModel">
+
+    <ScrollViewer>
+        <StackPanel Margin="16" Spacing="16">
+            <TextBlock Classes="Headline6" Text="Device Details" />
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Name  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Name" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body1"
+                    Text="{Binding Name}" />
+            </Grid>
+
+            <!--  Description  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Description" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body1"
+                    Text="{Binding Description, TargetNullValue='No description'}" />
+            </Grid>
+
+            <!--  Status  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Status" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body1"
+                    Text="{Binding Status}" />
+            </Grid>
+
+            <!--  Device ID  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Device ID" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body2"
+                    Opacity="0.5"
+                    Text="{Binding Device?.Id, TargetNullValue='-'}" />
+            </Grid>
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Configuration  -->
+            <TextBlock Classes="Headline6" Text="Configuration" />
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Enabled toggle  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Enabled" />
+                <ToggleSwitch
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding IsEnabled}" />
+            </Grid>
+
+            <!--  Default Dashboard  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Default Dashboard" />
+                <ComboBox
+                    x:Name="DashboardComboBox"
+                    Grid.Column="1"
+                    MinWidth="200"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding DashboardOptions}"
+                    SelectedItem="{Binding SelectedDashboardOption}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:DashboardInfo">
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+
+            <!--  Launch Trigger  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Auto-Open Trigger" />
+                <ComboBox
+                    Grid.Column="1"
+                    MinWidth="200"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding AvailableTriggers}"
+                    SelectedItem="{Binding SelectedTrigger}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:DashboardLaunchTrigger">
+                            <TextBlock Text="{Binding ., Converter={x:Static converters:EnumConverters.DashboardLaunchTriggerToString}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Manual Controls  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Manual Control" />
+                <Button
+                    Grid.Column="1"
+                    HorizontalAlignment="Left"
+                    Command="{Binding ToggleDashboardCommand}"
+                    Content="{Binding DashboardButtonLabel}"
+                    Theme="{StaticResource MaterialOutlineButton}" />
+            </Grid>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

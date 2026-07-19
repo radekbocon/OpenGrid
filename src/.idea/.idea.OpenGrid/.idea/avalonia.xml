@@ -10,6 +10,7 @@
         <entry key="OpenGrid/Controls/ChartControl.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/ConfirmDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/DeviceAccessDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
+        <entry key="OpenGrid/Controls/DeviceDetailsControl.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/LapSelectionDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/LapStatsControl.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/LapTableControl.axaml" value="OpenGrid/OpenGrid.csproj" />
@@ -17,12 +18,15 @@
         <entry key="OpenGrid/Controls/PageView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/TrackMapControl.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Controls/UdpTelemetryInstructionsDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
+        <entry key="OpenGrid/Views/CarItemView.axaml" value="OpenGrid/OpenGrid.csproj" />
+        <entry key="OpenGrid/Views/CarsView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/ConfirmDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/DashboardDetailView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/DashboardWebWindow.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/DashboardWindow.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/DashboardsView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/DeviceAccessDialog.axaml" value="OpenGrid/OpenGrid.csproj" />
+        <entry key="OpenGrid/Views/DeviceItemView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/DevicesView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/HomeView.axaml" value="OpenGrid/OpenGrid.csproj" />
         <entry key="OpenGrid/Views/LapComparisonView.axaml" value="OpenGrid/OpenGrid.csproj" />

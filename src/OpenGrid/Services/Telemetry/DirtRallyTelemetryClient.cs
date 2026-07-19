@@ -116,6 +116,8 @@ public class DirtRallyTelemetryClient : ITelemetryClient
             return new TelemetryRecord
             {
                 Timestamp = DateTime.UtcNow,
+                Car = Car.Create("dirt_rally_generic_car"),
+                Track = Track.Create("dirt_rally_generic_track"),
                 SpeedKmh = packet.Speed * 3.6f,
                 Gas = packet.Throttle,
                 Brake = packet.Brake,

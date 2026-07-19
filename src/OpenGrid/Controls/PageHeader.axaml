@@ -24,7 +24,8 @@
                         <TextBlock
                             Grid.Column="1"
                             VerticalAlignment="Center"
-                            Classes="Headline5"
+                            Classes="Headline4"
+                            FontSize="30"
                             Text="{TemplateBinding Title}" />
                         <ContentPresenter
                             Grid.Column="2"

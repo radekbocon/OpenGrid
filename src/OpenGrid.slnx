@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="OpenGrid/OpenGrid.csproj" />
-  <Project Path="OpenGridBridge/OpenGridBridge.csproj" />
-</Solution>
