@@ -76,11 +76,6 @@ public class AcTelemetryClient : ITelemetryClient
             {
                 return null;
             }
-
-            if (graphicsData.Value.Status == GameStatus.OFF)
-            {
-                return null;
-            }
             
             var playerCarIndex = graphicsData.Value.CarIDs.IndexOf(graphicsData.Value.PlayerCarID);
 
@@ -105,8 +100,8 @@ public class AcTelemetryClient : ITelemetryClient
                 Distance = graphicsData.Value.DistanceTraveled,
                 MaxRpm = staticData.Value.MaxRpm,
                 TirePressures = physicsData.Value.WheelsPressure,
-                LastLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.LastTime),
-                BestLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.BestTime),
+                LastLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.LastTime == 2147483647 ? 0 : graphicsData.Value.LastTime),
+                BestLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.BestTime == 2147483647 ? 0 : graphicsData.Value.BestTime),
                 AbsSetting = graphicsData.Value.ABS,
                 Tc1Setting = graphicsData.Value.TC,
                 Tc2Setting = graphicsData.Value.TCCUT,
