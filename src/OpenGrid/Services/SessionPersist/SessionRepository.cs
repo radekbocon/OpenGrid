@@ -7,7 +7,11 @@ namespace OpenGrid.Services.SessionPersist;
 
 public class SessionRepository
 {
-    private readonly string _telemetryFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "OpenGrid", "Telemetry");
+    private const float MinLapDistance = 100f;
+    
+    private static readonly TimeSpan MinLapTime = TimeSpan.FromSeconds(10);
+    private static readonly string TelemetryFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "OpenGrid", "Telemetry");
+    
     private readonly ITelemetryService _telemetryService;
     private readonly ISettingsService _settingsService;
     private readonly SessionWriter _sessionWriter;
@@ -39,8 +43,8 @@ public class SessionRepository
 
     public SessionRepository(ITelemetryService telemetryService, ISettingsService settingsService)
     {
-        Directory.CreateDirectory(_telemetryFolder);
-        _sessionWriter = new SessionWriter(_telemetryFolder);
+        Directory.CreateDirectory(TelemetryFolder);
+        _sessionWriter = new SessionWriter(TelemetryFolder);
         _telemetryService = telemetryService;
         _settingsService = settingsService;
         _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
@@ -52,7 +56,7 @@ public class SessionRepository
 
         await Task.Run(() =>
         {
-            var files = Directory.GetFiles(_telemetryFolder, "*.csv");
+            var files = Directory.GetFiles(TelemetryFolder, "*.csv");
             foreach (var file in files)
             {
                 try
@@ -77,7 +81,7 @@ public class SessionRepository
 
     public SessionDetails LoadSessionDetails(SessionInfo session)
     {
-        var filePath = Path.Combine(_telemetryFolder, session.FileName);
+        var filePath = Path.Combine(TelemetryFolder, session.FileName);
         var details = _sessionWriter.LoadDetails(filePath, session);
         return details;
     }
@@ -187,7 +191,7 @@ public class SessionRepository
             {
                 var distance = g.Max(r => r.Distance) - g.Min(r => r.Distance);
                 var time = g.Max(r => r.LapTime);
-                return distance >= 100f && time >= TimeSpan.FromSeconds(10);
+                return distance >= MinLapDistance && time >= MinLapTime;
             })
             .Select(g => g.Key)
             .ToHashSet();
@@ -202,7 +206,7 @@ public class SessionRepository
 
         if (session.Records.Count == 0)
         {
-            var filePath = Path.Combine(_telemetryFolder, session.Info.FileName);
+            var filePath = Path.Combine(TelemetryFolder, session.Info.FileName);
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
@@ -223,7 +227,7 @@ public class SessionRepository
 
     public void DeleteSession(string fileName)
     {
-        var filePath = Path.Combine(_telemetryFolder, fileName);
+        var filePath = Path.Combine(TelemetryFolder, fileName);
         if (File.Exists(filePath))
         {
             File.Delete(filePath);
