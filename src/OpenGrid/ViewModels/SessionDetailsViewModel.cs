@@ -167,8 +167,8 @@ public partial class SessionDetailsViewModel : ViewModelBase
         await Task.Run(() =>
         {
             var firstPos = lap.Records.First().CarPosition;
-            var xs = lap.Records.Select(r => (double)(r.CarPosition.X - firstPos.X)).ToArray();
-            var ys = lap.Records.Select(r => (double)(r.CarPosition.Z - firstPos.Z)).ToArray();
+            var xs = lap.Records.Select(r => (double)(r.CarPosition.Z - firstPos.Z)).ToArray();
+            var ys = lap.Records.Select(r => (double)(r.CarPosition.X - firstPos.X)).ToArray();
             var gas = lap.Records.Select(r => r.Gas).ToArray();
             var brake = lap.Records.Select(r => r.Brake).ToArray();
 
@@ -278,8 +278,8 @@ public partial class SessionDetailsViewModel : ViewModelBase
                 }
 
                 var firstPos = records.First().CarPosition;
-                var trackXs = records.Select(r => (double)(r.CarPosition.X - firstPos.X)).ToArray();
-                var trackYs = records.Select(r => (double)(r.CarPosition.Z - firstPos.Z)).ToArray();
+                var trackXs = records.Select(r => (double)(r.CarPosition.Z - firstPos.Z)).ToArray();
+                var trackYs = records.Select(r => (double)(r.CarPosition.X - firstPos.X)).ToArray();
                 trackSeries.Add(new TrackMapSeries
                 {
                     Name = item.ShortName,
