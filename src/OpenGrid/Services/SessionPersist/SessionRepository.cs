@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CsvHelper;
 using Serilog;
 using OpenGrid.Models.Telemetry;
@@ -119,20 +118,14 @@ public class SessionRepository
     {
         if (CurrentSession is null)
         {
-            CurrentSession = new SessionDetails(e.Game, e.Telemetry);
-            _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
-            _lastRecordTimestamp = e.Telemetry.Timestamp;
-            _lastReceived = null;
+            StartNewSession(e);
             return;
         }
 
         if (IsNewSession(e.Telemetry))
         {
             FinalizeCurrentSession();
-            CurrentSession = new SessionDetails(e.Game, e.Telemetry);
-            _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
-            _lastRecordTimestamp = e.Telemetry.Timestamp;
-            _lastReceived = null;
+            StartNewSession(e);
             return;
         }
 
@@ -162,6 +155,15 @@ public class SessionRepository
         _lastReceived = e.Telemetry;
     }
 
+    private void StartNewSession(TelemetryEventArgs e)
+    {
+        CurrentSession = new SessionDetails(e.Game, e.Telemetry);
+        _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
+        _lastRecordTimestamp = e.Telemetry.Timestamp;
+        _lastReceived = null;
+        Log.Information("Started recording {Game} on {Track}", e.Game, e.Telemetry.Track);
+    }
+
     private void CloseCurrentFile()
     {
         if (_currentFileWriter is null)
@@ -176,7 +178,41 @@ public class SessionRepository
     private void FinalizeCurrentSession()
     {
         CloseCurrentFile();
-        _sessionWriter.WriteFull(CurrentSession!);
+
+        var session = CurrentSession!;
+        var totalLaps = session.Records.GroupBy(r => r.CurrentLap).Count();
+        var validLaps = session.Records
+            .GroupBy(r => r.CurrentLap)
+            .Where(g =>
+            {
+                var distance = g.Max(r => r.Distance) - g.Min(r => r.Distance);
+                var time = g.Max(r => r.LapTime);
+                return distance >= 100f && time >= TimeSpan.FromSeconds(10);
+            })
+            .Select(g => g.Key)
+            .ToHashSet();
+
+        var removedLaps = totalLaps - validLaps.Count;
+        if (removedLaps > 0)
+        {
+            Log.Information("Removed {Count} partial lap(s) from {Game} on {Track}", removedLaps, session.Info.Game, session.Info.Track);
+        }
+
+        session.Records.RemoveAll(r => !validLaps.Contains(r.CurrentLap));
+
+        if (session.Records.Count == 0)
+        {
+            var filePath = Path.Combine(_telemetryFolder, session.Info.FileName);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+            Log.Information("Discarded empty session from {Game} on {Track} with no valid laps", session.Info.Game, session.Info.Track);
+            return;
+        }
+
+        Log.Information("Saved {Game} on {Track} with {Count} valid lap(s)", session.Info.Game, session.Info.Track, validLaps.Count);
+        _sessionWriter.WriteFull(session);
     }
 
     public void DeleteLap(SessionDetails details, int lapNumber)
