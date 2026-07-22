@@ -23,20 +23,29 @@ public sealed class DeviceService : IDeviceService
         _serializers = new Dictionary<DeviceType, IDeviceSerializer>
         {
             { DeviceType.Display, new DisplayDeviceSerializer() },
+            { DeviceType.Sound, new SoundDeviceSerializer() },
         };
         GetPersistedDevices();
     }
 
     public IReadOnlyList<IDevice> GetPersistedDevices()
     {
-        var screens = GetScreens();
+        var screens = EnumerateScreens();
+        var soundDevices = EnumerateSoundDevices();
         var persistedDevices = LoadPersistedDevices();
 
         foreach (var device in persistedDevices)
         {
-            if (device is DisplayDevice displayDevice)
+            switch (device)
             {
-                displayDevice.Screen = screens.FirstOrDefault(x => x.DisplayName == device.Id);
+                case DisplayDevice displayDevice:
+                    displayDevice.Screen = screens.FirstOrDefault(x => x.DisplayName == device.Id);
+                    break;
+                case SoundDevice soundDevice:
+                    soundDevice.Status = soundDevices.Any(x => x.Id == device.Id)
+                        ? DeviceConnectionStatus.Connected
+                        : DeviceConnectionStatus.Disconnected;
+                    break;
             }
         }
         
@@ -46,7 +55,8 @@ public sealed class DeviceService : IDeviceService
 
     public IReadOnlyList<IDevice> ScanForDevices()
     {
-        var screens = GetScreens();
+        var screens = EnumerateScreens();
+        var soundDevices = EnumerateSoundDevices();
         var saved = LoadPersistedDevices();
         var savedIds = new HashSet<string>(saved.Select(d => d.Id));
         var newDevices = new List<IDevice>();
@@ -66,6 +76,24 @@ public sealed class DeviceService : IDeviceService
                 IsEnabled = true,
                 Screen = screen,
                 Name = screen.DisplayName!,
+            };
+            newDevices.Add(device);
+        }
+
+        foreach (var soundDevice in soundDevices)
+        {
+            if (savedIds.Contains(soundDevice.Id))
+            {
+                continue;
+            }
+
+            var device = new SoundDevice
+            {
+                Id = soundDevice.Id,
+                DeviceType = DeviceType.Sound,
+                Name = soundDevice.Name,
+                Description = soundDevice.Description,
+                IsEnabled = true,
             };
             newDevices.Add(device);
         }
@@ -152,11 +180,25 @@ public sealed class DeviceService : IDeviceService
     }
 
 
-    private static List<Screen> GetScreens()
+    private static List<Screen> EnumerateScreens()
     {
         return Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
                desktop.MainWindow?.Screens.All is not { } screens
             ? []
             : screens.Where(x => x.DisplayName is not null).ToList();
+    }
+
+    private static List<SoundDeviceInfo> EnumerateSoundDevices()
+    {
+        try
+        {
+            var enumerator = new PipeWireDeviceEnumerator();
+            return enumerator.EnumerateDevices();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to enumerate sound devices");
+            return [];
+        }
     }
 }
