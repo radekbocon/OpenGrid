@@ -75,7 +75,12 @@ public partial class DevicesViewModel : ViewModelBase
 
     private DeviceItemViewModel CreateDeviceItem(IDevice device)
     {
-        var deviceItem = new DeviceItemViewModel(_deviceService, _dashboardService, _dashboardLauncher, OnRemove);
+        DeviceItemViewModel deviceItem = device.DeviceType switch
+        {
+            DeviceType.Display => new DisplayDeviceItemViewModel(_deviceService, _dashboardService, _dashboardLauncher, OnRemove),
+            DeviceType.Sound => new SoundDeviceItemViewModel(_deviceService, OnRemove),
+            _ => throw new ArgumentOutOfRangeException(nameof(device.DeviceType), device.DeviceType, "Unsupported device type"),
+        };
         deviceItem.Init(device);
         return deviceItem;
     }
