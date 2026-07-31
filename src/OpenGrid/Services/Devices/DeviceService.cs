@@ -192,7 +192,7 @@ public sealed class DeviceService : IDeviceService
     {
         try
         {
-            var enumerator = new PipeWireDeviceEnumerator();
+            var enumerator = new PortAudioDeviceEnumerator();
             return enumerator.EnumerateDevices();
         }
         catch (Exception ex)
