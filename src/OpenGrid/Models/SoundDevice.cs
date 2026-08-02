@@ -8,4 +8,5 @@ public class SoundDevice : IDevice
     public string? Description { get; set; }
     public bool IsEnabled { get; set; }
     public DeviceConnectionStatus Status { get; set; }
+    public BassShakerConfiguration? BassShaker { get; set; }
 }

@@ -2,6 +2,10 @@
     x:Class="OpenGrid.Views.SoundDeviceItemView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:converters="clr-namespace:OpenGrid.Converters"
+    xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+    xmlns:models="clr-namespace:OpenGrid.Models"
     xmlns:viewModels="clr-namespace:OpenGrid.ViewModels"
     x:DataType="viewModels:SoundDeviceItemViewModel">
 
@@ -106,6 +110,222 @@
                     Grid.Column="1"
                     VerticalAlignment="Center"
                     IsChecked="{Binding IsEnabled}" />
+            </Grid>
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Bass Shaker  -->
+            <TextBlock Classes="Headline6" Text="Bass Shaker" />
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Bass Shaker enable toggle  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Enable Bass Shaker" />
+                <ToggleSwitch
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding IsBassShakerEnabled}" />
+            </Grid>
+
+            <!--  Configured telemetry inputs  -->
+            <ItemsControl ItemsSource="{Binding BassShakerInputs}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:BassShakerInputViewModel">
+                        <materialControls:Card Margin="0,4" Padding="12,8">
+                            <StackPanel Spacing="10">
+                                <Grid
+                                    ColumnDefinitions="*,Auto,Auto"
+                                    ColumnSpacing="8">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Subtitle1"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding InputName}" />
+                                    <ToggleSwitch
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        IsChecked="{Binding IsEnabled}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        Width="24"
+                                        Height="24"
+                                        Padding="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Flat"
+                                        Command="{Binding RemoveCommand}"
+                                        ToolTip.Tip="Remove input">
+                                        <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
+                                    </Button>
+                                </Grid>
+
+                                <!--  Volume  -->
+                                <Grid
+                                    ColumnDefinitions="110,*"
+                                    ColumnSpacing="12">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Body2"
+                                        Opacity="0.6"
+                                        Text="Volume" />
+                                    <Grid
+                                        Grid.Column="1"
+                                        ColumnDefinitions="*,Auto"
+                                        ColumnSpacing="12">
+                                        <Slider
+                                            Grid.Column="0"
+                                            Minimum="0"
+                                            Maximum="100"
+                                            Value="{Binding Volume}" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            MinWidth="44"
+                                            VerticalAlignment="Center"
+                                            Classes="Body2"
+                                            Text="{Binding Volume, StringFormat='{}{0:0}%'}" />
+                                    </Grid>
+                                </Grid>
+
+                                <!--  Frequency  -->
+                                <Grid
+                                    ColumnDefinitions="110,*"
+                                    ColumnSpacing="12">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Body2"
+                                        Opacity="0.6"
+                                        Text="Frequency" />
+                                    <Grid
+                                        Grid.Column="1"
+                                        ColumnDefinitions="*,Auto"
+                                        ColumnSpacing="12">
+                                        <Slider
+                                            Grid.Column="0"
+                                            Minimum="20"
+                                            Maximum="120"
+                                            Value="{Binding Frequency}" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            MinWidth="44"
+                                            VerticalAlignment="Center"
+                                            Classes="Body2"
+                                            Text="{Binding Frequency, StringFormat='{}{0:0} Hz'}" />
+                                    </Grid>
+                                </Grid>
+
+                                <!--  Min RPM (percent of telemetry max)  -->
+                                <Grid
+                                    ColumnDefinitions="110,*"
+                                    ColumnSpacing="12">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Body2"
+                                        Opacity="0.6"
+                                        Text="Min RPM %" />
+                                    <Grid
+                                        Grid.Column="1"
+                                        ColumnDefinitions="*,Auto"
+                                        ColumnSpacing="12">
+                                        <Slider
+                                            Grid.Column="0"
+                                            Minimum="0"
+                                            Maximum="100"
+                                            Value="{Binding MinRpmPercent}" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            MinWidth="44"
+                                            VerticalAlignment="Center"
+                                            Classes="Body2"
+                                            Text="{Binding MinRpmPercent, StringFormat='{}{0:0}%'}" />
+                                    </Grid>
+                                </Grid>
+
+                                <!--  Max RPM (percent of telemetry max)  -->
+                                <Grid
+                                    ColumnDefinitions="110,*"
+                                    ColumnSpacing="12">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Body2"
+                                        Opacity="0.6"
+                                        Text="Max RPM %" />
+                                    <Grid
+                                        Grid.Column="1"
+                                        ColumnDefinitions="*,Auto"
+                                        ColumnSpacing="12">
+                                        <Slider
+                                            Grid.Column="0"
+                                            Minimum="0"
+                                            Maximum="100"
+                                            Value="{Binding MaxRpmPercent}" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            MinWidth="44"
+                                            VerticalAlignment="Center"
+                                            Classes="Body2"
+                                            Text="{Binding MaxRpmPercent, StringFormat='{}{0:0}%'}" />
+                                    </Grid>
+                                </Grid>
+                            </StackPanel>
+                        </materialControls:Card>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!--  No inputs hint  -->
+            <TextBlock
+                Classes="Body2"
+                Opacity="0.5"
+                Text="No vibration inputs configured yet."
+                IsVisible="{Binding !HasBassShakerInputs}" />
+
+            <!--  Add input  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Add Input" />
+                <StackPanel
+                    Grid.Column="1"
+                    Orientation="Horizontal"
+                    Spacing="8">
+                    <ComboBox
+                        MinWidth="180"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        ItemsSource="{Binding AvailableTelemetryInputs}"
+                        SelectedItem="{Binding SelectedTelemetryInput}"
+                        Theme="{StaticResource MaterialFilledComboBox}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:TelemetryInput">
+                                <TextBlock Text="{Binding ., Converter={x:Static converters:EnumConverters.TelemetryInputToString}}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button
+                        VerticalAlignment="Center"
+                        Command="{Binding AddBassShakerInputCommand}"
+                        Content="Add"
+                        Theme="{StaticResource MaterialOutlineButton}" />
+                </StackPanel>
             </Grid>
 
         </StackPanel>

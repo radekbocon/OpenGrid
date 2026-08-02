@@ -6,6 +6,7 @@ using OpenGrid.Controls;
 using OpenGrid.Models;
 using OpenGrid.Services.Dashboard;
 using OpenGrid.Services.Devices;
+using OpenGrid.Services.Sound;
 
 namespace OpenGrid.ViewModels;
 
@@ -14,6 +15,7 @@ public partial class DevicesViewModel : ViewModelBase
     private readonly IDeviceService _deviceService;
     private readonly IDashboardService _dashboardService;
     private readonly DashboardLauncher _dashboardLauncher;
+    private readonly IBassShakerService _bassShakerService;
 
     public ObservableCollection<DeviceItemViewModel> Devices { get; }
 
@@ -26,11 +28,12 @@ public partial class DevicesViewModel : ViewModelBase
 
     public bool IsDeviceSelected => SelectedDevice is not null;
 
-    public DevicesViewModel(IDeviceService deviceService, IDashboardService dashboardService, DashboardLauncher dashboardLauncher)
+    public DevicesViewModel(IDeviceService deviceService, IDashboardService dashboardService, DashboardLauncher dashboardLauncher, IBassShakerService bassShakerService)
     {
         _deviceService = deviceService;
         _dashboardService = dashboardService;
         _dashboardLauncher = dashboardLauncher;
+        _bassShakerService = bassShakerService;
         IsMenuItem = true;
         Devices = [];
     }
@@ -78,7 +81,7 @@ public partial class DevicesViewModel : ViewModelBase
         DeviceItemViewModel deviceItem = device.DeviceType switch
         {
             DeviceType.Display => new DisplayDeviceItemViewModel(_deviceService, _dashboardService, _dashboardLauncher, OnRemove),
-            DeviceType.Sound => new SoundDeviceItemViewModel(_deviceService, OnRemove),
+            DeviceType.Sound => new SoundDeviceItemViewModel(_deviceService, _bassShakerService, OnRemove),
             _ => throw new ArgumentOutOfRangeException(nameof(device.DeviceType), device.DeviceType, "Unsupported device type"),
         };
         deviceItem.Init(device);
@@ -87,6 +90,11 @@ public partial class DevicesViewModel : ViewModelBase
 
     private void OnRemove(DeviceItemViewModel item)
     {
+        if (item.Device is SoundDevice soundDevice)
+        {
+            _bassShakerService.RemoveDevice(soundDevice.Id);
+        }
+
         Devices.Remove(item);
         SelectedDevice = Devices.FirstOrDefault();
         OnPropertyChanged(nameof(IsDeviceSelected));

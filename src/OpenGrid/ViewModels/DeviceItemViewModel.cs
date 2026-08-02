@@ -36,6 +36,11 @@ public abstract partial class DeviceItemViewModel : ViewModelBase
 
         device.IsEnabled = value;
         DeviceService.SaveDevice(device);
+        OnDeviceSettingsChanged();
+    }
+
+    protected virtual void OnDeviceSettingsChanged()
+    {
     }
 
     protected DeviceItemViewModel(IDeviceService deviceService, Action<DeviceItemViewModel> onRemove)
