@@ -38,22 +38,14 @@ internal sealed class PortAudioDeviceEnumerator
         for (var index = 0; index < PortAudio.DeviceCount; index++)
         {
             var info = PortAudio.GetDeviceInfo(index);
-            if (info is { maxInputChannels: <= 0, maxOutputChannels: <= 0 })
+            if (info.maxOutputChannels <= 0)
                 continue;
-
-            var direction = info is { maxInputChannels: > 0, maxOutputChannels: > 0 }
-                ? "Input/Output"
-                : info.maxInputChannels > 0
-                    ? "Input"
-                    : "Output";
-
-            var channels = Math.Max(info.maxInputChannels, info.maxOutputChannels);
 
             devices.Add(new SoundDeviceInfo
             {
                 Id = index.ToString(),
                 Name = info.name,
-                Description = $"{direction}, {channels} channel(s), {info.defaultSampleRate:0.##} Hz",
+                Description = $"Output, {info.maxOutputChannels} channel(s), {info.defaultSampleRate:0.##} Hz",
             });
         }
 
