@@ -83,9 +83,9 @@ public sealed class BassShakerService : IBassShakerService, IDisposable
 
         if (_outputs.TryGetValue(device.Id, out var currentOutput))
         {
-            if (!currentOutput.HasInputs(enabledInputs))
+            if (!currentOutput.HasInputs(bassShaker.Volume, enabledInputs))
             {
-                currentOutput.Reconfigure(enabledInputs);
+                currentOutput.Reconfigure(bassShaker.Volume, enabledInputs);
             }
             return;
         }
@@ -98,7 +98,7 @@ public sealed class BassShakerService : IBassShakerService, IDisposable
                 _portAudioReady = true;
             }
 
-            var output = new BassShakerOutput(deviceIndex, enabledInputs);
+            var output = new BassShakerOutput(deviceIndex, bassShaker.Volume, enabledInputs);
             _outputs[device.Id] = output;
             Log.Information("Started bass shaker output on device {Device}", device.Name);
         }

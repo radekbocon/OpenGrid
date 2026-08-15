@@ -27,6 +27,8 @@ public record TelemetryRecord
     public int AbsSetting { get; init; }
     public int Tc1Setting { get; init; }
     public int Tc2Setting { get; init; }
+    public float Abs { get; init; }
+    public float Tc { get; init; }
     public TimeSpan DeltaLapTime { get; init; }
     public int Position { get; init; }
     public int EngineMap { get; init; }

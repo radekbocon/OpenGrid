@@ -26,6 +26,9 @@ public partial class SoundDeviceItemViewModel : DeviceItemViewModel
     [ObservableProperty]
     public partial bool IsBassShakerEnabled { get; set; }
 
+    [ObservableProperty]
+    public partial double Volume { get; set; }
+
     public bool HasSelectedTelemetryInput => SelectedTelemetryInput is not null;
 
     public bool HasBassShakerInputs => BassShakerInputs.Count > 0;
@@ -54,8 +57,19 @@ public partial class SoundDeviceItemViewModel : DeviceItemViewModel
         }
 
         IsBassShakerEnabled = soundDevice.BassShaker.IsEnabled;
+        Volume = soundDevice.BassShaker.Volume * 100;
         RefreshAvailableTelemetryInputs();
         OnPropertyChanged(nameof(HasBassShakerInputs));
+        ConfigureBassShaker();
+    }
+
+    partial void OnVolumeChanged(double value)
+    {
+        if (Device is not SoundDevice soundDevice || soundDevice.BassShaker is null)
+            return;
+
+        soundDevice.BassShaker.Volume = value / 100.0;
+        DeviceService.SaveDevice(soundDevice);
         ConfigureBassShaker();
     }
 

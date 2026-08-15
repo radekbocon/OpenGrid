@@ -9,6 +9,8 @@ public partial class BassShakerInputViewModel : ViewModelBase
     private readonly Action _onChanged;
     private readonly Action<BassShakerInputViewModel> _onRemove;
 
+    public static IReadOnlyList<BassShakerChannel> AvailableChannels { get; } = Enum.GetValues<BassShakerChannel>();
+
     public BassShakerInputSettings Settings { get; }
     public TelemetryInput Input => Settings.Input;
     public string InputName => GetDisplayName(Settings.Input);
@@ -17,22 +19,26 @@ public partial class BassShakerInputViewModel : ViewModelBase
     public partial bool IsEnabled { get; set; }
 
     [ObservableProperty]
+    public partial BassShakerChannel Channel { get; set; }
+
+    [ObservableProperty]
     public partial double Volume { get; set; }
 
     [ObservableProperty]
     public partial double Frequency { get; set; }
 
     [ObservableProperty]
-    public partial double MinRpmPercent { get; set; }
+    public partial double MinPercent { get; set; }
 
     [ObservableProperty]
-    public partial double MaxRpmPercent { get; set; }
+    public partial double MaxPercent { get; set; }
 
     public static string GetDisplayName(TelemetryInput input)
     {
         return input switch
         {
-            TelemetryInput.EngineRpm => "Engine RPM",
+            TelemetryInput.Abs => "ABS",
+            TelemetryInput.Tc => "Traction Control",
             _ => input.ToString(),
         };
     }
@@ -43,15 +49,22 @@ public partial class BassShakerInputViewModel : ViewModelBase
         _onChanged = onChanged;
         _onRemove = onRemove;
         IsEnabled = settings.IsEnabled;
+        Channel = settings.Channel;
         Volume = settings.Volume * 100;
         Frequency = settings.Frequency;
-        MinRpmPercent = settings.MinRpmPercent;
-        MaxRpmPercent = settings.MaxRpmPercent;
+        MinPercent = settings.MinPercent;
+        MaxPercent = settings.MaxPercent;
     }
 
     partial void OnIsEnabledChanged(bool value)
     {
         Settings.IsEnabled = value;
+        _onChanged();
+    }
+
+    partial void OnChannelChanged(BassShakerChannel value)
+    {
+        Settings.Channel = value;
         _onChanged();
     }
 
@@ -67,15 +80,15 @@ public partial class BassShakerInputViewModel : ViewModelBase
         _onChanged();
     }
 
-    partial void OnMinRpmPercentChanged(double value)
+    partial void OnMinPercentChanged(double value)
     {
-        Settings.MinRpmPercent = value;
+        Settings.MinPercent = value;
         _onChanged();
     }
 
-    partial void OnMaxRpmPercentChanged(double value)
+    partial void OnMaxPercentChanged(double value)
     {
-        Settings.MaxRpmPercent = value;
+        Settings.MaxPercent = value;
         _onChanged();
     }
 

@@ -10,7 +10,8 @@ public static class EnumConverters
         {
             return x switch
             {
-                TelemetryInput.EngineRpm => "Engine RPM",
+                TelemetryInput.Abs => "ABS",
+                TelemetryInput.Tc => "Traction Control",
                 _ => x.ToString(),
             };
         });

@@ -8,8 +8,8 @@ public static class TelemetryInputResolver
     public static double GetNormalized(BassShakerInputSettings settings, TelemetryRecord telemetry)
     {
         var (value, referenceMax) = GetValueAndReference(settings.Input, telemetry);
-        var min = referenceMax * settings.MinRpmPercent / 100.0;
-        var max = referenceMax * settings.MaxRpmPercent / 100.0;
+        var min = referenceMax * settings.MinPercent / 100.0;
+        var max = referenceMax * settings.MaxPercent / 100.0;
         var range = max - min;
         return range > 0
             ? Math.Clamp((value - min) / range, 0, 1)
@@ -20,7 +20,8 @@ public static class TelemetryInputResolver
     {
         return input switch
         {
-            TelemetryInput.EngineRpm => (telemetry.EngineRpm, Math.Max(telemetry.MaxRpm, telemetry.EngineRpm)),
+            TelemetryInput.Abs => (telemetry.Abs, 1),
+            TelemetryInput.Tc => (telemetry.Tc, 1),
             _ => (0, 0),
         };
     }

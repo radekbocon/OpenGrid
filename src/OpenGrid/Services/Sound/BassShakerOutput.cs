@@ -17,14 +17,16 @@ internal sealed class BassShakerOutput : IDisposable
     private readonly double _sampleRate;
     private readonly double _smoothingAlpha;
     private volatile InputChannel[] _channels;
+    private double _deviceVolume;
     private IReadOnlyList<BassShakerInputSettings> _inputSettings;
 
-    public BassShakerOutput(int deviceIndex, IReadOnlyList<BassShakerInputSettings> inputs)
+    public BassShakerOutput(int deviceIndex, double deviceVolume, IReadOnlyList<BassShakerInputSettings> inputs)
     {
         var deviceInfo = PortAudio.GetDeviceInfo(deviceIndex);
         _sampleRate = deviceInfo.defaultSampleRate;
         _channelCount = Math.Clamp(deviceInfo.maxOutputChannels, 1, 2);
         _smoothingAlpha = 1 - Math.Exp(-1 / (SmoothingTimeConstantSeconds * _sampleRate));
+        Volatile.Write(ref _deviceVolume, deviceVolume);
         _channels = inputs.Select(x => new InputChannel(x)).ToArray();
         _inputSettings = inputs;
 
@@ -41,16 +43,18 @@ internal sealed class BassShakerOutput : IDisposable
         _stream.Start();
     }
 
-    public void Reconfigure(IReadOnlyList<BassShakerInputSettings> inputs)
+    public void Reconfigure(double deviceVolume, IReadOnlyList<BassShakerInputSettings> inputs)
     {
+        Volatile.Write(ref _deviceVolume, deviceVolume);
         _channels = inputs.Select(x => new InputChannel(x)).ToArray();
         _inputSettings = inputs;
     }
 
-    public bool HasInputs(IReadOnlyList<BassShakerInputSettings> inputs)
+    public bool HasInputs(double deviceVolume, IReadOnlyList<BassShakerInputSettings> inputs)
     {
         var current = _inputSettings;
-        return current.Count == inputs.Count
+        return _deviceVolume == deviceVolume
+            && current.Count == inputs.Count
             && current.SequenceEqual(inputs, ReferenceEqualityComparer.Instance);
     }
 
@@ -73,10 +77,12 @@ internal sealed class BassShakerOutput : IDisposable
     {
         var channels = _channels;
         var outputSamples = (float*)output;
+        var deviceVolume = Volatile.Read(ref _deviceVolume);
 
         for (var frame = 0u; frame < frameCount; frame++)
         {
-            var sample = 0.0;
+            var leftSample = 0.0;
+            var rightSample = 0.0;
             foreach (var channel in channels)
             {
                 var targetGain = channel.Settings.IsEnabled
@@ -88,13 +94,28 @@ internal sealed class BassShakerOutput : IDisposable
                 {
                     channel.Phase -= TwoPi;
                 }
-                sample += channel.SmoothedGain * Math.Sin(channel.Phase);
+
+                var value = channel.SmoothedGain * Math.Sin(channel.Phase);
+                switch (channel.Settings.Channel)
+                {
+                    case BassShakerChannel.Right:
+                        rightSample += value;
+                        break;
+                    case BassShakerChannel.Left:
+                        leftSample += value;
+                        break;
+                    default:
+                        leftSample += value;
+                        rightSample += value;
+                        break;
+                }
             }
 
-            var clampedSample = (float)Math.Clamp(sample, -1, 1);
-            for (var channelIndex = 0; channelIndex < _channelCount; channelIndex++)
+            var frameIndex = frame * _channelCount;
+            outputSamples[frameIndex] = (float)Math.Clamp(leftSample * deviceVolume, -1, 1);
+            if (_channelCount == 2)
             {
-                outputSamples[frame * _channelCount + channelIndex] = clampedSample;
+                outputSamples[frameIndex + 1] = (float)Math.Clamp(rightSample * deviceVolume, -1, 1);
             }
         }
 

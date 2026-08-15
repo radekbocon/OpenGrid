@@ -136,6 +136,35 @@
                     IsChecked="{Binding IsBassShakerEnabled}" />
             </Grid>
 
+            <!--  Global volume  -->
+            <Grid
+                ColumnDefinitions="140,*"
+                ColumnSpacing="12"
+                RowDefinitions="Auto">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Volume" />
+                <Grid
+                    Grid.Column="1"
+                    ColumnDefinitions="*,Auto"
+                    ColumnSpacing="12">
+                    <Slider
+                        Grid.Column="0"
+                        Minimum="0"
+                        Maximum="100"
+                        Value="{Binding Volume}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        MinWidth="44"
+                        VerticalAlignment="Center"
+                        Classes="Body2"
+                        Text="{Binding Volume, StringFormat='{}{0:0}%'}" />
+                </Grid>
+            </Grid>
+
             <!--  Configured telemetry inputs  -->
             <ItemsControl ItemsSource="{Binding BassShakerInputs}">
                 <ItemsControl.ItemTemplate>
@@ -166,6 +195,25 @@
                                         ToolTip.Tip="Remove input">
                                         <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
                                     </Button>
+                                </Grid>
+
+                                <!--  Channel  -->
+                                <Grid
+                                    ColumnDefinitions="110,*"
+                                    ColumnSpacing="12">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Body2"
+                                        Opacity="0.6"
+                                        Text="Channel" />
+                                    <ComboBox
+                                        Grid.Column="1"
+                                        MinWidth="120"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        ItemsSource="{x:Static viewModels:BassShakerInputViewModel.AvailableChannels}"
+                                        SelectedItem="{Binding Channel}" />
                                 </Grid>
 
                                 <!--  Volume  -->
@@ -224,7 +272,7 @@
                                     </Grid>
                                 </Grid>
 
-                                <!--  Min RPM (percent of telemetry max)  -->
+                                <!--  Min activation threshold  -->
                                 <Grid
                                     ColumnDefinitions="110,*"
                                     ColumnSpacing="12">
@@ -233,7 +281,7 @@
                                         VerticalAlignment="Center"
                                         Classes="Body2"
                                         Opacity="0.6"
-                                        Text="Min RPM %" />
+                                        Text="Min %" />
                                     <Grid
                                         Grid.Column="1"
                                         ColumnDefinitions="*,Auto"
@@ -242,17 +290,17 @@
                                             Grid.Column="0"
                                             Minimum="0"
                                             Maximum="100"
-                                            Value="{Binding MinRpmPercent}" />
+                                            Value="{Binding MinPercent}" />
                                         <TextBlock
                                             Grid.Column="1"
                                             MinWidth="44"
                                             VerticalAlignment="Center"
                                             Classes="Body2"
-                                            Text="{Binding MinRpmPercent, StringFormat='{}{0:0}%'}" />
+                                            Text="{Binding MinPercent, StringFormat='{}{0:0}%'}" />
                                     </Grid>
                                 </Grid>
 
-                                <!--  Max RPM (percent of telemetry max)  -->
+                                <!--  Max activation threshold  -->
                                 <Grid
                                     ColumnDefinitions="110,*"
                                     ColumnSpacing="12">
@@ -261,7 +309,7 @@
                                         VerticalAlignment="Center"
                                         Classes="Body2"
                                         Opacity="0.6"
-                                        Text="Max RPM %" />
+                                        Text="Max %" />
                                     <Grid
                                         Grid.Column="1"
                                         ColumnDefinitions="*,Auto"
@@ -270,13 +318,13 @@
                                             Grid.Column="0"
                                             Minimum="0"
                                             Maximum="100"
-                                            Value="{Binding MaxRpmPercent}" />
+                                            Value="{Binding MaxPercent}" />
                                         <TextBlock
                                             Grid.Column="1"
                                             MinWidth="44"
                                             VerticalAlignment="Center"
                                             Classes="Body2"
-                                            Text="{Binding MaxRpmPercent, StringFormat='{}{0:0}%'}" />
+                                            Text="{Binding MaxPercent, StringFormat='{}{0:0}%'}" />
                                     </Grid>
                                 </Grid>
                             </StackPanel>
