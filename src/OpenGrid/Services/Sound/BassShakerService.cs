@@ -26,6 +26,7 @@ public sealed class BassShakerService : IBassShakerService, IDisposable
         _telemetryService = telemetryService;
         _deviceService = deviceService;
         _telemetryService.TelemetryReceived += OnTelemetryReceived;
+        _telemetryService.TelemetryStatusChanged += OnTelemetryStatusChanged;
 
         lock (_sync)
         {
@@ -129,6 +130,22 @@ public sealed class BassShakerService : IBassShakerService, IDisposable
         }
     }
 
+    private void OnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus status)
+    {
+        if (status == TelemetryConnectionStatus.Connected)
+        {
+            return;
+        }
+
+        lock (_sync)
+        {
+            foreach (var output in _outputs.Values)
+            {
+                output.ClearTelemetry();
+            }
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -138,6 +155,7 @@ public sealed class BassShakerService : IBassShakerService, IDisposable
         _disposed = true;
 
         _telemetryService.TelemetryReceived -= OnTelemetryReceived;
+        _telemetryService.TelemetryStatusChanged -= OnTelemetryStatusChanged;
 
         lock (_sync)
         {

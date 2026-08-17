@@ -67,6 +67,14 @@ internal sealed class BassShakerOutput : IDisposable
         }
     }
 
+    public void ClearTelemetry()
+    {
+        foreach (var channel in _channels)
+        {
+            Volatile.Write(ref channel.Normalized, 0);
+        }
+    }
+
     private unsafe StreamCallbackResult OnAudioCallback(
         IntPtr input,
         IntPtr output,
