@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DialogHostAvalonia;
+using OpenGrid.Controls;
 using OpenGrid.Models;
 
 namespace OpenGrid.ViewModels;
@@ -93,8 +95,16 @@ public partial class BassShakerInputViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Remove()
+    private async Task RemoveAsync()
     {
+        var confirmDialog = new ConfirmDialog("Remove this effect?");
+        await DialogHost.Show(confirmDialog);
+
+        if (!confirmDialog.Result)
+        {
+            return;
+        }
+        
         _onRemove(this);
     }
 }
