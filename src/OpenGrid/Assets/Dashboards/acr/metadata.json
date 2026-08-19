@@ -1,0 +1,9 @@
+{
+  "name": "Minimal ACR",
+  "description": "Gear and shift indicator, with maximum RPM autodetection.",
+  "version": "1.0",
+  "type": "dashboard",
+  "author": "jotomo",
+  "width": 1280,
+  "height": 720
+}

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Racing Dashboard</title>
+    <script src="/framework/opengrid.js"></script>
+    <script src="/framework/opengrid-ui.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #111;
+        }
+
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dash {
+            flex-shrink: 0;
+            width: 1280px;
+            height: 720px;
+            background: #000;
+            padding: 12px;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: 650px
+        }
+
+        .dash > * {
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .gear {
+            width: 450px;
+            height: 600px;
+            border-radius: 30px ;
+            background: black;
+            color: white;
+            font-size: 550px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="dash">
+    <div class="center" style="grid-column:2;grid-row:1">
+        <div class="gear" id="gearDisp">-</div>
+    </div>
+</div>
+
+<div id="status" style="display:none"></div>
+
+<script>
+    let currentRpm = 0, maxRpm = 4000, redlineRpm = 3600, speedKmh = 0;
+
+    function fitToViewport() {
+        const d = document.querySelector('.dash');
+        const s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+        d.style.transform = 'scale(' + s + ')';
+        d.style.transformOrigin = 'center';
+    }
+
+    window.addEventListener('resize', fitToViewport);
+    fitToViewport();
+
+    function updateMaxRpmAndRedlineRpm() {
+        // Detect maximum RPM from revving the engine at the start. Doing this at speed, maxRpm
+        // can be falsely increased when downshifting early and overrevving the engine.
+        // Since neither distance nor time are available at this time, it's not possible to infer
+        // the beginning of the stage, with potentially another car with a different maxRpm, which
+        // requires resetting autodetection.
+        // TODO When distance or time become available, reset detection if either values changes back to zero.
+        //      For this, compare distance in onTelemetry callback and reset maxRpm when distance went back to zero.
+        if (currentRpm >= maxRpm && speedKmh < 1) {
+            maxRpm = currentRpm;
+            redlineRpm = currentRpm * 0.9;
+            return true;
+        }        
+        return false;
+    }
+    function renderFrame() {
+        const maxRpmUpdated = updateMaxRpmAndRedlineRpm();
+        const gearEl = document.getElementById('gearDisp');
+        if (!maxRpmUpdated && currentRpm >= redlineRpm) {
+            gearEl.style.background = '#f00';
+        } else {
+            gearEl.style.background = '#000';
+        }
+    }
+
+    function animationLoop() {
+        renderFrame();
+        requestAnimationFrame(animationLoop);
+    }
+
+    OpenGrid.onTelemetry = function (record) {
+        document.getElementById('gearDisp').textContent = record.gear || 'N';
+        currentRpm = record.engineRpm || 0;
+        speedKmh = record.speedKmh;
+    };
+
+    OpenGrid.onConnected = function () {
+    };
+    OpenGrid.onDisconnected = function () {
+    };
+    OpenGrid.connect();
+    animationLoop();
+</script>
+</body>
+</html>
