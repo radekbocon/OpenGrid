@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using PortAudioSharp;
 using Serilog;
 
@@ -38,6 +39,9 @@ internal sealed class PortAudioDeviceEnumerator
         for (var index = 0; index < PortAudio.DeviceCount; index++)
         {
             var info = PortAudio.GetDeviceInfo(index);
+            if ((PaHostApiTypeId)info.hostApi == PaHostApiTypeId.PaInDevelopment)
+                continue;
+            
             if (info.maxOutputChannels <= 0)
                 continue;
 
@@ -58,4 +62,26 @@ internal sealed class SoundDeviceInfo
     public required string Id { get; init; }
     public required string Name { get; init; }
     public string? Description { get; init; }
+}
+
+[SuppressMessage("ReSharper", "UnusedMember.Global")]
+public enum PaHostApiTypeId
+{
+    PaInDevelopment = 0, /* use while developing support for a new host API */
+    PaDirectSound = 1,
+    PaMme = 2,
+    PaAsio = 3,
+    PaSoundManager = 4,
+    PaCoreAudio = 5,
+    PaOss = 7,
+    PaAlsa = 8,
+    PaAl = 9,
+    PaBeOs = 10,
+    PaWdmks = 11,
+    PaJack = 12,
+    PaWasapi = 13,
+    PaAudioScienceHpi = 14,
+    PaAudioIo = 15,
+    PaPulseAudio = 16,
+    PaSndio = 17,
 }
