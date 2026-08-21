@@ -145,158 +145,156 @@
                 <ItemsControl ItemsSource="{Binding BassShakerInputs}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="viewModels:BassShakerInputViewModel">
-                            <Border Margin="2,8" CornerRadius="4">
-                                <Expander Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}">
-                                    <Expander.Header>
-                                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                            <TextBlock
-                                                Grid.Column="0"
-                                                VerticalAlignment="Center"
-                                                Classes="Subtitle1"
-                                                FontWeight="SemiBold"
-                                                Text="{Binding InputName}" />
-                                            <ToggleSwitch
-                                                Grid.Column="1"
-                                                VerticalAlignment="Center"
-                                                IsChecked="{Binding IsEnabled}" />
-                                            <Button
-                                                Grid.Column="2"
-                                                Width="24"
-                                                Height="24"
-                                                Padding="0"
-                                                VerticalAlignment="Center"
-                                                Classes="Flat"
-                                                Command="{Binding RemoveCommand}"
-                                                ToolTip.Tip="Remove input">
-                                                <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
-                                            </Button>
-                                        </Grid>
-                                    </Expander.Header>
+                            <Expander Margin="2,8" Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}">
+                                <Expander.Header>
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Classes="Subtitle1"
+                                            FontWeight="SemiBold"
+                                            Text="{Binding InputName}" />
+                                        <ToggleSwitch
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            IsChecked="{Binding IsEnabled}" />
+                                        <Button
+                                            Grid.Column="2"
+                                            Width="24"
+                                            Height="24"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Classes="Flat"
+                                            Command="{Binding RemoveCommand}"
+                                            ToolTip.Tip="Remove Effect">
+                                            <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
+                                        </Button>
+                                    </Grid>
+                                </Expander.Header>
 
-                                    <StackPanel Margin="16" Spacing="10">
-                                        <!--  Channel  -->
-                                        <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
-                                            <TextBlock
+                                <StackPanel Margin="16,8,16,16" Spacing="10">
+                                    <!--  Channel  -->
+                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Classes="Body2"
+                                            Opacity="0.6"
+                                            Text="Channel" />
+                                        <ComboBox
+                                            Grid.Column="1"
+                                            MinWidth="120"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            ItemsSource="{x:Static viewModels:BassShakerInputViewModel.AvailableChannels}"
+                                            SelectedItem="{Binding Channel}" />
+                                    </Grid>
+
+                                    <!--  Volume  -->
+                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Classes="Body2"
+                                            Opacity="0.6"
+                                            Text="Volume" />
+                                        <Grid
+                                            Grid.Column="1"
+                                            ColumnDefinitions="*,Auto"
+                                            ColumnSpacing="12">
+                                            <Slider
                                                 Grid.Column="0"
+                                                Maximum="100"
+                                                Minimum="0"
+                                                Value="{Binding Volume}" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                MinWidth="44"
                                                 VerticalAlignment="Center"
                                                 Classes="Body2"
-                                                Opacity="0.6"
-                                                Text="Channel" />
-                                            <ComboBox
-                                                Grid.Column="1"
-                                                MinWidth="120"
-                                                HorizontalAlignment="Left"
-                                                VerticalAlignment="Center"
-                                                ItemsSource="{x:Static viewModels:BassShakerInputViewModel.AvailableChannels}"
-                                                SelectedItem="{Binding Channel}" />
+                                                Text="{Binding Volume, StringFormat='{}{0:0}%'}" />
                                         </Grid>
+                                    </Grid>
 
-                                        <!--  Volume  -->
-                                        <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
-                                            <TextBlock
+                                    <!--  Frequency  -->
+                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Classes="Body2"
+                                            Opacity="0.6"
+                                            Text="Frequency" />
+                                        <Grid
+                                            Grid.Column="1"
+                                            ColumnDefinitions="*,Auto"
+                                            ColumnSpacing="12">
+                                            <Slider
                                                 Grid.Column="0"
+                                                Maximum="120"
+                                                Minimum="20"
+                                                Value="{Binding Frequency}" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                MinWidth="44"
                                                 VerticalAlignment="Center"
                                                 Classes="Body2"
-                                                Opacity="0.6"
-                                                Text="Volume" />
-                                            <Grid
-                                                Grid.Column="1"
-                                                ColumnDefinitions="*,Auto"
-                                                ColumnSpacing="12">
-                                                <Slider
-                                                    Grid.Column="0"
-                                                    Maximum="100"
-                                                    Minimum="0"
-                                                    Value="{Binding Volume}" />
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    MinWidth="44"
-                                                    VerticalAlignment="Center"
-                                                    Classes="Body2"
-                                                    Text="{Binding Volume, StringFormat='{}{0:0}%'}" />
-                                            </Grid>
+                                                Text="{Binding Frequency, StringFormat='{}{0:0} Hz'}" />
                                         </Grid>
+                                    </Grid>
 
-                                        <!--  Frequency  -->
-                                        <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
-                                            <TextBlock
+                                    <!--  Min activation threshold  -->
+                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Classes="Body2"
+                                            Opacity="0.6"
+                                            Text="Min %" />
+                                        <Grid
+                                            Grid.Column="1"
+                                            ColumnDefinitions="*,Auto"
+                                            ColumnSpacing="12">
+                                            <Slider
                                                 Grid.Column="0"
+                                                Maximum="100"
+                                                Minimum="0"
+                                                Value="{Binding MinPercent}" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                MinWidth="44"
                                                 VerticalAlignment="Center"
                                                 Classes="Body2"
-                                                Opacity="0.6"
-                                                Text="Frequency" />
-                                            <Grid
-                                                Grid.Column="1"
-                                                ColumnDefinitions="*,Auto"
-                                                ColumnSpacing="12">
-                                                <Slider
-                                                    Grid.Column="0"
-                                                    Maximum="120"
-                                                    Minimum="20"
-                                                    Value="{Binding Frequency}" />
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    MinWidth="44"
-                                                    VerticalAlignment="Center"
-                                                    Classes="Body2"
-                                                    Text="{Binding Frequency, StringFormat='{}{0:0} Hz'}" />
-                                            </Grid>
+                                                Text="{Binding MinPercent, StringFormat='{}{0:0}%'}" />
                                         </Grid>
+                                    </Grid>
 
-                                        <!--  Min activation threshold  -->
-                                        <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
-                                            <TextBlock
+                                    <!--  Max activation threshold  -->
+                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Classes="Body2"
+                                            Opacity="0.6"
+                                            Text="Max %" />
+                                        <Grid
+                                            Grid.Column="1"
+                                            ColumnDefinitions="*,Auto"
+                                            ColumnSpacing="12">
+                                            <Slider
                                                 Grid.Column="0"
+                                                Maximum="100"
+                                                Minimum="0"
+                                                Value="{Binding MaxPercent}" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                MinWidth="44"
                                                 VerticalAlignment="Center"
                                                 Classes="Body2"
-                                                Opacity="0.6"
-                                                Text="Min %" />
-                                            <Grid
-                                                Grid.Column="1"
-                                                ColumnDefinitions="*,Auto"
-                                                ColumnSpacing="12">
-                                                <Slider
-                                                    Grid.Column="0"
-                                                    Maximum="100"
-                                                    Minimum="0"
-                                                    Value="{Binding MinPercent}" />
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    MinWidth="44"
-                                                    VerticalAlignment="Center"
-                                                    Classes="Body2"
-                                                    Text="{Binding MinPercent, StringFormat='{}{0:0}%'}" />
-                                            </Grid>
+                                                Text="{Binding MaxPercent, StringFormat='{}{0:0}%'}" />
                                         </Grid>
-
-                                        <!--  Max activation threshold  -->
-                                        <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
-                                            <TextBlock
-                                                Grid.Column="0"
-                                                VerticalAlignment="Center"
-                                                Classes="Body2"
-                                                Opacity="0.6"
-                                                Text="Max %" />
-                                            <Grid
-                                                Grid.Column="1"
-                                                ColumnDefinitions="*,Auto"
-                                                ColumnSpacing="12">
-                                                <Slider
-                                                    Grid.Column="0"
-                                                    Maximum="100"
-                                                    Minimum="0"
-                                                    Value="{Binding MaxPercent}" />
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    MinWidth="44"
-                                                    VerticalAlignment="Center"
-                                                    Classes="Body2"
-                                                    Text="{Binding MaxPercent, StringFormat='{}{0:0}%'}" />
-                                            </Grid>
-                                        </Grid>
-                                    </StackPanel>
-                                </Expander>
-                            </Border>
+                                    </Grid>
+                                </StackPanel>
+                            </Expander>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -306,7 +304,7 @@
                     Classes="Body2"
                     IsVisible="{Binding !HasBassShakerInputs}"
                     Opacity="0.5"
-                    Text="No vibration inputs configured yet." />
+                    Text="No vibration effects configured yet." />
             </StackPanel>
 
             <!--  Add input  -->
@@ -319,7 +317,7 @@
                     VerticalAlignment="Center"
                     Classes="Subtitle1"
                     Opacity="0.6"
-                    Text="Add Input" />
+                    Text="Add Effect" />
                 <StackPanel
                     Grid.Column="1"
                     Orientation="Horizontal"
