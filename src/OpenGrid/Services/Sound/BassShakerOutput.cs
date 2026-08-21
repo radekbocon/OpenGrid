@@ -1,46 +1,64 @@
+using System.Runtime.InteropServices;
 using OpenGrid.Models;
 using OpenGrid.Models.Telemetry;
-using PortAudioSharp;
+using SDL3;
 using Serilog;
-using PortAudioStream = PortAudioSharp.Stream;
 
 namespace OpenGrid.Services.Sound;
 
 internal sealed class BassShakerOutput : IDisposable
 {
-    private const uint FramesPerBuffer = 256;
     private const double SmoothingTimeConstantSeconds = 0.004;
     private const double TwoPi = Math.PI * 2;
+    private const int DefaultSampleRate = 48000;
 
-    private readonly PortAudioStream _stream;
+    private readonly SDL.AudioStreamCallback _audioCallback;
     private readonly int _channelCount;
     private readonly double _sampleRate;
     private readonly double _smoothingAlpha;
+    private IntPtr _stream;
+    private float[] _buffer = [];
     private volatile InputChannel[] _channels;
     private double _deviceVolume;
     private IReadOnlyList<BassShakerInputSettings> _inputSettings;
 
-    public BassShakerOutput(int deviceIndex, double deviceVolume, IReadOnlyList<BassShakerInputSettings> inputs)
+    public BassShakerOutput(string deviceId, double deviceVolume, IReadOnlyList<BassShakerInputSettings> inputs)
     {
-        var deviceInfo = PortAudio.GetDeviceInfo(deviceIndex);
-        _sampleRate = deviceInfo.defaultSampleRate;
-        _channelCount = Math.Clamp(deviceInfo.maxOutputChannels, 1, 2);
+        var deviceInstance = ResolveDeviceInstance(deviceId);
+
+        if (!SDL.GetAudioDeviceFormat(deviceInstance, out var deviceSpec, out _))
+        {
+            throw new InvalidOperationException($"Failed to query audio device format for '{deviceId}': {SDL.GetError()}");
+        }
+
+        _sampleRate = deviceSpec.Freq > 0 ? deviceSpec.Freq : DefaultSampleRate;
+        _channelCount = Math.Clamp(deviceSpec.Channels, 1, 2);
         _smoothingAlpha = 1 - Math.Exp(-1 / (SmoothingTimeConstantSeconds * _sampleRate));
         Volatile.Write(ref _deviceVolume, deviceVolume);
         _channels = inputs.Select(x => new InputChannel(x)).ToArray();
         _inputSettings = inputs;
+        _audioCallback = OnAudioCallback;
 
-        var outputParameters = new StreamParameters
+        var spec = new SDL.AudioSpec
         {
-            device = deviceIndex,
-            channelCount = _channelCount,
-            sampleFormat = SampleFormat.Float32,
-            suggestedLatency = deviceInfo.defaultLowOutputLatency,
-            hostApiSpecificStreamInfo = IntPtr.Zero,
+            Format = SDL.AudioFormat.AudioF32LE,
+            Channels = _channelCount,
+            Freq = (int)_sampleRate,
         };
 
-        _stream = new PortAudioStream(null, outputParameters, _sampleRate, FramesPerBuffer, StreamFlags.NoFlag, OnAudioCallback, this);
-        _stream.Start();
+        _stream = SDL.OpenAudioDeviceStream(deviceInstance, ref spec, _audioCallback, IntPtr.Zero);
+        if (_stream == IntPtr.Zero)
+        {
+            throw new InvalidOperationException($"Failed to open audio stream for '{deviceId}': {SDL.GetError()}");
+        }
+
+        if (!SDL.ResumeAudioStreamDevice(_stream))
+        {
+            var error = SDL.GetError();
+            SDL.DestroyAudioStream(_stream);
+            _stream = IntPtr.Zero;
+            throw new InvalidOperationException($"Failed to start audio stream for '{deviceId}': {error}");
+        }
     }
 
     public void Reconfigure(double deviceVolume, IReadOnlyList<BassShakerInputSettings> inputs)
@@ -75,19 +93,21 @@ internal sealed class BassShakerOutput : IDisposable
         }
     }
 
-    private unsafe StreamCallbackResult OnAudioCallback(
-        IntPtr input,
-        IntPtr output,
-        uint frameCount,
-        ref StreamCallbackTimeInfo timeInfo,
-        StreamCallbackFlags statusFlags,
-        IntPtr userDataPtr)
+    private void OnAudioCallback(IntPtr userdata, IntPtr stream, int additionalAmount, int totalAmount)
     {
+        var bytesPerFrame = _channelCount * sizeof(float);
+        var frameCount = additionalAmount / bytesPerFrame;
+        if (frameCount <= 0)
+        {
+            return;
+        }
+
+        var sampleCount = frameCount * _channelCount;
+        var buffer = _buffer.Length >= sampleCount ? _buffer : _buffer = new float[sampleCount];
         var channels = _channels;
-        var outputSamples = (float*)output;
         var deviceVolume = Volatile.Read(ref _deviceVolume);
 
-        for (var frame = 0u; frame < frameCount; frame++)
+        for (var frame = 0; frame < frameCount; frame++)
         {
             var leftSample = 0.0;
             var rightSample = 0.0;
@@ -120,21 +140,46 @@ internal sealed class BassShakerOutput : IDisposable
             }
 
             var frameIndex = frame * _channelCount;
-            outputSamples[frameIndex] = (float)Math.Clamp(leftSample * deviceVolume, -1, 1);
+            buffer[frameIndex] = (float)Math.Clamp(leftSample * deviceVolume, -1, 1);
             if (_channelCount == 2)
             {
-                outputSamples[frameIndex + 1] = (float)Math.Clamp(rightSample * deviceVolume, -1, 1);
+                buffer[frameIndex + 1] = (float)Math.Clamp(rightSample * deviceVolume, -1, 1);
             }
         }
 
-        return StreamCallbackResult.Continue;
+        SDL.PutAudioStreamData(stream, MemoryMarshal.Cast<float, byte>(buffer.AsSpan(0, sampleCount)), sampleCount * sizeof(float));
+    }
+
+    private static uint ResolveDeviceInstance(string deviceId)
+    {
+        var deviceIds = SDL.GetAudioPlaybackDevices(out var count) ?? [];
+        foreach (var id in deviceIds)
+        {
+            if (!SDL.IsAudioDevicePhysical(id))
+            {
+                continue;
+            }
+
+            if (string.Equals(SDL.GetAudioDeviceName(id), deviceId, StringComparison.OrdinalIgnoreCase))
+            {
+                return id;
+            }
+        }
+
+        throw new InvalidOperationException($"Audio output device '{deviceId}' not found");
     }
 
     public void Dispose()
     {
+        var stream = Interlocked.Exchange(ref _stream, IntPtr.Zero);
+        if (stream == IntPtr.Zero)
+        {
+            return;
+        }
+
         try
         {
-            _stream.Stop();
+            SDL.PauseAudioStreamDevice(stream);
         }
         catch (Exception ex)
         {
@@ -143,7 +188,7 @@ internal sealed class BassShakerOutput : IDisposable
 
         try
         {
-            _stream.Dispose();
+            SDL.DestroyAudioStream(stream);
         }
         catch (Exception ex)
         {

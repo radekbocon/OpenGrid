@@ -1,7 +1,6 @@
 using OpenGrid.Models;
 using OpenGrid.Services.Devices;
 using OpenGrid.Services.Telemetry;
-using PortAudioSharp;
 using Serilog;
 
 namespace OpenGrid.Services.Sound;
@@ -18,7 +17,6 @@ public sealed class BassShakerService : IBassShakerService, IDisposable
     private readonly IDeviceService _deviceService;
     private readonly Dictionary<string, BassShakerOutput> _outputs = [];
     private readonly object _sync = new();
-    private bool _portAudioReady;
     private bool _disposed;
 
     public BassShakerService(ITelemetryService telemetryService, IDeviceService deviceService)
@@ -63,7 +61,7 @@ public sealed class BassShakerService : IBassShakerService, IDisposable
     {
         var bassShaker = device.BassShaker;
 
-        if (!device.IsEnabled || bassShaker is not { IsEnabled: true } || bassShaker.Inputs.Count == 0)
+        if (!device.IsEnabled || bassShaker is null || bassShaker.Inputs.Count == 0)
         {
             RemoveOutput(device.Id);
             return;
@@ -71,12 +69,6 @@ public sealed class BassShakerService : IBassShakerService, IDisposable
 
         var enabledInputs = bassShaker.Inputs.Where(x => x.IsEnabled).ToList();
         if (enabledInputs.Count == 0)
-        {
-            RemoveOutput(device.Id);
-            return;
-        }
-
-        if (!int.TryParse(device.Id, out var deviceIndex))
         {
             RemoveOutput(device.Id);
             return;
@@ -93,13 +85,9 @@ public sealed class BassShakerService : IBassShakerService, IDisposable
 
         try
         {
-            if (!_portAudioReady)
-            {
-                PortAudio.Initialize();
-                _portAudioReady = true;
-            }
+            SdlAudio.EnsureInitialized();
 
-            var output = new BassShakerOutput(deviceIndex, bassShaker.Volume, enabledInputs);
+            var output = new BassShakerOutput(device.Id, bassShaker.Volume, enabledInputs);
             _outputs[device.Id] = output;
             Log.Information("Started bass shaker output on device {Device}", device.Name);
         }

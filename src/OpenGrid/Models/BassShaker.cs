@@ -15,7 +15,6 @@ public enum BassShakerChannel
 
 public class BassShakerConfiguration
 {
-    public bool IsEnabled { get; set; }
     public double Volume { get; set; } = 1.0;
     public List<BassShakerInputSettings> Inputs { get; set; } = [];
 }
