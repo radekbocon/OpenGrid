@@ -126,6 +126,8 @@ public class DirtRallyTelemetryClient : ITelemetryClient
                 CurrentGear = MapGear((int)packet.Gear),
                 EngineRpm = packet.EngineRPM * 10f,
                 MaxRpm = packet.MaxRPM * 10f,
+                Abs = packet.AntiLockBrakes,
+                Tc = packet.TractionControl,
                 LapTime = TimeSpan.FromSeconds(packet.LapTime),
                 LastLapTime = TimeSpan.FromSeconds(packet.LastLapTime),
                 CurrentLap = (int)packet.Lap,

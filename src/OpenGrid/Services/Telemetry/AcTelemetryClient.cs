@@ -105,6 +105,8 @@ public class AcTelemetryClient : ITelemetryClient
                 AbsSetting = graphicsData.Value.ABS,
                 Tc1Setting = graphicsData.Value.TC,
                 Tc2Setting = graphicsData.Value.TCCUT,
+                Abs = physicsData.Value.Abs,
+                Tc = physicsData.Value.TC,
                 DeltaLapTime = TimeSpan.FromMilliseconds(graphicsData.Value.DeltaLapTime),
                 Position = graphicsData.Value.Position,
                 EngineMap = graphicsData.Value.EngineMap + 1,

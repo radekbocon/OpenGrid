@@ -46,6 +46,8 @@ public class SharedMemoryBridgeLauncher
             };
             startInfo.EnvironmentVariables["WINEPREFIX"] = winePrefix;
             startInfo.EnvironmentVariables["WINEFSYNC"] = "1";
+            startInfo.EnvironmentVariables.Remove("DOTNET_DiagnosticPorts");
+            startInfo.EnvironmentVariables.Remove("DOTNET_DefaultDiagnosticPortSuspend");
 
             var wineserverPath = ProtonHelper.FindProtonWineserver(compatDataDir);
             if (wineserverPath != null)
@@ -63,6 +65,12 @@ public class SharedMemoryBridgeLauncher
             _bridgeProcess = Process.Start(startInfo);
             if (_bridgeProcess != null)
             {
+#if DEBUG
+                _bridgeProcess.OutputDataReceived += OnBridgeOutputDataReceived;
+                _bridgeProcess.ErrorDataReceived += OnBridgeErrorDataReceived;
+                _bridgeProcess.BeginOutputReadLine();
+                _bridgeProcess.BeginErrorReadLine(); 
+#endif
                 await Task.Delay(2000, cancellationToken);
             }
         }
@@ -74,6 +82,22 @@ public class SharedMemoryBridgeLauncher
         {
             Log.Error(exception, "Error launching bridge: {0}", exception.Message);
             throw;
+        }
+    }
+
+    private static void OnBridgeOutputDataReceived(object sender, DataReceivedEventArgs e)
+    {
+        if (e.Data != null)
+        {
+            Log.Information("Bridge stdout: {Line}", e.Data);
+        }
+    }
+
+    private static void OnBridgeErrorDataReceived(object sender, DataReceivedEventArgs e)
+    {
+        if (e.Data != null)
+        {
+            Log.Warning("Bridge stderr: {Line}", e.Data);
         }
     }
 
@@ -91,6 +115,8 @@ public class SharedMemoryBridgeLauncher
             {
                 Log.Error(ex, "Error killing bridge process");
             }
+            _bridgeProcess.OutputDataReceived -= OnBridgeOutputDataReceived;
+            _bridgeProcess.ErrorDataReceived -= OnBridgeErrorDataReceived;
             _bridgeProcess.Dispose();
             _bridgeProcess = null;
         }

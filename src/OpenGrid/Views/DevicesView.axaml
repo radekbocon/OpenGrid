@@ -67,11 +67,11 @@
                                         Margin="8"
                                         ColumnDefinitions="Auto,*,Auto"
                                         ColumnSpacing="8">
-                                        <avalonia:MaterialIcon
-                                            Grid.Column="0"
-                                            VerticalAlignment="Center"
-                                            IconSize="24"
-                                            Kind="Devices" />
+                                        <Panel Grid.Column="0" VerticalAlignment="Center">
+                                            <avalonia:MaterialIcon
+                                                IconSize="24"
+                                                Kind="{Binding IconKind}" />
+                                        </Panel>
                                         <StackPanel
                                             Grid.Column="1"
                                             VerticalAlignment="Center"
@@ -121,8 +121,11 @@
                 <materialControls:Card Grid.Column="1" IsVisible="{Binding IsDeviceSelected}">
                     <ContentControl Content="{Binding SelectedDevice}">
                         <ContentControl.DataTemplates>
-                            <DataTemplate x:DataType="vm:DeviceItemViewModel">
-                                <views:DeviceItemView DataContext="{Binding}" />
+                            <DataTemplate x:DataType="vm:DisplayDeviceItemViewModel">
+                                <views:DisplayDeviceItemView DataContext="{Binding}" />
+                            </DataTemplate>
+                            <DataTemplate x:DataType="vm:SoundDeviceItemViewModel">
+                                <views:SoundDeviceItemView DataContext="{Binding}" />
                             </DataTemplate>
                         </ContentControl.DataTemplates>
                     </ContentControl>
