@@ -112,11 +112,14 @@ public class DirtRallyTelemetryClient : ITelemetryClient
 
             var buffer = data.Length >= PacketSize ? data : PadToStructSize(data);
             var packet = MemoryMarshal.Read<DirtRallyUdpData>(buffer.AsSpan());
+            
+            var rpm = packet.EngineRPM * 10f;
+            var maxRpm = packet.MaxRPM * 10f;
 
             return new TelemetryRecord
             {
                 Timestamp = DateTime.UtcNow,
-                Car = Car.Create("dirt_rally_generic_car"),
+                Car = packet.MaxRPM != 0 ? Car.Create($"dirt_rally_car-{maxRpm}") : Car.Unknown,
                 Track = Track.Create("dirt_rally_generic_track"),
                 SpeedKmh = packet.Speed * 3.6f,
                 Gas = packet.Throttle,
@@ -124,8 +127,8 @@ public class DirtRallyTelemetryClient : ITelemetryClient
                 Clutch = packet.Clutch,
                 SteerAngle = packet.Steering,
                 CurrentGear = MapGear((int)packet.Gear),
-                EngineRpm = packet.EngineRPM * 10f,
-                MaxRpm = packet.MaxRPM * 10f,
+                EngineRpm = rpm,
+                MaxRpm = maxRpm,
                 Abs = packet.AntiLockBrakes,
                 Tc = packet.TractionControl,
                 LapTime = TimeSpan.FromSeconds(packet.LapTime),
@@ -143,8 +146,8 @@ public class DirtRallyTelemetryClient : ITelemetryClient
                 {
                     2 => TimeSpan.FromSeconds(packet.Sector1Time),
                     3 => TimeSpan.FromSeconds(packet.Sector2Time),
-                    _ => TimeSpan.Zero
-                }
+                    _ => TimeSpan.Zero,
+                },
             };
         }
         catch (Exception ex)
