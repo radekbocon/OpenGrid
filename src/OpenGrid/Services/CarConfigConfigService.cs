@@ -1,5 +1,6 @@
 using System.Text.Json;
 using OpenGrid.Models;
+using OpenGrid.Models.Telemetry;
 using OpenGrid.Services.Telemetry;
 using Serilog;
 
@@ -51,17 +52,17 @@ public sealed class CarConfigConfigService : ICarConfigService
 
     private void OnTelemetryReceived(object? sender, TelemetryEventArgs e)
     {
-        var carKey = e.Telemetry.Car.Key;
-        if (string.IsNullOrWhiteSpace(carKey) || carKey == "unknown_car")
+        var car = e.Telemetry.Car;
+        if (string.IsNullOrWhiteSpace(car.Key) || car == Car.Unknown)
             return;
 
-        if (_knownCarKeys.Contains(carKey))
+        if (_knownCarKeys.Contains(car.Key))
             return;
 
-        var existing = GetByCarKey(carKey);
+        var existing = GetByCarKey(car.Key);
         if (existing is not null)
         {
-            _knownCarKeys.Add(carKey);
+            _knownCarKeys.Add(car.Key);
             return;
         }
 
@@ -70,14 +71,14 @@ public sealed class CarConfigConfigService : ICarConfigService
 
         var profile = new CarProfile
         {
-            CarKey = carKey,
+            CarKey = car.Key,
             Name = e.Telemetry.Car.DisplayName,
             MaxRpm = maxRpm,
             RedlineRpm = (int)(maxRpm * 0.95)
         };
 
         _cars.Add(profile);
-        _knownCarKeys.Add(carKey);
+        _knownCarKeys.Add(car.Key);
         SaveToFile(profile);
         CarAdded?.Invoke(this, profile);
     }
