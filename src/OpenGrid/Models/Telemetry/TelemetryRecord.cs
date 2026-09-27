@@ -64,7 +64,9 @@ public enum Gear
     N3 = 4,
     N4 = 5,
     N5 = 6,
-    N6 = 7
+    N6 = 7,
+    N7 = 8,
+    N8 = 9,
 }
 
 public record struct TireStats(float FrontLeft, float FrontRight, float RearLeft, float RearRight)
@@ -91,7 +93,9 @@ public static class GearExtensions
             Gear.N4 => "4",
             Gear.N5 => "5",
             Gear.N6 => "6",
-            _ => ""
+            Gear.N7 => "7",
+            Gear.N8 => "8",
+            _ => "",
         };
     }
 }

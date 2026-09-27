@@ -175,8 +175,10 @@ public class DirtRallyTelemetryClient : ITelemetryClient
             3 => Gear.N3,
             4 => Gear.N4,
             5 => Gear.N5,
-            >= 6 => Gear.N6,
-            _ => Gear.N
+            6 => Gear.N6,
+            7 =>  Gear.N7,
+            8 => Gear.N8,
+            _ => Gear.N,
         };
     }
 
