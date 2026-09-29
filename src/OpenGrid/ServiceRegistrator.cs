@@ -3,6 +3,7 @@ using OpenGrid.Services;
 using OpenGrid.Services.Dashboard;
 using OpenGrid.Services.Devices;
 using OpenGrid.Services.SessionPersist;
+using OpenGrid.Services.Sound;
 using OpenGrid.Services.Telemetry;
 using OpenGrid.ViewModels;
 
@@ -26,6 +27,7 @@ public static class ServiceRegistrator
         services.AddSingleton<SteamGameManager>();
         services.AddSingleton<IDashboardService, DashboardService>();
         services.AddSingleton<IDeviceService, DeviceService>();
+        services.AddSingleton<IBassShakerService, BassShakerService>();
         services.AddSingleton<ICarConfigService, CarConfigConfigService>();
         services.AddSingleton<TelemetryWebSocketBroadcaster>();
         services.AddSingleton<DashboardHttpServer>();

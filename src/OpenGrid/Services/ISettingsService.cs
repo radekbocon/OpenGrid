@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace OpenGrid.Services;
 
 public interface ISettingsService
@@ -7,8 +5,8 @@ public interface ISettingsService
     bool MinimizeToTray { get; set; }
     string? SelectedTheme { get; set; }
     int RecordingRateHz { get; set; }
-    HashSet<int> AutoConnectGameAppIds { get; set; }
-    HashSet<int> AutoRecordingGameAppIds { get; set; }
+    ObservableSet<int> AutoConnectGameAppIds { get; }
+    ObservableSet<int> AutoRecordingGameAppIds { get; }
     void Save();
     void Load();
 }

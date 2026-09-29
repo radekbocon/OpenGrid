@@ -49,6 +49,8 @@ public class DebugTelemetryClient : ITelemetryClient
         var currentLap = (_tick / 1000) + 1;
         var currentGear = (Gear)(_tick % 8);
         var engineRpm = 0f + (float)(Math.Abs(Math.Sin(_tick * 0.01)) * 12000f);
+        var abs = Math.Clamp((brake - 0.05f) / 0.15f, 0f, 1f);
+        var tc = Math.Clamp((gas - 0.6f) / 0.35f, 0f, 1f);
         float[] temps = [
             85f + (float)_random.NextDouble() * 15f,
             87f + (float)_random.NextDouble() * 15f, 
@@ -93,6 +95,8 @@ public class DebugTelemetryClient : ITelemetryClient
             AbsSetting = (_tick / 50) % 4,
             Tc1Setting = (_tick / 30) % 12,
             Tc2Setting = (_tick / 30) % 12,
+            Abs = abs,
+            Tc = tc,
             EngineMap = (_tick / 100) % 8 + 1,
             BrakeBias = 58f + (float)Math.Sin(_tick * 0.05) * 10f,
             Distance = (float)(_tick * 1.5),

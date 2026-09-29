@@ -9,6 +9,7 @@ using OpenGrid.Views;
 using Microsoft.Extensions.DependencyInjection;
 using OpenGrid.Services;
 using OpenGrid.Services.Dashboard;
+using OpenGrid.Services.Sound;
 using OpenGrid.Services.Telemetry;
 
 namespace OpenGrid;
@@ -55,6 +56,8 @@ public class App : Application
 
             var dashboardLaunchService = Program.ServiceProvider.GetRequiredService<DashboardLauncher>();
             dashboardLaunchService.HandleTrigger(DashboardLaunchTrigger.OnAppStart);
+
+            _ = Program.ServiceProvider.GetRequiredService<IBassShakerService>();
             
 
             using var iconStream = AssetLoader.Open(new Uri("avares://OpenGrid/Assets/icon.png"));
@@ -115,6 +118,16 @@ public class App : Application
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Error during application exit cleanup");
+        }
+
+        try
+        {
+            var bassShakerService = Program.ServiceProvider.GetService<IBassShakerService>();
+            bassShakerService?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Error disposing bass shaker service");
         }
     }
 

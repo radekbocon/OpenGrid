@@ -42,16 +42,15 @@ public class DirtRallyTelemetryClient : ITelemetryClient
                 {
                     return true;
                 }
-                
+
                 await Task.Delay(1000, cancellationToken);
             }
-            
         }
         catch (Exception e)
         {
             Log.Error(e, "DirtRallyTelemetryClient: Failed to bind to UDP port {Port}", Port);
         }
-        
+
         return false;
     }
 
@@ -113,10 +112,12 @@ public class DirtRallyTelemetryClient : ITelemetryClient
             var buffer = data.Length >= PacketSize ? data : PadToStructSize(data);
             var packet = MemoryMarshal.Read<DirtRallyUdpData>(buffer.AsSpan());
 
+            var carKey = (packet.MaxRPM, packet.IdleRPM, packet.MaxGears);
+
             return new TelemetryRecord
             {
                 Timestamp = DateTime.UtcNow,
-                Car = Car.Create("dirt_rally_generic_car"),
+                Car = DirtRallyCars.Get(carKey),
                 Track = Track.Create("dirt_rally_generic_track"),
                 SpeedKmh = packet.Speed * 3.6f,
                 Gas = packet.Throttle,
@@ -126,13 +127,17 @@ public class DirtRallyTelemetryClient : ITelemetryClient
                 CurrentGear = MapGear((int)packet.Gear),
                 EngineRpm = packet.EngineRPM * 10f,
                 MaxRpm = packet.MaxRPM * 10f,
+                Abs = packet.AntiLockBrakes,
+                Tc = packet.TractionControl,
+                Fuel = packet.FuelInTank,
                 LapTime = TimeSpan.FromSeconds(packet.LapTime),
                 LastLapTime = TimeSpan.FromSeconds(packet.LastLapTime),
                 CurrentLap = (int)packet.Lap,
                 Distance = packet.Distance,
                 Position = (int)packet.RacePos,
                 SessionType = SessionType.Race,
-                TirePressures = new TireStats(packet.TirePressureFL, packet.TirePressureFR, packet.TirePressureRL, packet.TirePressureRR),
+                TirePressures = new TireStats(packet.TirePressureFL, packet.TirePressureFR, packet.TirePressureRL,
+                    packet.TirePressureRR),
                 CarPosition = new Vector3(packet.PosX, packet.PosY, packet.PosZ),
                 GForceLat = packet.GForceLat,
                 GForceLon = packet.GForceLon,
@@ -141,8 +146,8 @@ public class DirtRallyTelemetryClient : ITelemetryClient
                 {
                     2 => TimeSpan.FromSeconds(packet.Sector1Time),
                     3 => TimeSpan.FromSeconds(packet.Sector2Time),
-                    _ => TimeSpan.Zero
-                }
+                    _ => TimeSpan.Zero,
+                },
             };
         }
         catch (Exception ex)
@@ -170,8 +175,10 @@ public class DirtRallyTelemetryClient : ITelemetryClient
             3 => Gear.N3,
             4 => Gear.N4,
             5 => Gear.N5,
-            >= 6 => Gear.N6,
-            _ => Gear.N
+            6 => Gear.N6,
+            7 =>  Gear.N7,
+            8 => Gear.N8,
+            _ => Gear.N,
         };
     }
 
@@ -184,6 +191,7 @@ public class DirtRallyTelemetryClient : ITelemetryClient
                 return false;
             }
         }
+
         return true;
     }
 }
