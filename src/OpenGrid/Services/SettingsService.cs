@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Collections.Specialized;
 using System.Text.Json;
 
 namespace OpenGrid.Services;
@@ -8,11 +6,10 @@ namespace OpenGrid.Services;
 internal record UserSettings
 {
     public bool MinimizeToTray { get; set; } = true;
-    public int? DashboardPort { get; set; }
     public string? SelectedTheme { get; set; }
     public int RecordingRateHz { get; set; } = 30;
-    public HashSet<int> AutoConnectGameAppIds { get; set; } = [];
-    public HashSet<int> AutoRecordingGameAppIds { get; set; } = [];
+    public ObservableSet<int> AutoConnectGameAppIds { get; set; } = [];
+    public ObservableSet<int> AutoRecordingGameAppIds { get; set; } = [];
 }
 
 public sealed class SettingsService : ISettingsService
@@ -56,7 +53,7 @@ public sealed class SettingsService : ISettingsService
         }
     }
 
-    public HashSet<int> AutoConnectGameAppIds
+    public ObservableSet<int> AutoConnectGameAppIds
     {
         get => _userSettings.AutoConnectGameAppIds;
         set
@@ -66,7 +63,7 @@ public sealed class SettingsService : ISettingsService
         }
     }
 
-    public HashSet<int> AutoRecordingGameAppIds
+    public ObservableSet<int> AutoRecordingGameAppIds
     {
         get => _userSettings.AutoRecordingGameAppIds;
         set
@@ -103,11 +100,23 @@ public sealed class SettingsService : ISettingsService
             }
             var json = File.ReadAllText(SettingsPath);
             var settings = JsonSerializer.Deserialize<UserSettings>(json);
+            
+            _userSettings.AutoConnectGameAppIds.CollectionChanged -= OnSettingsCollectionChanged;
+            _userSettings.AutoRecordingGameAppIds.CollectionChanged -= OnSettingsCollectionChanged;
+            
             _userSettings = settings ?? _userSettings;
+            
+            _userSettings.AutoConnectGameAppIds.CollectionChanged += OnSettingsCollectionChanged;
+            _userSettings.AutoRecordingGameAppIds.CollectionChanged += OnSettingsCollectionChanged;
         }
         catch (Exception ex)
         {
             Serilog.Log.Warning(ex, "Failed to load settings");
         }
+    }
+
+    private void OnSettingsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        Save();
     }
 }

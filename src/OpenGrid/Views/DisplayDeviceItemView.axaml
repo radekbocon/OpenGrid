@@ -1,11 +1,11 @@
 <UserControl
-    x:Class="OpenGrid.Views.DeviceItemView"
+    x:Class="OpenGrid.Views.DisplayDeviceItemView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:converters="clr-namespace:OpenGrid.Converters"
     xmlns:models="clr-namespace:OpenGrid.Models"
     xmlns:viewModels="clr-namespace:OpenGrid.ViewModels"
-    x:DataType="viewModels:DeviceItemViewModel">
+    x:DataType="viewModels:DisplayDeviceItemViewModel">
 
     <ScrollViewer>
         <StackPanel Margin="16" Spacing="16">

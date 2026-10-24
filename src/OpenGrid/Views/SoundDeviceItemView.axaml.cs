@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace OpenGrid.Views;
 
-public partial class DeviceItemView : UserControl
+public partial class SoundDeviceItemView : UserControl
 {
-    public DeviceItemView()
+    public SoundDeviceItemView()
     {
         InitializeComponent();
     }
