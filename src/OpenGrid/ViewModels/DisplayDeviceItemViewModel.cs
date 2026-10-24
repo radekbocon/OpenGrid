@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DialogHostAvalonia;
 using Material.Icons;
+using OpenGrid.Controls;
 using OpenGrid.Models;
 using OpenGrid.Services.Dashboard;
 using OpenGrid.Services.Devices;
@@ -20,6 +22,7 @@ public partial class DisplayDeviceItemViewModel : DeviceItemViewModel
     public ObservableCollection<DashboardInfo> AvailableDashboards { get; } = [];
 
     public ObservableCollection<DashboardInfo> DashboardOptions { get; } = [];
+    public ObservableCollection<GameDashboardOverrideItemViewModel> GameOverrides { get; } = [];
 
     public static DashboardLaunchTrigger[] AvailableTriggers { get; } =
         Enum.GetValues<DashboardLaunchTrigger>();
@@ -68,6 +71,43 @@ public partial class DisplayDeviceItemViewModel : DeviceItemViewModel
         DeviceService.SaveDevice(displayDevice);
     }
 
+    [RelayCommand]
+    private async Task AddGameOverrideAsync()
+    {
+        if (Device is not DisplayDevice displayDevice)
+            return;
+
+        var dialog = new AddGameDashboardOverrideDialog(
+            SteamGame.GetAllSupported(),
+            DashboardOptions.Where(x => x.Id != ""),
+            displayDevice.GameDashboardOverrides.Select(x => x.GameAppId));
+        await DialogHost.Show(dialog);
+        if (dialog.Result is not { } result)
+            return;
+
+        var game = SteamGame.GetByAppId(result.GameAppId)!;
+        var item = new GameDashboardOverrideItemViewModel(game, DashboardOptions, SaveGameOverrides, RemoveGameOverride, result);
+        GameOverrides.Add(item);
+        displayDevice.GameDashboardOverrides.Add(result);
+        DeviceService.SaveDevice(displayDevice);
+    }
+
+    private void RemoveGameOverride(GameDashboardOverrideItemViewModel item)
+    {
+        if (Device is DisplayDevice displayDevice)
+        {
+            displayDevice.GameDashboardOverrides.Remove(item.Model);
+            DeviceService.SaveDevice(displayDevice);
+        }
+        GameOverrides.Remove(item);
+    }
+
+    private void SaveGameOverrides()
+    {
+        if (Device is DisplayDevice displayDevice)
+            DeviceService.SaveDevice(displayDevice);
+    }
+
     public DisplayDeviceItemViewModel(IDeviceService deviceService, IDashboardService dashboardService, DashboardLauncher dashboardLauncher, Action<DeviceItemViewModel> onRemove)
         : base(deviceService, onRemove)
     {
@@ -88,6 +128,13 @@ public partial class DisplayDeviceItemViewModel : DeviceItemViewModel
 
         if (device is DisplayDevice displayDevice)
         {
+            GameOverrides.Clear();
+            foreach (var gameOverride in displayDevice.GameDashboardOverrides)
+            {
+                var game = SteamGame.GetByAppId(gameOverride.GameAppId);
+                if (game is not null)
+                    GameOverrides.Add(new GameDashboardOverrideItemViewModel(game, DashboardOptions, SaveGameOverrides, RemoveGameOverride, gameOverride));
+            }
             SelectedDashboard = !string.IsNullOrEmpty(displayDevice.DashboardId)
                 ? _dashboardService.GetById(displayDevice.DashboardId)
                 : null;
@@ -127,5 +174,31 @@ public partial class DisplayDeviceItemViewModel : DeviceItemViewModel
 
         IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice.Id);
         OnPropertyChanged(nameof(DashboardButtonLabel));
+    }
+}
+
+public sealed class GameDashboardOverrideItemViewModel
+{
+    private readonly Action _save;
+    private readonly Action<GameDashboardOverrideItemViewModel> _remove;
+    public GameDashboardOverride Model { get; }
+    public SteamGame Game { get; }
+    public IReadOnlyList<DashboardInfo> DashboardOptions { get; }
+    public DashboardInfo? SelectedDashboard
+    {
+        get => DashboardOptions.FirstOrDefault(x => x.Id == Model.DashboardId);
+        set { Model.DashboardId = value?.Id ?? ""; _save(); }
+    }
+    public IRelayCommand RemoveCommand { get; }
+
+    public GameDashboardOverrideItemViewModel(SteamGame game, IReadOnlyList<DashboardInfo> dashboardOptions,
+        Action save, Action<GameDashboardOverrideItemViewModel> remove, GameDashboardOverride? model = null)
+    {
+        Game = game;
+        DashboardOptions = dashboardOptions;
+        Model = model ?? new GameDashboardOverride { GameAppId = game.AppId };
+        _save = save;
+        _remove = remove;
+        RemoveCommand = new RelayCommand(() => _remove(this));
     }
 }

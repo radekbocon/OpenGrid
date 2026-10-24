@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using OpenGrid.Models;
 using OpenGrid.Services.Devices;
@@ -134,7 +133,28 @@ public sealed class DashboardLauncher
 
     private void OnGameStarted(object? sender, SteamGameProcess e)
     {
-        HandleTrigger(DashboardLaunchTrigger.OnGameStart);
+        HandleGameStart(e.SteamGame.AppId);
+    }
+
+    private void HandleGameStart(int appId)
+    {
+        var devices = _deviceService.GetPersistedDevices();
+        foreach (var device in devices)
+        {
+            if (device is not DisplayDevice { IsEnabled: true } displayDevice)
+                continue;
+
+            var dashboardOverride = displayDevice.GameDashboardOverrides
+                .FirstOrDefault(x => x.GameAppId == appId);
+            if (dashboardOverride is not null && !string.IsNullOrWhiteSpace(dashboardOverride.DashboardId))
+            {
+                OpenDashboardForDevice(displayDevice, DashboardLaunchTrigger.OnGameStart, dashboardOverride.DashboardId);
+            }
+            else if (displayDevice.DashboardId is not null)
+            {
+                OpenDashboardForDevice(displayDevice, displayDevice.DashboardTrigger);
+            }
+        }
     }
 
     private void OnGameStopped(object? sender, SteamGameProcess e)
@@ -154,15 +174,19 @@ public sealed class DashboardLauncher
         }
     }
 
-    private void OpenDashboardForDevice(DisplayDevice displayDevice, DashboardLaunchTrigger trigger)
+    private void OpenDashboardForDevice(DisplayDevice displayDevice, DashboardLaunchTrigger trigger, string? dashboardId = null)
     {
-        if (_openWindows.ContainsKey(displayDevice.Id))
-            return;
+        dashboardId ??= displayDevice.DashboardId;
 
-        var dashboard = _dashboardService.GetById(displayDevice.DashboardId!);
+        if (dashboardId is null)
+        {
+            return;
+        }
+
+        var dashboard = _dashboardService.GetById(dashboardId);
         if (dashboard is null)
         {
-            Log.Warning("Dashboard {DashboardId} not found for device {DeviceId}", displayDevice.DashboardId, displayDevice.Id);
+            Log.Warning("Dashboard {DashboardId} not found for device {DeviceId}", dashboardId, displayDevice.Id);
             return;
         }
 
@@ -200,7 +224,7 @@ public sealed class DashboardLauncher
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to open dashboard {DashboardId} on device {DeviceId}", displayDevice.DashboardId, displayDevice.Id);
+                Log.Error(ex, "Failed to open dashboard {DashboardId} on device {DeviceId}", dashboardId, displayDevice.Id);
             }
         });
     }
