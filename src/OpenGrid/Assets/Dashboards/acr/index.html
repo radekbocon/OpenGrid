@@ -90,26 +90,10 @@
 
     window.addEventListener('resize', fitToViewport);
     fitToViewport();
-
-    function updateMaxRpmAndRedlineRpm() {
-        // Detect maximum RPM from revving the engine at the start. Doing this at speed, maxRpm
-        // can be falsely increased when downshifting early and overrevving the engine.
-        // Since neither distance nor time are available at this time, it's not possible to infer
-        // the beginning of the stage, with potentially another car with a different maxRpm, which
-        // requires resetting autodetection.
-        // TODO When distance or time become available, reset detection if either values changes back to zero.
-        //      For this, compare distance in onTelemetry callback and reset maxRpm when distance went back to zero.
-        if (currentRpm >= maxRpm && speedKmh < 1) {
-            maxRpm = currentRpm;
-            redlineRpm = currentRpm * 0.9;
-            return true;
-        }        
-        return false;
-    }
+    
     function renderFrame() {
-        const maxRpmUpdated = updateMaxRpmAndRedlineRpm();
         const gearEl = document.getElementById('gearDisp');
-        if (!maxRpmUpdated && currentRpm >= redlineRpm) {
+        if (currentRpm >= redlineRpm) {
             gearEl.style.background = '#f00';
         } else {
             gearEl.style.background = '#000';
@@ -124,6 +108,8 @@
     OpenGrid.onTelemetry = function (record) {
         document.getElementById('gearDisp').textContent = record.gear || 'N';
         currentRpm = record.engineRpm || 0;
+        maxRpm = record.maxRpm || 8000;
+        if (record.redlineRpm) redlineRpm = record.redlineRpm;
         speedKmh = record.speedKmh;
     };
 
