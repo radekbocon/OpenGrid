@@ -180,11 +180,6 @@
 
     let maxRpm = 8000;
     let redlineRpm = 7360;
-    let lastGear = null;
-    let lastSpeed = null;
-    let lastRedlineState = null;
-    let pendingRecord = null;
-    let frameRequested = false;
 
     const ticks = [];
     const tickStates = [];
@@ -268,25 +263,15 @@
         }
 
         const redlineOn = redlineRpm > 0 && rpm >= redlineRpm;
-        if (redlineOn !== lastRedlineState) {
-            gearEl.classList.toggle('hot', redlineOn);
-            ticksEl.classList.toggle('redline', redlineOn);
-            lastRedlineState = redlineOn;
-        }
+        gearEl.classList.toggle('hot', redlineOn);
+        ticksEl.classList.toggle('redline', redlineOn);
     }
 
     function renderRecord(record) {
-        const gear = record.gear || 'N';
-        if (gear !== lastGear) {
-            gearEl.textContent = gear;
-            lastGear = gear;
-        }
+        gearEl.textContent = record.gear || 'N';
 
         const speed = Math.round(record.speedKmh || 0);
-        if (speed !== lastSpeed) {
-            speedEl.textContent = String(speed).padStart(3, '0');
-            lastSpeed = speed;
-        }
+        speedEl.textContent = String(speed).padStart(3, '0');
 
         const rpm = Math.round(record.engineRpm || 0);
         const newMax = record.maxRpm > 0 ? record.maxRpm : (maxRpm > 0 ? maxRpm : 8000);
@@ -309,20 +294,8 @@
         updateRpm(rpm);
     }
 
-    function flushRecord() {
-        frameRequested = false;
-        const record = pendingRecord;
-        pendingRecord = null;
-        if (record) {
-            renderRecord(record);
-        }
-    }
-
     OpenGrid.onTelemetry = function (record) {
-        pendingRecord = record;
-        if (frameRequested) return;
-        frameRequested = true;
-        requestAnimationFrame(flushRecord);
+        renderRecord(record);
     };
 
     OpenGrid.onConnected = function () {
