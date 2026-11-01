@@ -33,7 +33,7 @@
         drawer.appendChild(fsRow);
         drawer.appendChild(rcRow);
 
-        if (typeof invokeCSharpAction !== 'undefined') {
+        if (typeof invokeCSharpAction === 'function') {
             const wdRow = document.createElement('div');
             wdRow.className = 'og-row';
             wdRow.id = 'og-wd-row';
