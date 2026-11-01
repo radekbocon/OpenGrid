@@ -12,10 +12,17 @@ public class DisplayDevice : IDevice
     public bool IsEnabled { get; set; }
     public string? DashboardId { get; set; }
     public DashboardLaunchTrigger DashboardTrigger { get; set; }
+    public List<GameDashboardOverride> GameDashboardOverrides { get; set; } = [];
 
     public DeviceConnectionStatus Status => Screen is not null 
         ? DeviceConnectionStatus.Connected 
         : DeviceConnectionStatus.Disconnected;
+}
+
+public class GameDashboardOverride
+{
+    public int GameAppId { get; set; }
+    public string DashboardId { get; set; } = "";
 }
 
 
