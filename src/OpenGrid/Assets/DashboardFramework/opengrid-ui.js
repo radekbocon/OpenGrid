@@ -20,7 +20,7 @@
         fsRow.id = 'og-fs-row';
         fsRow.innerHTML =
             '<svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>' +
-            '<span class="og-lbl" id="og-fs-label">Enter Fullscreen</span>' +
+            '<span class="og-lbl">Toggle Fullscreen</span>' +
             '<span class="og-keys">F11</span>';
 
         const rcRow = document.createElement('div');
@@ -84,12 +84,6 @@
         }, 5000);
     }
 
-    function updateFsLabel() {
-        const lbl = document.getElementById('og-fs-label');
-        if (!lbl) return;
-        lbl.textContent = OpenGrid.isFullscreen() ? 'Exit Fullscreen' : 'Enter Fullscreen';
-    }
-
     function clearAutoHide() {
         if (autoHideTimer) {
             clearTimeout(autoHideTimer);
@@ -101,7 +95,6 @@
         clearAutoHide();
         isOpen = true;
         if (drawer) drawer.classList.add('og-open');
-        updateFsLabel();
         OpenGrid.updateStatusUI();
     }
 
@@ -138,11 +131,6 @@
             }
         }
     });
-
-    document.addEventListener('fullscreenchange', updateFsLabel);
-    document.addEventListener('webkitfullscreenchange', updateFsLabel);
-    document.addEventListener('mozfullscreenchange', updateFsLabel);
-    document.addEventListener('MSFullscreenChange', updateFsLabel);
 
     if (document.body) buildUI();
     else document.addEventListener('DOMContentLoaded', buildUI);
