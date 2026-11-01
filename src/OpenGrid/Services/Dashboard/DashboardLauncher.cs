@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using OpenGrid.Models;
 using OpenGrid.Services.Devices;
@@ -17,7 +18,9 @@ public sealed class DashboardLauncher
     private readonly SteamGameManager _steamGameManager;
     private readonly ITelemetryService _telemetryService;
 
-    private readonly Dictionary<string, (DashboardWindow Window, DashboardLaunchTrigger Trigger)> _openWindows = new(StringComparer.Ordinal);
+    // One dashboard window per screen. Each window keeps a stack of dashboard states so
+    // temporary game overrides can be undone when the game that triggered them stops.
+    private readonly Dictionary<string, OpenDashboardWindow> _openWindows = new(StringComparer.Ordinal);
 
     public event EventHandler<string>? DashboardStateChanged;
 
@@ -52,14 +55,14 @@ public sealed class DashboardLauncher
 
             if (displayDevice.DashboardTrigger != trigger)
                 continue;
-            
+
             OpenDashboardForDevice(displayDevice, trigger);
         }
     }
 
-    public bool IsDeviceDashboardOpen(string deviceId)
+    public bool IsDeviceDashboardOpen(DisplayDevice displayDevice)
     {
-        return _openWindows.ContainsKey(deviceId);
+        return _openWindows.ContainsKey(GetScreenKey(displayDevice));
     }
 
     public void OpenDeviceDashboard(DisplayDevice displayDevice)
@@ -70,64 +73,30 @@ public sealed class DashboardLauncher
         OpenDashboardForDevice(displayDevice, DashboardLaunchTrigger.None);
     }
 
-    public void CloseDeviceDashboard(string deviceId)
+    public void CloseDeviceDashboard(DisplayDevice displayDevice)
     {
-        if (Dispatcher.UIThread.CheckAccess())
-        {
-            CloseDeviceDashboardCore(deviceId);
-        }
-        else
-        {
-            Dispatcher.UIThread.Post(() => CloseDeviceDashboardCore(deviceId));
-        }
+        RunOnUiThread(() => CloseWindow(GetScreenKey(displayDevice)));
     }
 
-    private void CloseDeviceDashboardCore(string deviceId)
+    private void CloseForTrigger(DashboardLaunchTrigger trigger)
     {
-        if (!_openWindows.TryGetValue(deviceId, out var entry))
-            return;
-
-        try
-        {
-            entry.Window.Closed -= null!;
-            entry.Window.Close();
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Error closing dashboard window for device {DeviceId}", deviceId);
-        }
-        _openWindows.Remove(deviceId);
-        DashboardStateChanged?.Invoke(this, deviceId);
-    }
-
-    public void CloseForTrigger(DashboardLaunchTrigger trigger)
-    {
-        if (Dispatcher.UIThread.CheckAccess())
-        {
-            CloseForTriggerCore(trigger);
-        }
-        else
-        {
-            Dispatcher.UIThread.Post(() => CloseForTriggerCore(trigger));
-        }
+        RunOnUiThread(() => CloseForTriggerCore(trigger));
     }
 
     private void CloseForTriggerCore(DashboardLaunchTrigger trigger)
     {
-        var toClose = _openWindows.Where(kv => kv.Value.Trigger == trigger).ToList();
-        foreach (var (id, (window, _)) in toClose)
+        foreach (var entry in _openWindows.Values.ToList())
         {
-            try
+            var changed = entry.Window.RemoveDashboardsForTrigger(trigger);
+
+            if (entry.Window.DashboardCount == 0)
             {
-                window.Closed -= null!;
-                window.Close();
+                CloseWindow(entry);
+                continue;
             }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Error closing dashboard window");
-            }
-            _openWindows.Remove(id);
-            DashboardStateChanged?.Invoke(this, id);
+
+            if (changed)
+                NotifyStateChanged(entry);
         }
     }
 
@@ -145,21 +114,53 @@ public sealed class DashboardLauncher
                 continue;
 
             var dashboardOverride = displayDevice.GameDashboardOverrides
-                .FirstOrDefault(x => x.GameAppId == appId);
-            if (dashboardOverride is not null && !string.IsNullOrWhiteSpace(dashboardOverride.DashboardId))
+                .FirstOrDefault(x => x.GameAppId == appId && !string.IsNullOrWhiteSpace(x.DashboardId));
+
+            if (dashboardOverride is not null)
             {
-                OpenDashboardForDevice(displayDevice, DashboardLaunchTrigger.OnGameStart, dashboardOverride.DashboardId);
+                OpenDashboardForDevice(
+                    displayDevice,
+                    DashboardLaunchTrigger.OnGameStart,
+                    dashboardOverride.DashboardId,
+                    appId,
+                    replaceExisting: true);
             }
             else if (displayDevice.DashboardId is not null)
             {
-                OpenDashboardForDevice(displayDevice, displayDevice.DashboardTrigger);
+                OpenDashboardForDevice(
+                    displayDevice,
+                    displayDevice.DashboardTrigger,
+                    displayDevice.DashboardId,
+                    appId);
             }
         }
     }
 
     private void OnGameStopped(object? sender, SteamGameProcess e)
     {
-        CloseForTrigger(DashboardLaunchTrigger.OnGameStart);
+        RestoreForGame(e.SteamGame.AppId);
+    }
+
+    private void RestoreForGame(int appId)
+    {
+        RunOnUiThread(() => RestoreForGameCore(appId));
+    }
+
+    private void RestoreForGameCore(int appId)
+    {
+        foreach (var entry in _openWindows.Values.ToList())
+        {
+            var changed = entry.Window.RemoveDashboardsForGame(appId);
+
+            if (entry.Window.DashboardCount == 0)
+            {
+                CloseWindow(entry);
+                continue;
+            }
+
+            if (changed)
+                NotifyStateChanged(entry);
+        }
     }
 
     private void OnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
@@ -174,14 +175,17 @@ public sealed class DashboardLauncher
         }
     }
 
-    private void OpenDashboardForDevice(DisplayDevice displayDevice, DashboardLaunchTrigger trigger, string? dashboardId = null)
+    private void OpenDashboardForDevice(
+        DisplayDevice displayDevice,
+        DashboardLaunchTrigger trigger,
+        string? dashboardId = null,
+        int? gameAppId = null,
+        bool replaceExisting = false)
     {
         dashboardId ??= displayDevice.DashboardId;
 
         if (dashboardId is null)
-        {
             return;
-        }
 
         var dashboard = _dashboardService.GetById(dashboardId);
         if (dashboard is null)
@@ -190,42 +194,145 @@ public sealed class DashboardLauncher
             return;
         }
 
-        if (displayDevice.Screen is null)
+        var screen = displayDevice.Screen;
+        if (screen is null)
         {
             Log.Warning("Screen not available for device {DeviceId}", displayDevice.Id);
             return;
         }
 
-        var url = $"http://localhost:{_dashboardServer.Port}/dashboards/{dashboard.Id}/";
+        var screenKey = GetScreenKey(displayDevice);
+        var deviceId = displayDevice.Id;
+        var state = new DashboardWindowState(
+            dashboard.Id,
+            GetDashboardUrl(dashboard),
+            dashboard.Name,
+            dashboard.Width,
+            dashboard.Height,
+            trigger,
+            gameAppId);
 
         Dispatcher.UIThread.Post(() =>
         {
             try
             {
-                var window = new DashboardWindow(url, dashboard.Name, dashboard.Width, dashboard.Height);
-                var bounds = displayDevice.Screen.Bounds;
-
-                window.Position = new PixelPoint(bounds.X, bounds.Y);
-                window.Width = bounds.Width;
-                window.Height = bounds.Height;
-                window.WindowState = WindowState.FullScreen;
-                window.WindowDecorations = WindowDecorations.None;
-                window.Topmost = true;
-
-                window.Closed += (_, _) =>
+                if (_openWindows.TryGetValue(screenKey, out var existing))
                 {
-                    _openWindows.Remove(displayDevice.Id);
-                    DashboardStateChanged?.Invoke(this, displayDevice.Id);
-                };
+                    existing.DeviceIds.Add(deviceId);
 
-                _openWindows[displayDevice.Id] = (window, trigger);
+                    if (!replaceExisting)
+                    {
+                        DashboardStateChanged?.Invoke(this, deviceId);
+                        return;
+                    }
+
+                    if (existing.Window.CurrentDashboard != state)
+                        existing.Window.PushDashboard(state);
+
+                    DashboardStateChanged?.Invoke(this, deviceId);
+                    return;
+                }
+
+                var window = new DashboardWindow(state);
+                ApplyWindowPlacement(window, screen);
+
+                var entry = new OpenDashboardWindow(window, screenKey);
+                entry.DeviceIds.Add(deviceId);
+                window.Closed += (_, _) => OnWindowClosed(entry);
+
+                _openWindows[screenKey] = entry;
                 window.Show();
-                DashboardStateChanged?.Invoke(this, displayDevice.Id);
+                NotifyStateChanged(entry);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to open dashboard {DashboardId} on device {DeviceId}", dashboardId, displayDevice.Id);
+                Log.Error(ex, "Failed to open dashboard {DashboardId} on device {DeviceId}", dashboard.Id, deviceId);
             }
         });
+    }
+
+    private void OnWindowClosed(OpenDashboardWindow entry)
+    {
+        if (!_openWindows.TryGetValue(entry.ScreenKey, out var current) || !ReferenceEquals(current, entry))
+            return;
+
+        _openWindows.Remove(entry.ScreenKey);
+        NotifyStateChanged(entry);
+    }
+
+    private void CloseWindow(string screenKey)
+    {
+        if (_openWindows.TryGetValue(screenKey, out var entry))
+            CloseWindow(entry);
+    }
+
+    private void CloseWindow(OpenDashboardWindow? entry)
+    {
+        if (entry is null)
+            return;
+
+        if (_openWindows.TryGetValue(entry.ScreenKey, out var current) && ReferenceEquals(current, entry))
+            _openWindows.Remove(entry.ScreenKey);
+
+        try
+        {
+            entry.Window.Close();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Error closing dashboard window for screen {ScreenKey}", entry.ScreenKey);
+        }
+
+        NotifyStateChanged(entry);
+    }
+
+    private void NotifyStateChanged(OpenDashboardWindow entry)
+    {
+        foreach (var deviceId in entry.DeviceIds)
+            DashboardStateChanged?.Invoke(this, deviceId);
+    }
+
+    private static string GetScreenKey(DisplayDevice displayDevice)
+    {
+        return displayDevice.Screen?.DisplayName ?? displayDevice.Id;
+    }
+
+    private string GetDashboardUrl(DashboardInfo dashboard)
+    {
+        return string.IsNullOrEmpty(dashboard.Url)
+            ? $"http://localhost:{_dashboardServer.Port}/dashboards/{dashboard.Id}/"
+            : dashboard.Url;
+    }
+
+    private static void ApplyWindowPlacement(DashboardWindow window, Screen screen)
+    {
+        var bounds = screen.Bounds;
+        window.Position = new PixelPoint(bounds.X, bounds.Y);
+        window.Width = bounds.Width;
+        window.Height = bounds.Height;
+        window.WindowState = WindowState.FullScreen;
+        window.WindowDecorations = WindowDecorations.None;
+        window.Topmost = true;
+    }
+
+    private static void RunOnUiThread(Action action)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+            action();
+        else
+            Dispatcher.UIThread.Post(action);
+    }
+
+    private sealed class OpenDashboardWindow
+    {
+        public OpenDashboardWindow(DashboardWindow window, string screenKey)
+        {
+            Window = window;
+            ScreenKey = screenKey;
+        }
+
+        public DashboardWindow Window { get; }
+        public string ScreenKey { get; }
+        public HashSet<string> DeviceIds { get; } = new(StringComparer.Ordinal);
     }
 }

@@ -140,7 +140,7 @@ public partial class DisplayDeviceItemViewModel : DeviceItemViewModel
                 : null;
             SelectedDashboardOption = SelectedDashboard ?? NoneDashboard;
             SelectedTrigger = displayDevice.DashboardTrigger;
-            IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice.Id);
+            IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice);
         }
         else
         {
@@ -157,11 +157,11 @@ public partial class DisplayDeviceItemViewModel : DeviceItemViewModel
             return;
 
         if (IsDashboardOpen)
-            _dashboardLauncher.CloseDeviceDashboard(displayDevice.Id);
+            _dashboardLauncher.CloseDeviceDashboard(displayDevice);
         else
             _dashboardLauncher.OpenDeviceDashboard(displayDevice);
 
-        IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice.Id);
+        IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice);
     }
 
     private void OnDashboardStateChanged(object? sender, string deviceId)
@@ -172,7 +172,7 @@ public partial class DisplayDeviceItemViewModel : DeviceItemViewModel
         if (displayDevice.Id != deviceId)
             return;
 
-        IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice.Id);
+        IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice);
         OnPropertyChanged(nameof(DashboardButtonLabel));
     }
 }
