@@ -179,30 +179,37 @@ const OpenGrid = (function () {
             document.msFullscreenElement);
     }
 
+    function settle(result) {
+        // Fullscreen requests return a promise that may reject (e.g. no user gesture).
+        if (result && typeof result.catch === 'function') result.catch(function () { });
+        return result;
+    }
+
     function requestFullscreen(el) {
         el = el || document.documentElement;
-        if (el.requestFullscreen) return el.requestFullscreen();
-        if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
-        if (el.mozRequestFullScreen) return el.mozRequestFullScreen();
-        if (el.msRequestFullscreen) return el.msRequestFullscreen();
+        if (el.requestFullscreen) return settle(el.requestFullscreen());
+        if (el.webkitRequestFullscreen) return settle(el.webkitRequestFullscreen());
+        if (el.mozRequestFullScreen) return settle(el.mozRequestFullScreen());
+        if (el.msRequestFullscreen) return settle(el.msRequestFullscreen());
     }
 
     function exitFullscreen() {
-        if (document.exitFullscreen) return document.exitFullscreen();
-        if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
-        if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
-        if (document.msExitFullscreen) return document.msExitFullscreen();
+        if (document.exitFullscreen) return settle(document.exitFullscreen());
+        if (document.webkitExitFullscreen) return settle(document.webkitExitFullscreen());
+        if (document.mozCancelFullScreen) return settle(document.mozCancelFullScreen());
+        if (document.msExitFullscreen) return settle(document.msExitFullscreen());
     }
 
     function toggleFullscreen() {
-        if (invokeCSharpAction !== 'undefined') {
+        // invokeCSharpAction is only injected by the desktop WebView. Using typeof
+        // keeps this safe in a regular browser, where it is not defined at all.
+        if (typeof invokeCSharpAction === 'function') {
             invokeCSharpAction("ToggleFullscreen");
+            return;
         }
-        else {
-            if (isFullscreen()) exitFullscreen();
-            else requestFullscreen();    
-        }
-        
+
+        if (isFullscreen()) exitFullscreen();
+        else requestFullscreen();
     }
 
     document.addEventListener('visibilitychange', function () {
