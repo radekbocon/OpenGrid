@@ -8,7 +8,6 @@ namespace OpenGrid.Services.SessionPersist;
 public class SessionRepository
 {
     private const float MinLapDistance = 100f;
-    
     private static readonly TimeSpan MinLapTime = TimeSpan.FromSeconds(10);
     private static readonly string TelemetryFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "OpenGrid", "Telemetry");
     
@@ -184,25 +183,35 @@ public class SessionRepository
         CloseCurrentFile();
 
         var session = CurrentSession!;
-        var totalLaps = session.Records.GroupBy(r => r.CurrentLap).Count();
-        var validLaps = session.Records
+        var lapRecords = session.Records
             .GroupBy(r => r.CurrentLap)
-            .Where(g =>
+            .Select(g =>
             {
-                var distance = g.Max(r => r.Distance) - g.Min(r => r.Distance);
-                var time = g.Max(r => r.LapTime);
+                var records = g.ToList();
+                var resetIndex = -1;
+                for (var index = 1; index < records.Count; index++)
+                {
+                    if (records[index].Distance <= records[index - 1].Distance)
+                    {
+                        resetIndex = index;
+                        break;
+                    }
+                }
+                return resetIndex < 0 ? records : records.Take(resetIndex).ToList();
+            })
+            .Where(records =>
+            {
+                var distance = records.Max(r => r.Distance) - records.Min(r => r.Distance);
+                var time = records.Max(r => r.LapTime);
                 return distance >= MinLapDistance && time >= MinLapTime;
             })
-            .Select(g => g.Key)
+            .ToList();
+
+        var recordsToKeep = lapRecords
+            .SelectMany(x => x)
             .ToHashSet();
 
-        var removedLaps = totalLaps - validLaps.Count;
-        if (removedLaps > 0)
-        {
-            Log.Information("Removed {Count} partial lap(s) from {Game} on {Track}", removedLaps, session.Info.Game, session.Info.Track);
-        }
-
-        session.Records.RemoveAll(r => !validLaps.Contains(r.CurrentLap));
+        session.Records.RemoveAll(r => !recordsToKeep.Contains(r));
 
         if (session.Records.Count == 0)
         {
@@ -215,7 +224,7 @@ public class SessionRepository
             return;
         }
 
-        Log.Information("Saved {Game} on {Track} with {Count} valid lap(s)", session.Info.Game, session.Info.Track, validLaps.Count);
+        Log.Information("Saved {Game} on {Track} with {Count} lap(s)", session.Info.Game, session.Info.Track, lapRecords.Count);
         _sessionWriter.WriteFull(session);
     }
 

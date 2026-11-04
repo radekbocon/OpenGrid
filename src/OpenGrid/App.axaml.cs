@@ -86,6 +86,11 @@ public class App : Application
             _trayIcon.Clicked += (_, _) => ShowMainWindow(desktop);
         }
 
+        if (_trayIcon != null)
+        {
+            TrayIcon.SetIcons(this, [_trayIcon]);
+        }
+
         base.OnFrameworkInitializationCompleted();
     }
 

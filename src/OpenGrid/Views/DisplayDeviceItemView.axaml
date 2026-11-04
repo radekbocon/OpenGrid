@@ -165,6 +165,46 @@
 
             <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="Headline6" Text="Game Overrides" />
+                <Button
+                    Grid.Column="1"
+                    Command="{Binding AddGameOverrideCommand}"
+                    Content="Add" />
+            </Grid>
+            <TextBlock
+                Opacity="0.6"
+                Text="Dashboards selected here replace the default dashboard when the game starts."
+                TextWrapping="Wrap" />
+            <ItemsControl ItemsSource="{Binding GameOverrides}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:GameDashboardOverrideItemViewModel">
+                        <Grid
+                            Margin="0,4"
+                            ColumnDefinitions="*,*,Auto"
+                            ColumnSpacing="8">
+                            <TextBlock VerticalAlignment="Center" Text="{Binding Game.Name}" />
+                            <ComboBox
+                                Grid.Column="1"
+                                ItemsSource="{Binding DashboardOptions}"
+                                SelectedItem="{Binding SelectedDashboard}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="models:DashboardInfo">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Button
+                                Grid.Column="2"
+                                Command="{Binding RemoveCommand}"
+                                Content="Remove" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
             <!--  Manual Controls  -->
             <Grid
                 ColumnDefinitions="140,*"

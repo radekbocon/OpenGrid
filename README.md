@@ -59,7 +59,7 @@ The build automatically publishes `OpenGridBridge` as a single-file Win-x64 exec
 ## Contributing
 
 You are welcome to open PRs. Please make sure your code tested and consistent with the existing architecture and style. 
-AI-assisted contributions are allowed as long as the code is good quality and 100% reviewed by human who understands how it.
+AI-assisted contributions are allowed as long as the code is good quality and 100% reviewed by human who understands it.
 
 Feel free to open issues for any feature requests or bugs.
 

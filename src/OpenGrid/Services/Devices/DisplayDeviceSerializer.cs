@@ -23,6 +23,7 @@ public class DisplayDeviceSerializer : IDeviceSerializer
                 IsEnabled = dto.IsEnabled,
                 DashboardId = dto.DashboardId,
                 DashboardTrigger = dto.DashboardTrigger,
+                GameDashboardOverrides = dto.GameDashboardOverrides ?? [],
             }
         };
     }
@@ -42,6 +43,7 @@ public class DisplayDeviceSerializer : IDeviceSerializer
             IsEnabled = device.IsEnabled,
             DashboardId = displayDevice?.DashboardId,
             DashboardTrigger = displayDevice?.DashboardTrigger ?? DashboardLaunchTrigger.None,
+            GameDashboardOverrides = displayDevice?.GameDashboardOverrides ?? [],
         };
 
         return JsonSerializer.Serialize(dto);
@@ -56,5 +58,6 @@ public class DisplayDeviceSerializer : IDeviceSerializer
         public required bool IsEnabled { get; init; }
         public string? DashboardId { get; init; }
         public DashboardLaunchTrigger DashboardTrigger { get; init; }
+        public List<GameDashboardOverride>? GameDashboardOverrides { get; init; }
     }
 }

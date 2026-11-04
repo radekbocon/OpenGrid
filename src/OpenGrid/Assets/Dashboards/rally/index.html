@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rally Dashboard</title>
+    <script src="/framework/opengrid.js"></script>
+    <script src="/framework/opengrid-ui.js"></script>
+    <style>
+        :root {
+            --green: #18e05a;
+            --amber: #ffa000;
+            --red: #ff2020;
+            --speed: #ccc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .dash {
+            position: relative;
+            flex-shrink: 0;
+            width: 1280px;
+            height: 720px;
+            overflow: hidden;
+            background: #000;
+            color: #fff;
+        }
+
+        .ticks,
+        .labels {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .tick {
+            position: absolute;
+            left: 640px;
+            top: 410px;
+            width: 14px;
+            height: 330px;
+            margin-left: -7px;
+            margin-top: -330px;
+            transform-origin: 50% 100%;
+        }
+
+        .tick::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 44px;
+            background: #1e1e1e;
+        }
+
+        .tick.on.z-green::before {
+            background: var(--green);
+        }
+
+        .tick.on.z-amber::before {
+            background: var(--amber);
+        }
+
+        .tick.on.z-red::before {
+            background: var(--red);
+        }
+
+        .ticks.redline {
+            animation: redline .14s step-end infinite alternate;
+        }
+
+        @keyframes redline {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: .2;
+            }
+        }
+
+        .labels span {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            font-family: "Consolas", "DejaVu Sans Mono", monospace;
+            font-size: 15px;
+            color: #717171;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .gear {
+            position: absolute;
+            left: 640px;
+            top: 340px;
+            transform: translate(-50%, -50%);
+            font-size: 340px;
+            line-height: .76;
+            font-weight: 800;
+            letter-spacing: -6px;
+            color: #fff;
+        }
+
+        .gear.hot {
+            color: var(--red);
+        }
+
+        .speed-line {
+            position: absolute;
+            left: 640px;
+            top: 560px;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: baseline;
+        }
+
+        .speed {
+            font-family: "Consolas", "DejaVu Sans Mono", monospace;
+            font-size: 144px;
+            line-height: .8;
+            font-weight: bold;
+            color: var(--speed);
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dash">
+    <div class="ticks" id="ticks"></div>
+    <div class="labels" id="labels"></div>
+
+    <div class="gear" id="gearDisp">N</div>
+
+    <div class="speed-line">
+        <span class="speed" id="speedDisp">000</span>
+    </div>
+</div>
+
+<div id="status" style="display:none"></div>
+
+<script>
+    const NUM_TICKS = 40;
+    const START_ANGLE = -120;
+    const SWEEP = 240;
+    const CX = 640;
+    const CY = 410;
+    const LABEL_R = 366;
+
+    let maxRpm = 8000;
+    let redlineRpm = 7360;
+
+    const ticks = [];
+    const tickStates = [];
+
+    const gearEl = document.getElementById('gearDisp');
+    const speedEl = document.getElementById('speedDisp');
+    const ticksEl = document.getElementById('ticks');
+    const labelsEl = document.getElementById('labels');
+
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    function fitToViewport() {
+        const d = document.querySelector('.dash');
+        const s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+        d.style.transform = 'scale(' + s + ')';
+        d.style.transformOrigin = 'center';
+    }
+
+    window.addEventListener('resize', fitToViewport);
+    fitToViewport();
+
+    function applyZones() {
+        const max = maxRpm > 0 ? maxRpm : 8000;
+        const redline = redlineRpm > 0 ? redlineRpm : max * 0.92;
+        const rl = clamp(redline / max, 0, 1);
+        const amberStart = Math.max(0.55, rl - 0.22);
+
+        for (let i = 0; i < NUM_TICKS; i++) {
+            const ratio = (i + 1) / NUM_TICKS;
+            const zone = ratio > rl - 0.005 ? 'z-red' : (ratio > amberStart ? 'z-amber' : 'z-green');
+            const tick = ticks[i];
+            tick.classList.remove('z-green', 'z-amber', 'z-red');
+            tick.classList.add(zone);
+        }
+    }
+
+    function buildTicks() {
+        ticksEl.textContent = '';
+        ticks.length = 0;
+        tickStates.length = 0;
+
+        for (let i = 0; i < NUM_TICKS; i++) {
+            const tick = document.createElement('div');
+            tick.className = 'tick';
+            const angle = START_ANGLE + SWEEP * (i + 0.5) / NUM_TICKS;
+            tick.style.transform = 'rotate(' + angle.toFixed(2) + 'deg)';
+            ticksEl.appendChild(tick);
+            ticks.push(tick);
+            tickStates.push(false);
+        }
+
+        applyZones();
+    }
+
+    function buildLabels() {
+        labelsEl.textContent = '';
+        const max = maxRpm > 0 ? maxRpm : 8000;
+
+        for (let value = 0; value <= max + 1; value += 1000) {
+            const angle = (START_ANGLE + SWEEP * (value / max)) * Math.PI / 180;
+            const span = document.createElement('span');
+            span.textContent = value / 1000;
+            span.style.left = (CX + LABEL_R * Math.sin(angle)).toFixed(1) + 'px';
+            span.style.top = (CY - LABEL_R * Math.cos(angle)).toFixed(1) + 'px';
+            labelsEl.appendChild(span);
+        }
+    }
+
+    function updateRpm(rpm) {
+        const max = maxRpm > 0 ? maxRpm : 8000;
+        const ratio = clamp(rpm / max, 0, 1);
+
+        for (let i = 0; i < NUM_TICKS; i++) {
+            const on = ratio >= (i + 1) / NUM_TICKS;
+            if (on !== tickStates[i]) {
+                ticks[i].classList.toggle('on', on);
+                tickStates[i] = on;
+            }
+        }
+
+        const redlineOn = redlineRpm > 0 && rpm >= redlineRpm;
+        gearEl.classList.toggle('hot', redlineOn);
+        ticksEl.classList.toggle('redline', redlineOn);
+    }
+
+    function renderRecord(record) {
+        gearEl.textContent = record.gear || 'N';
+
+        const speed = Math.round(record.speedKmh || 0);
+        speedEl.textContent = String(speed).padStart(3, '0');
+
+        const rpm = Math.round(record.engineRpm || 0);
+        const newMax = record.maxRpm > 0 ? record.maxRpm : (maxRpm > 0 ? maxRpm : 8000);
+        const newRedline = record.redlineRpm > 0 ? record.redlineRpm : newMax * 0.92;
+        let zonesDirty = false;
+
+        if (Math.abs(newMax - maxRpm) > 1) {
+            maxRpm = newMax;
+            buildLabels();
+            zonesDirty = true;
+        }
+        if (Math.abs(newRedline - redlineRpm) > 1) {
+            redlineRpm = newRedline;
+            zonesDirty = true;
+        }
+        if (zonesDirty) {
+            applyZones();
+        }
+
+        updateRpm(rpm);
+    }
+
+    OpenGrid.onTelemetry = function (record) {
+        renderRecord(record);
+    };
+
+    OpenGrid.onConnected = function () {
+    };
+
+    OpenGrid.onDisconnected = function () {
+    };
+
+    buildTicks();
+    buildLabels();
+    OpenGrid.connect();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "Rally",
+  "description": "Rally cluster with a tachometer arc around the gear and a digital speed readout.",
+  "version": "1.0",
+  "type": "dashboard",
+  "author": "OpenGrid",
+  "width": 1280,
+  "height": 720
+}
