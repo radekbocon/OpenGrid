@@ -44,7 +44,7 @@ public record SteamGame(
         "Assetto Corsa Evo", 
         3058630, 
         true, 
-        typeof(AcTelemetryClient), 
+        typeof(AcEvoTelemetryClient), 
         "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3058630/header.jpg",
         "Assetto Corsa EVO",
         "GameThread");

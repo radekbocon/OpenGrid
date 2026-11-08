@@ -11,9 +11,9 @@ namespace OpenGrid.Services.Telemetry;
 /// </summary>
 public class AcTelemetryClient : ITelemetryClient
 {
-    private bool IsConnected => File.Exists(AcConstants.ShmPhysicsPath) &&
-                                File.Exists(AcConstants.ShmGraphicsPath) &&
-                                File.Exists(AcConstants.ShmStaticPath);
+    private bool IsConnected => File.Exists(AcConstants.ShmAcPhysicsPath) &&
+                                File.Exists(AcConstants.ShmAcGraphicsPath) &&
+                                File.Exists(AcConstants.ShmAcStaticPath);
 
     public async Task<bool> ConnectAsync(CancellationToken cancellationToken)
     {
@@ -39,9 +39,9 @@ public class AcTelemetryClient : ITelemetryClient
 
     public void Stop()
     {
-        TryDeleteFile(AcConstants.ShmPhysicsPath);
-        TryDeleteFile(AcConstants.ShmGraphicsPath);
-        TryDeleteFile(AcConstants.ShmStaticPath);
+        TryDeleteFile(AcConstants.ShmAcPhysicsPath);
+        TryDeleteFile(AcConstants.ShmAcGraphicsPath);
+        TryDeleteFile(AcConstants.ShmAcStaticPath);
     }
 
     private static void TryDeleteFile(string path)
@@ -68,9 +68,9 @@ public class AcTelemetryClient : ITelemetryClient
                 return null;
             }
 
-            var physicsData = ReadStructFromFile<SPageFilePhysics>(AcConstants.ShmPhysicsPath, 2048);
-            var graphicsData = ReadStructFromFile<SPageFileGraphic>(AcConstants.ShmGraphicsPath, 2048);
-            var staticData = ReadStructFromFile<SPageFileStatic>(AcConstants.ShmStaticPath, 2048);
+            var physicsData = ReadStructFromFile<SPageFilePhysics>(AcConstants.ShmAcPhysicsPath, 2048);
+            var graphicsData = ReadStructFromFile<SPageFileGraphic>(AcConstants.ShmAcGraphicsPath, 2048);
+            var staticData = ReadStructFromFile<SPageFileStatic>(AcConstants.ShmAcStaticPath, 2048);
 
             if (physicsData == null || graphicsData == null || staticData == null)
             {
@@ -178,4 +178,3 @@ public class AcTelemetryClient : ITelemetryClient
         }
     }
 }
-
