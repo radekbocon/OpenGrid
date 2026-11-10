@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using OpenGrid.Models;
 using OpenGrid.Models.Telemetry;
 using Serilog;
@@ -35,24 +34,9 @@ public class AcEvoTelemetryClient : ITelemetryClient
 
     public void Stop()
     {
-        TryDeleteFile(AcConstants.ShmAcEvoPhysicsPath);
-        TryDeleteFile(AcConstants.ShmAcEvoGraphicsPath);
-        TryDeleteFile(AcConstants.ShmAcEvoStaticPath);
-    }
-
-    private static void TryDeleteFile(string path)
-    {
-        try
-        {
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Could not delete file: {Path}", path);
-        }
+        ShmHelper.TryDeleteFile(AcConstants.ShmAcEvoPhysicsPath);
+        ShmHelper.TryDeleteFile(AcConstants.ShmAcEvoGraphicsPath);
+        ShmHelper.TryDeleteFile(AcConstants.ShmAcEvoStaticPath);
     }
 
     public TelemetryRecord? ReadTelemetry()
@@ -64,9 +48,9 @@ public class AcEvoTelemetryClient : ITelemetryClient
                 return null;
             }
 
-            var physicsData = ReadStructFromFile<SPageFilePhysicsEvo>(AcConstants.ShmAcEvoPhysicsPath);
-            var graphicsData = ReadStructFromFile<SPageFileGraphicEvo>(AcConstants.ShmAcEvoGraphicsPath);
-            var staticData = ReadStructFromFile<SPageFileStaticEvo>(AcConstants.ShmAcEvoStaticPath);
+            var physicsData = ShmHelper.ReadStructFromFile<SPageFilePhysicsEvo>(AcConstants.ShmAcEvoPhysicsPath);
+            var graphicsData = ShmHelper.ReadStructFromFile<SPageFileGraphicEvo>(AcConstants.ShmAcEvoGraphicsPath);
+            var staticData = ShmHelper.ReadStructFromFile<SPageFileStaticEvo>(AcConstants.ShmAcEvoStaticPath);
 
             if (physicsData == null || graphicsData == null || staticData == null)
             {
@@ -98,10 +82,10 @@ public class AcEvoTelemetryClient : ITelemetryClient
             var snapshot = new TelemetryRecord
             {
                 Timestamp = DateTime.UtcNow,
-                Track = Track.Create(staticData.Value.Track),
+                Track = Track.Create(staticData.Value.Track + "_" + staticData.Value.TrackConfiguration),
                 Car = Car.Create(graphicsData.Value.CarModel),
                 SessionType = session,
-                CurrentLap = graphicsData.Value.TotalLapCount,
+                CurrentLap = graphicsData.Value.TotalLapCount + 1,
                 SpeedKmh = physicsData.Value.SpeedKmh,
                 SteerAngle = physicsData.Value.SteerAngle,
                 Fuel = physicsData.Value.Fuel,
@@ -145,53 +129,5 @@ public class AcEvoTelemetryClient : ITelemetryClient
         }
     }
     
-    private static T? ReadStructFromFile<T>(string filePath) where T : struct
-    {
-        try
-        {
-            if (!File.Exists(filePath))
-            {
-                return null;
-            }
-
-            var size = Marshal.SizeOf<T>();
-            using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            var bytes = new byte[size];
-            var read = fs.Read(bytes, 0, size);
-            return read < size ? null : BytesToStruct<T>(bytes, size);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error reading struct from file: {Message}", ex.Message);
-            return null;
-        }
-    }
     
-    private static T? BytesToStruct<T>(byte[] data, int size) where T : struct
-    {
-        try
-        {
-            if (data.Length < size)
-            {
-                return null;
-            }
-
-            var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-            try
-            {
-                var ptr = handle.AddrOfPinnedObject();
-                var result = Marshal.PtrToStructure<T>(ptr);
-                return result;
-            }
-            finally
-            {
-                handle.Free();
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error converting bytes to strMessagect: {Message}", ex.Message);
-            return null;
-        }
-    }
 }
