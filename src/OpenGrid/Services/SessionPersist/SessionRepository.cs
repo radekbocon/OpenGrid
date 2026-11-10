@@ -160,6 +160,11 @@ public class SessionRepository
 
     private void StartNewSession(TelemetryEventArgs e)
     {
+        if (e.Telemetry.SessionType == SessionType.Unknown)
+        {
+            return;
+        }
+        
         CurrentSession = new SessionDetails(e.Game, e.Telemetry);
         _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
         _lastRecordTimestamp = e.Telemetry.Timestamp;
@@ -226,6 +231,7 @@ public class SessionRepository
 
         Log.Information("Saved {Game} on {Track} with {Count} lap(s)", session.Info.Game.Name, session.Info.Track?.DisplayName, lapRecords.Count);
         _sessionWriter.WriteFull(session);
+        CurrentSession = null;
     }
 
     public void DeleteLap(SessionDetails details, int lapNumber)
