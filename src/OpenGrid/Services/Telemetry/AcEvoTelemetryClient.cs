@@ -95,6 +95,7 @@ public class AcEvoTelemetryClient : ITelemetryClient
                 CurrentGear = (Gear)physicsData.Value.Gear,
                 EngineRpm = physicsData.Value.Rpms,
                 TireTemperatures = physicsData.Value.TyreTemp,
+                WheelSpeeds = WheelSlipCalculator.ToWheelSpeeds(physicsData.Value.WheelAngularSpeed, WheelSlipCalculator.DefaultTyreRadiusMeters),
                 LapTime = TimeSpan.FromMilliseconds(graphicsData.Value.CurrentLapTimeMs),
                 Distance = graphicsData.Value.CurrentKm * 1000f,
                 MaxRpm = physicsData.Value.CurrentMaxRpm,

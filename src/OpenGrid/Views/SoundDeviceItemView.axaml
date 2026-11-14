@@ -190,6 +190,25 @@
                                             SelectedItem="{Binding Channel}" />
                                     </Grid>
 
+                                    <!--  Wheels (wheel slip effects only)  -->
+                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12" IsVisible="{Binding UsesWheelSelection}">
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Classes="Body2"
+                                            Opacity="0.6"
+                                            Text="Wheels" />
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            Orientation="Horizontal"
+                                            Spacing="12">
+                                            <CheckBox Content="FL" IsChecked="{Binding IsFrontLeftSelected}" />
+                                            <CheckBox Content="FR" IsChecked="{Binding IsFrontRightSelected}" />
+                                            <CheckBox Content="RL" IsChecked="{Binding IsRearLeftSelected}" />
+                                            <CheckBox Content="RR" IsChecked="{Binding IsRearRightSelected}" />
+                                        </StackPanel>
+                                    </Grid>
+
                                     <!--  Volume  -->
                                     <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
                                         <TextBlock

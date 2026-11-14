@@ -16,6 +16,7 @@ public partial class BassShakerInputViewModel : ViewModelBase
     public BassShakerInputSettings Settings { get; }
     public TelemetryInput Input => Settings.Input;
     public string InputName => GetDisplayName(Settings.Input);
+    public bool UsesWheelSelection => Input is TelemetryInput.WheelSpin or TelemetryInput.WheelLock;
 
     [ObservableProperty]
     public partial bool IsEnabled { get; set; }
@@ -35,15 +36,19 @@ public partial class BassShakerInputViewModel : ViewModelBase
     [ObservableProperty]
     public partial double MaxPercent { get; set; }
 
-    public static string GetDisplayName(TelemetryInput input)
-    {
-        return input switch
-        {
-            TelemetryInput.Abs => "ABS",
-            TelemetryInput.Tc => "Traction Control",
-            _ => input.ToString(),
-        };
-    }
+    [ObservableProperty]
+    public partial bool IsFrontLeftSelected { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsFrontRightSelected { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsRearLeftSelected { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsRearRightSelected { get; set; }
+
+    public static string GetDisplayName(TelemetryInput input) => input.GetDisplayName();
 
     public BassShakerInputViewModel(BassShakerInputSettings settings, Action onChanged, Action<BassShakerInputViewModel> onRemove)
     {
@@ -56,6 +61,10 @@ public partial class BassShakerInputViewModel : ViewModelBase
         Frequency = settings.Frequency;
         MinPercent = settings.MinPercent;
         MaxPercent = settings.MaxPercent;
+        IsFrontLeftSelected = settings.Wheels.Includes(WheelSelection.FrontLeft);
+        IsFrontRightSelected = settings.Wheels.Includes(WheelSelection.FrontRight);
+        IsRearLeftSelected = settings.Wheels.Includes(WheelSelection.RearLeft);
+        IsRearRightSelected = settings.Wheels.Includes(WheelSelection.RearRight);
     }
 
     partial void OnIsEnabledChanged(bool value)
@@ -91,6 +100,20 @@ public partial class BassShakerInputViewModel : ViewModelBase
     partial void OnMaxPercentChanged(double value)
     {
         Settings.MaxPercent = value;
+        _onChanged();
+    }
+
+    partial void OnIsFrontLeftSelectedChanged(bool value) => SetWheel(WheelSelection.FrontLeft, value);
+
+    partial void OnIsFrontRightSelectedChanged(bool value) => SetWheel(WheelSelection.FrontRight, value);
+
+    partial void OnIsRearLeftSelectedChanged(bool value) => SetWheel(WheelSelection.RearLeft, value);
+
+    partial void OnIsRearRightSelectedChanged(bool value) => SetWheel(WheelSelection.RearRight, value);
+
+    private void SetWheel(WheelSelection wheel, bool selected)
+    {
+        Settings.Wheels = selected ? Settings.Wheels | wheel : Settings.Wheels & ~wheel;
         _onChanged();
     }
 

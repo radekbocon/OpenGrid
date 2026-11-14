@@ -116,19 +116,10 @@ public partial class SoundDeviceItemViewModel : DeviceItemViewModel
 
     private void RefreshAvailableTelemetryInputs()
     {
-        var configuredInputs = new HashSet<TelemetryInput>(BassShakerInputs.Select(x => x.Input));
         AvailableTelemetryInputs.Clear();
         foreach (var input in Enum.GetValues<TelemetryInput>())
         {
-            if (!configuredInputs.Contains(input))
-            {
-                AvailableTelemetryInputs.Add(input);
-            }
-        }
-
-        if (SelectedTelemetryInput is not null && !configuredInputs.Contains(SelectedTelemetryInput.Value))
-        {
-            SelectedTelemetryInput = null;
+            AvailableTelemetryInputs.Add(input);
         }
     }
 
