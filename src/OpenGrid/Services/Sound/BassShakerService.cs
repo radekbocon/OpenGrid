@@ -67,7 +67,9 @@ public sealed class BassShakerService : IBassShakerService, IDisposable
             return;
         }
 
-        var enabledInputs = bassShaker.Inputs.Where(x => x.IsEnabled).ToList();
+        var enabledInputs = bassShaker.Inputs
+            .Where(static x => x is { IsEnabled: true, Mappings.Count: > 0 })
+            .ToList();
         if (enabledInputs.Count == 0)
         {
             RemoveOutput(device.Id);
@@ -76,10 +78,7 @@ public sealed class BassShakerService : IBassShakerService, IDisposable
 
         if (_outputs.TryGetValue(device.Id, out var currentOutput))
         {
-            if (!currentOutput.HasInputs(bassShaker.Volume, enabledInputs))
-            {
-                currentOutput.Reconfigure(bassShaker.Volume, enabledInputs);
-            }
+            currentOutput.Reconfigure(bassShaker.Volume, enabledInputs);
             return;
         }
 

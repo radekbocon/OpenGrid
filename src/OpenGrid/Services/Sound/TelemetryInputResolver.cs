@@ -5,9 +5,9 @@ namespace OpenGrid.Services.Sound;
 
 public static class TelemetryInputResolver
 {
-    public static double GetNormalized(BassShakerInputSettings settings, TelemetryRecord telemetry)
+    public static double GetNormalized(BassShakerInputSettings settings, WheelSelection wheels, TelemetryRecord telemetry)
     {
-        var (value, referenceMax) = GetValueAndReference(settings, telemetry);
+        var (value, referenceMax) = GetValueAndReference(settings, wheels, telemetry);
         var min = referenceMax * settings.MinPercent / 100.0;
         var max = referenceMax * settings.MaxPercent / 100.0;
         var range = max - min;
@@ -16,7 +16,7 @@ public static class TelemetryInputResolver
             : 0;
     }
 
-    private static (double Value, double ReferenceMax) GetValueAndReference(BassShakerInputSettings settings, TelemetryRecord telemetry)
+    private static (double Value, double ReferenceMax) GetValueAndReference(BassShakerInputSettings settings, WheelSelection wheels, TelemetryRecord telemetry)
     {
         if (settings.Input is TelemetryInput.WheelLock or TelemetryInput.WheelSpin)
         {
@@ -29,8 +29,8 @@ public static class TelemetryInputResolver
             var vehicleSpeed = telemetry.SpeedKmh / 3.6f;
             var slipRatios = WheelSlipCalculator.CalculateSlipRatios(telemetry.WheelSpeeds, vehicleSpeed);
             var value = settings.Input == TelemetryInput.WheelLock
-                ? WheelSlipCalculator.GetWheelLock(slipRatios, settings.Wheels)
-                : WheelSlipCalculator.GetWheelSpin(slipRatios, settings.Wheels);
+                ? WheelSlipCalculator.GetWheelLock(slipRatios, wheels)
+                : WheelSlipCalculator.GetWheelSpin(slipRatios, wheels);
             return (value, 1);
         }
 

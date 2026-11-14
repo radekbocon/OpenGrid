@@ -50,7 +50,10 @@ public partial class SoundDeviceItemViewModel : DeviceItemViewModel
 
         foreach (var inputSettings in soundDevice.BassShaker.Inputs)
         {
-            AddBassShakerInputViewModel(inputSettings);
+            if (inputSettings is not null)
+            {
+                AddBassShakerInputViewModel(inputSettings);
+            }
         }
 
         Volume = soundDevice.BassShaker.Volume * 100;
@@ -83,6 +86,7 @@ public partial class SoundDeviceItemViewModel : DeviceItemViewModel
         soundDevice.BassShaker ??= new BassShakerConfiguration();
 
         var settings = new BassShakerInputSettings { Input = input };
+        settings.Mappings.Add(new BassShakerMapping());
         soundDevice.BassShaker.Inputs.Add(settings);
         AddBassShakerInputViewModel(settings);
 

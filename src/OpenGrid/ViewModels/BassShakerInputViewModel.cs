@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
@@ -11,18 +12,15 @@ public partial class BassShakerInputViewModel : ViewModelBase
     private readonly Action _onChanged;
     private readonly Action<BassShakerInputViewModel> _onRemove;
 
-    public static IReadOnlyList<BassShakerChannel> AvailableChannels { get; } = Enum.GetValues<BassShakerChannel>();
-
     public BassShakerInputSettings Settings { get; }
+    public ObservableCollection<BassShakerMappingViewModel> Mappings { get; } = [];
     public TelemetryInput Input => Settings.Input;
     public string InputName => GetDisplayName(Settings.Input);
     public bool UsesWheelSelection => Input is TelemetryInput.WheelSpin or TelemetryInput.WheelLock;
+    public bool HasMappings => Mappings.Count > 0;
 
     [ObservableProperty]
     public partial bool IsEnabled { get; set; }
-
-    [ObservableProperty]
-    public partial BassShakerChannel Channel { get; set; }
 
     [ObservableProperty]
     public partial double Volume { get; set; }
@@ -36,18 +34,6 @@ public partial class BassShakerInputViewModel : ViewModelBase
     [ObservableProperty]
     public partial double MaxPercent { get; set; }
 
-    [ObservableProperty]
-    public partial bool IsFrontLeftSelected { get; set; }
-
-    [ObservableProperty]
-    public partial bool IsFrontRightSelected { get; set; }
-
-    [ObservableProperty]
-    public partial bool IsRearLeftSelected { get; set; }
-
-    [ObservableProperty]
-    public partial bool IsRearRightSelected { get; set; }
-
     public static string GetDisplayName(TelemetryInput input) => input.GetDisplayName();
 
     public BassShakerInputViewModel(BassShakerInputSettings settings, Action onChanged, Action<BassShakerInputViewModel> onRemove)
@@ -56,26 +42,23 @@ public partial class BassShakerInputViewModel : ViewModelBase
         _onChanged = onChanged;
         _onRemove = onRemove;
         IsEnabled = settings.IsEnabled;
-        Channel = settings.Channel;
         Volume = settings.Volume * 100;
         Frequency = settings.Frequency;
         MinPercent = settings.MinPercent;
         MaxPercent = settings.MaxPercent;
-        IsFrontLeftSelected = settings.Wheels.Includes(WheelSelection.FrontLeft);
-        IsFrontRightSelected = settings.Wheels.Includes(WheelSelection.FrontRight);
-        IsRearLeftSelected = settings.Wheels.Includes(WheelSelection.RearLeft);
-        IsRearRightSelected = settings.Wheels.Includes(WheelSelection.RearRight);
+
+        foreach (var mapping in settings.Mappings)
+        {
+            if (mapping is not null)
+            {
+                AddMappingViewModel(mapping);
+            }
+        }
     }
 
     partial void OnIsEnabledChanged(bool value)
     {
         Settings.IsEnabled = value;
-        _onChanged();
-    }
-
-    partial void OnChannelChanged(BassShakerChannel value)
-    {
-        Settings.Channel = value;
         _onChanged();
     }
 
@@ -103,17 +86,26 @@ public partial class BassShakerInputViewModel : ViewModelBase
         _onChanged();
     }
 
-    partial void OnIsFrontLeftSelectedChanged(bool value) => SetWheel(WheelSelection.FrontLeft, value);
-
-    partial void OnIsFrontRightSelectedChanged(bool value) => SetWheel(WheelSelection.FrontRight, value);
-
-    partial void OnIsRearLeftSelectedChanged(bool value) => SetWheel(WheelSelection.RearLeft, value);
-
-    partial void OnIsRearRightSelectedChanged(bool value) => SetWheel(WheelSelection.RearRight, value);
-
-    private void SetWheel(WheelSelection wheel, bool selected)
+    [RelayCommand]
+    private void AddMapping()
     {
-        Settings.Wheels = selected ? Settings.Wheels | wheel : Settings.Wheels & ~wheel;
+        var mapping = new BassShakerMapping();
+        Settings.Mappings.Add(mapping);
+        AddMappingViewModel(mapping);
+        OnPropertyChanged(nameof(HasMappings));
+        _onChanged();
+    }
+
+    private void AddMappingViewModel(BassShakerMapping mapping)
+    {
+        Mappings.Add(new BassShakerMappingViewModel(mapping, UsesWheelSelection, _onChanged, OnMappingRemoved));
+    }
+
+    private void OnMappingRemoved(BassShakerMappingViewModel mappingViewModel)
+    {
+        Settings.Mappings.Remove(mappingViewModel.Mapping);
+        Mappings.Remove(mappingViewModel);
+        OnPropertyChanged(nameof(HasMappings));
         _onChanged();
     }
 

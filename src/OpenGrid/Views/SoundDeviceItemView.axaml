@@ -173,41 +173,87 @@
                                 </Expander.Header>
 
                                 <StackPanel Margin="16,8,16,16" Spacing="10">
-                                    <!--  Channel  -->
-                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
-                                        <TextBlock
-                                            Grid.Column="0"
-                                            VerticalAlignment="Center"
-                                            Classes="Body2"
-                                            Opacity="0.6"
-                                            Text="Channel" />
-                                        <ComboBox
-                                            Grid.Column="1"
-                                            MinWidth="120"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Center"
-                                            ItemsSource="{x:Static viewModels:BassShakerInputViewModel.AvailableChannels}"
-                                            SelectedItem="{Binding Channel}" />
-                                    </Grid>
+                                    <!--  Output mappings  -->
+                                    <StackPanel Spacing="6">
+                                        <Grid ColumnDefinitions="110,*,Auto" ColumnSpacing="12">
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                VerticalAlignment="Center"
+                                                Classes="Body2"
+                                                Opacity="0.6"
+                                                Text="Outputs" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                Classes="Body2"
+                                                Opacity="0.5"
+                                                Text="Map output channels to the tires that drive them."
+                                                TextWrapping="Wrap" />
+                                            <Button
+                                                Grid.Column="2"
+                                                Padding="12,4"
+                                                VerticalAlignment="Center"
+                                                Command="{Binding AddMappingCommand}"
+                                                Content="Add Output"
+                                                Theme="{StaticResource MaterialOutlineButton}" />
+                                        </Grid>
 
-                                    <!--  Wheels (wheel slip effects only)  -->
-                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12" IsVisible="{Binding UsesWheelSelection}">
+                                        <ItemsControl ItemsSource="{Binding Mappings}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="viewModels:BassShakerMappingViewModel">
+                                                    <Border
+                                                        Margin="0,2"
+                                                        Padding="8"
+                                                        Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}"
+                                                        CornerRadius="4">
+                                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                                            <ComboBox
+                                                                Grid.Column="0"
+                                                                MinWidth="120"
+                                                                VerticalAlignment="Center"
+                                                                ItemsSource="{x:Static viewModels:BassShakerMappingViewModel.AvailableChannels}"
+                                                                SelectedItem="{Binding Channel}" />
+                                                            <StackPanel
+                                                                Grid.Column="1"
+                                                                VerticalAlignment="Center"
+                                                                IsVisible="{Binding UsesWheelSelection}"
+                                                                Orientation="Horizontal"
+                                                                Spacing="12">
+                                                                <CheckBox Content="FL" IsChecked="{Binding IsFrontLeftSelected}" />
+                                                                <CheckBox Content="FR" IsChecked="{Binding IsFrontRightSelected}" />
+                                                                <CheckBox Content="RL" IsChecked="{Binding IsRearLeftSelected}" />
+                                                                <CheckBox Content="RR" IsChecked="{Binding IsRearRightSelected}" />
+                                                            </StackPanel>
+                                                            <TextBlock
+                                                                Grid.Column="1"
+                                                                VerticalAlignment="Center"
+                                                                Classes="Body2"
+                                                                IsVisible="{Binding !UsesWheelSelection}"
+                                                                Opacity="0.5"
+                                                                Text="Applies to all tires" />
+                                                            <Button
+                                                                Grid.Column="2"
+                                                                Width="24"
+                                                                Height="24"
+                                                                Padding="0"
+                                                                VerticalAlignment="Center"
+                                                                Classes="Flat"
+                                                                Command="{Binding RemoveCommand}"
+                                                                ToolTip.Tip="Remove Output">
+                                                                <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
+                                                            </Button>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
                                         <TextBlock
-                                            Grid.Column="0"
-                                            VerticalAlignment="Center"
                                             Classes="Body2"
-                                            Opacity="0.6"
-                                            Text="Wheels" />
-                                        <StackPanel
-                                            Grid.Column="1"
-                                            Orientation="Horizontal"
-                                            Spacing="12">
-                                            <CheckBox Content="FL" IsChecked="{Binding IsFrontLeftSelected}" />
-                                            <CheckBox Content="FR" IsChecked="{Binding IsFrontRightSelected}" />
-                                            <CheckBox Content="RL" IsChecked="{Binding IsRearLeftSelected}" />
-                                            <CheckBox Content="RR" IsChecked="{Binding IsRearRightSelected}" />
-                                        </StackPanel>
-                                    </Grid>
+                                            IsVisible="{Binding !HasMappings}"
+                                            Opacity="0.5"
+                                            Text="No output mappings configured. Add one to route this effect." />
+                                    </StackPanel>
 
                                     <!--  Volume  -->
                                     <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
