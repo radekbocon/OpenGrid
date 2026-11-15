@@ -51,6 +51,9 @@ public class DebugTelemetryClient : ITelemetryClient
         var engineRpm = 0f + (float)(Math.Abs(Math.Sin(_tick * 0.01)) * 12000f);
         var abs = Math.Clamp((brake - 0.05f) / 0.15f, 0f, 1f);
         var tc = Math.Clamp((gas - 0.6f) / 0.35f, 0f, 1f);
+        var speedMps = speed / 3.6f;
+        var wheelSpeed = speedMps * (1f + tc - abs);
+        var wheelSpeeds = new TireStats(wheelSpeed, wheelSpeed, wheelSpeed * 1.05f, wheelSpeed * 1.05f);
         float[] temps = [
             85f + (float)_random.NextDouble() * 15f,
             87f + (float)_random.NextDouble() * 15f, 
@@ -86,6 +89,7 @@ public class DebugTelemetryClient : ITelemetryClient
             CurrentGear = currentGear,
             EngineRpm = engineRpm,
             TireTemperatures = TireStats.FromArray(temps),
+            WheelSpeeds = wheelSpeeds,
             LapTime = lapTime,
             LastLapTime = lastLapTime,
             BestLapTime = bestLapTime,

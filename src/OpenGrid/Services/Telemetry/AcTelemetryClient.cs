@@ -81,6 +81,7 @@ public class AcTelemetryClient : ITelemetryClient
                 CurrentGear = (Gear)physicsData.Value.Gear,
                 EngineRpm = physicsData.Value.Rpms,
                 TireTemperatures = physicsData.Value.TyreTemp,
+                WheelSpeeds = WheelSlipCalculator.ToWheelSpeeds(physicsData.Value.WheelAngularSpeed, staticData.Value.TyreRadius),
                 LapTime = TimeSpan.FromMilliseconds(graphicsData.Value.CurrentTime),
                 Distance = graphicsData.Value.DistanceTraveled,
                 MaxRpm = staticData.Value.MaxRpm,

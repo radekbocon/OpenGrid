@@ -120,6 +120,7 @@ public class DirtRallyTelemetryClient : ITelemetryClient
                 Car = DirtRallyCars.Get(carKey),
                 Track = Track.Create("dirt_rally_generic_track"),
                 SpeedKmh = packet.Speed * 3.6f,
+                WheelSpeeds = new TireStats(packet.WheelSpeedFL, packet.WheelSpeedFR, packet.WheelSpeedRL, packet.WheelSpeedRR),
                 Gas = packet.Throttle,
                 Brake = packet.Brake,
                 Clutch = packet.Clutch,

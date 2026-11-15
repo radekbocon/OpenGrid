@@ -5,16 +5,7 @@ namespace OpenGrid.Converters;
 
 public static class EnumConverters
 {
-    public static readonly FuncValueConverter<TelemetryInput, string> TelemetryInputToString = new(
-        x =>
-        {
-            return x switch
-            {
-                TelemetryInput.Abs => "ABS",
-                TelemetryInput.Tc => "Traction Control",
-                _ => x.ToString(),
-            };
-        });
+    public static readonly FuncValueConverter<TelemetryInput, string> TelemetryInputToString = new(x => x.GetDisplayName());
 
     public static readonly FuncValueConverter<DashboardLaunchTrigger, string> DashboardLaunchTriggerToString = new (
         x =>
