@@ -1,4 +1,3 @@
-using System;
 using OpenGrid.Models;
 using OpenGrid.Models.Telemetry;
 
@@ -19,14 +18,14 @@ public class SessionMetaRow
         {
             Id = info.Id.ToString(),
             GameAppId = info.Game.AppId,
-            CarKey = info.Car?.Key ?? "",
+            CarKey = info.Car?.Name ?? "",
             TrackKey = info.Track?.Key ?? "",
             SessionType = (int)info.Type,
             StartTime = SessionWriter.ToUnixSeconds(info.StartTime),
         };
     }
 
-    public static SessionInfo? ToSessionInfo(SessionMetaRow row)
+    public static SessionInfo? ToSessionInfo(SessionMetaRow row,  string filePath)
     {
         var game = SteamGame.GetByAppId(row.GameAppId);
         if (game is null)
@@ -38,6 +37,7 @@ public class SessionMetaRow
             (SessionType)row.SessionType,
             Car.Create(row.CarKey),
             Track.Create(row.TrackKey),
-            SessionWriter.FromUnixSeconds(row.StartTime));
+            SessionWriter.FromUnixSeconds(row.StartTime),
+            filePath);
     }
 }

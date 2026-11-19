@@ -28,9 +28,9 @@ public sealed class CarConfigConfigService : ICarConfigService
 
     public IReadOnlyList<CarProfile> GetAll() => _cars;
 
-    public CarProfile? GetByCarKey(string carKey)
+    public CarProfile? GetByCarName(string carName)
     {
-        return _cars.FirstOrDefault(c => c.CarKey == carKey);
+        return _cars.FirstOrDefault(c => c.Name == carName);
     }
 
     public void Save(CarProfile car)
@@ -41,11 +41,11 @@ public sealed class CarConfigConfigService : ICarConfigService
 
     public void Remove(string carKey)
     {
-        var car = _cars.FirstOrDefault(c => c.CarKey == carKey);
+        var car = _cars.FirstOrDefault(c => c.Name == carKey);
         if (car is null) return;
 
         _cars.Remove(car);
-        _knownCarKeys.Remove(car.CarKey);
+        _knownCarKeys.Remove(car.Name);
         DeleteFile(car);
         CarRemoved?.Invoke(this, car);
     }
@@ -53,16 +53,16 @@ public sealed class CarConfigConfigService : ICarConfigService
     private void OnTelemetryReceived(object? sender, TelemetryEventArgs e)
     {
         var car = e.Telemetry.Car;
-        if (string.IsNullOrWhiteSpace(car.Key) || car == Car.Unknown)
+        if (string.IsNullOrWhiteSpace(car.Name) || car == Car.Unknown)
             return;
 
-        if (_knownCarKeys.Contains(car.Key))
+        if (_knownCarKeys.Contains(car.Name))
             return;
 
-        var existing = GetByCarKey(car.Key);
+        var existing = GetByCarName(car.Name);
         if (existing is not null)
         {
-            _knownCarKeys.Add(car.Key);
+            _knownCarKeys.Add(car.Name);
             return;
         }
 
@@ -71,14 +71,13 @@ public sealed class CarConfigConfigService : ICarConfigService
 
         var profile = new CarProfile
         {
-            CarKey = car.Key,
-            Name = e.Telemetry.Car.DisplayName,
+            Name = car.Name,
             MaxRpm = maxRpm,
-            RedlineRpm = (int)(maxRpm * 0.95)
+            RedlineRpm = (int)(maxRpm * 0.95),
         };
 
         _cars.Add(profile);
-        _knownCarKeys.Add(car.Key);
+        _knownCarKeys.Add(car.Name);
         SaveToFile(profile);
         CarAdded?.Invoke(this, profile);
     }
@@ -97,9 +96,9 @@ public sealed class CarConfigConfigService : ICarConfigService
                 if (car is not null)
                 {
                     _cars.Add(car);
-                    if (!string.IsNullOrEmpty(car.CarKey))
+                    if (!string.IsNullOrEmpty(car.Name))
                     {
-                        _knownCarKeys.Add(car.CarKey);
+                        _knownCarKeys.Add(car.Name);
                     }
                 }
             }
@@ -119,7 +118,7 @@ public sealed class CarConfigConfigService : ICarConfigService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to save car {CarKey}", car.CarKey);
+            Log.Error(ex, "Failed to save car {CarKey}", car.Name);
         }
     }
 
@@ -135,9 +134,9 @@ public sealed class CarConfigConfigService : ICarConfigService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to delete car file {CarKey}", car.CarKey);
+            Log.Error(ex, "Failed to delete car file {CarKey}", car.Name);
         }
     }
 
-    private static string GetCarPath(CarProfile car) => Path.Combine(CarsDirectory, $"{car.CarKey}.json");
+    private static string GetCarPath(CarProfile car) => Path.Combine(CarsDirectory, $"{car.Name}.json");
 }

@@ -16,14 +16,14 @@ public sealed class TelemetryWebSocketBroadcaster : IDisposable
     private CancellationTokenSource? _cts;
     private int? _cachedRedlineRpm;
     private float? _cachedBrakeBiasOffset;
-    private string? _lastCarKey;
+    private string? _lastCarName;
 
     public TelemetryWebSocketBroadcaster(ICarConfigService carConfigService)
     {
         _carConfigService = carConfigService;
         _carConfigService.CarUpdated += (_, car) =>
         {
-            if (car.CarKey != _lastCarKey) return;
+            if (car.Name != _lastCarName) return;
             
             _cachedRedlineRpm = car.RedlineRpm;
             _cachedBrakeBiasOffset = car.BrakeBiasOffset;
@@ -73,11 +73,11 @@ public sealed class TelemetryWebSocketBroadcaster : IDisposable
     {
         _latestSnapshot = record;
 
-        var carKey = record.Car.Key;
-        if (carKey != _lastCarKey)
+        var carName = record.Car.Name;
+        if (carName != _lastCarName)
         {
-            _lastCarKey = carKey;
-            var profile = _carConfigService.GetByCarKey(carKey);
+            _lastCarName = carName;
+            var profile = _carConfigService.GetByCarName(carName);
             _cachedRedlineRpm = profile?.RedlineRpm;
             _cachedBrakeBiasOffset = profile?.BrakeBiasOffset;
         }

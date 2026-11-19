@@ -17,8 +17,7 @@ public static class TelemetryJsonSerializer
             timestamp = record.Timestamp,
             car = new
             {
-                key = record.Car.Key,
-                displayName = record.Car.DisplayName
+                displayName = record.Car.Name,
             },
             track = new
             {
