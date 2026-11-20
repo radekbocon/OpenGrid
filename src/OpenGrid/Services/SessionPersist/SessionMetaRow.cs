@@ -19,7 +19,7 @@ public class SessionMetaRow
             Id = info.Id.ToString(),
             GameAppId = info.Game.AppId,
             CarKey = info.Car?.Name ?? "",
-            TrackKey = info.Track?.Key ?? "",
+            TrackKey = info.Track?.Name ?? "",
             SessionType = (int)info.Type,
             StartTime = SessionWriter.ToUnixSeconds(info.StartTime),
         };
