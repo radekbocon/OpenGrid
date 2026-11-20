@@ -8,7 +8,7 @@ namespace OpenGridBridge;
 /// </summary>
 public class SharedMemoryBridge : IDisposable
 {
-    private const int UpdateInterval = 1000 / 120;
+    private const int UpdateInterval = 1000 / 240;
 
     private readonly KeyValuePair<string, string>[] _buffers;
     private readonly List<OpenedBuffer> _openedBuffers = [];
