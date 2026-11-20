@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using Serilog;
 using OpenGrid.Models;
 using OpenGrid.Models.Telemetry;
@@ -68,8 +67,8 @@ public class AcTelemetryClient : ITelemetryClient
             var snapshot = new TelemetryRecord
             {
                 Timestamp = DateTime.UtcNow,
-                Track = Track.Create(staticData.Value.Track),
-                Car = Car.Create(staticData.Value.CarModel),
+                Track = Track.Create(TrackPretty(staticData.Value.Track)),
+                Car = Car.Create(CarModelPretty(staticData.Value.CarModel)),
                 SessionType = graphicsData.Value.Session,
                 CurrentLap = graphicsData.Value.CompletedLaps,
                 SpeedKmh = physicsData.Value.SpeedKmh,
@@ -114,4 +113,7 @@ public class AcTelemetryClient : ITelemetryClient
             return null;
         }
     }
+
+    private static string CarModelPretty(string carModel) => AcCars.GetName(carModel);
+    private static string TrackPretty(string track) => AcTracks.GetName(track);
 }

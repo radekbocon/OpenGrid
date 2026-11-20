@@ -13,7 +13,7 @@ public partial class CarItemViewModel : ViewModelBase
     private readonly ICarConfigService _carConfigService;
     private float _brakeBiasOffset;
 
-    public string CarKey => _car.CarKey;
+    public string CarKey => _car.Name;
     
     public string Name { get; }
 
@@ -64,7 +64,7 @@ public partial class CarItemViewModel : ViewModelBase
 
         if (confirmDialog.Result)
         {
-            _carConfigService.Remove(_car.CarKey);
+            _carConfigService.Remove(_car.Name);
         }
     }
 

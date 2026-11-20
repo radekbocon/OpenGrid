@@ -225,11 +225,11 @@ public class SessionRepository
             {
                 File.Delete(filePath);
             }
-            Log.Information("Discarded empty session from {Game} on {Track} with no valid laps", session.Info.Game.Name, session.Info.Track?.DisplayName);
+            Log.Information("Discarded empty session from {Game} on {Track} with no valid laps", session.Info.Game.Name, session.Info.Track?.Name);
             return;
         }
 
-        Log.Information("Saved {Game} on {Track} with {Count} lap(s)", session.Info.Game.Name, session.Info.Track?.DisplayName, lapRecords.Count);
+        Log.Information("Saved {Game} on {Track} with {Count} lap(s)", session.Info.Game.Name, session.Info.Track?.Name, lapRecords.Count);
         _sessionWriter.WriteFull(session);
         CurrentSession = null;
     }
