@@ -3,8 +3,6 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
-    xmlns:converters="clr-namespace:OpenGrid.Converters"
-    xmlns:models="clr-namespace:OpenGrid.Models"
     xmlns:viewModels="clr-namespace:OpenGrid.ViewModels"
     x:DataType="viewModels:SoundDeviceItemViewModel">
 
@@ -90,7 +88,7 @@
             <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 
             <!--  Configuration  -->
-            <TextBlock Classes="Headline6" Text="Configuration" />
+            <TextBlock Classes="Headline6" Text="Bass Shaker" />
 
             <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 
@@ -111,7 +109,7 @@
                     IsChecked="{Binding IsEnabled}" />
             </Grid>
 
-            <!--  Global volume  -->
+            <!--  Default preset  -->
             <Grid
                 ColumnDefinitions="140,*"
                 ColumnSpacing="12"
@@ -121,293 +119,117 @@
                     VerticalAlignment="Center"
                     Classes="Subtitle1"
                     Opacity="0.6"
-                    Text="Master Volume" />
-                <Grid
+                    Text="Default Preset" />
+                <ComboBox
                     Grid.Column="1"
-                    ColumnDefinitions="*,Auto"
-                    ColumnSpacing="12">
-                    <Slider
-                        Grid.Column="0"
-                        Maximum="100"
-                        Minimum="0"
-                        Value="{Binding Volume}" />
-                    <TextBlock
-                        Grid.Column="1"
-                        MinWidth="44"
-                        VerticalAlignment="Center"
-                        Classes="Body2"
-                        Text="{Binding Volume, StringFormat='{}{0:0}%'}" />
-                </Grid>
-            </Grid>
-
-            <!--  Configured telemetry inputs  -->
-            <StackPanel Spacing="8">
-                <ItemsControl ItemsSource="{Binding BassShakerInputs}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="viewModels:BassShakerInputViewModel">
-                            <Expander Margin="2,8" Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}">
-                                <Expander.Header>
-                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                        <TextBlock
-                                            Grid.Column="0"
-                                            VerticalAlignment="Center"
-                                            Classes="Subtitle1"
-                                            FontWeight="SemiBold"
-                                            Text="{Binding InputName}" />
-                                        <ToggleSwitch
-                                            Grid.Column="1"
-                                            VerticalAlignment="Center"
-                                            IsChecked="{Binding IsEnabled}" />
-                                        <Button
-                                            Grid.Column="2"
-                                            Width="24"
-                                            Height="24"
-                                            Padding="0"
-                                            VerticalAlignment="Center"
-                                            Classes="Flat"
-                                            Command="{Binding RemoveCommand}"
-                                            ToolTip.Tip="Remove Effect">
-                                            <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
-                                        </Button>
-                                    </Grid>
-                                </Expander.Header>
-
-                                <StackPanel Margin="16,8,16,16" Spacing="10">
-                                    <!--  Output mappings  -->
-                                    <StackPanel Spacing="6">
-                                        <Grid ColumnDefinitions="110,*,Auto" ColumnSpacing="12">
-                                            <TextBlock
-                                                Grid.Column="0"
-                                                VerticalAlignment="Center"
-                                                Classes="Body2"
-                                                Opacity="0.6"
-                                                Text="Outputs" />
-                                            <TextBlock
-                                                Grid.Column="1"
-                                                VerticalAlignment="Center"
-                                                Classes="Body2"
-                                                Opacity="0.5"
-                                                Text="Map output channels to the tires that drive them."
-                                                TextWrapping="Wrap" />
-                                            <Button
-                                                Grid.Column="2"
-                                                Padding="12,4"
-                                                VerticalAlignment="Center"
-                                                Command="{Binding AddMappingCommand}"
-                                                Content="Add Output"
-                                                Theme="{StaticResource MaterialOutlineButton}" />
-                                        </Grid>
-
-                                        <ItemsControl ItemsSource="{Binding Mappings}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="viewModels:BassShakerMappingViewModel">
-                                                    <Border
-                                                        Margin="0,2"
-                                                        Padding="8"
-                                                        Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}"
-                                                        CornerRadius="4">
-                                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                                                            <ComboBox
-                                                                Grid.Column="0"
-                                                                MinWidth="120"
-                                                                VerticalAlignment="Center"
-                                                                ItemsSource="{x:Static viewModels:BassShakerMappingViewModel.AvailableChannels}"
-                                                                SelectedItem="{Binding Channel}" />
-                                                            <StackPanel
-                                                                Grid.Column="1"
-                                                                VerticalAlignment="Center"
-                                                                IsVisible="{Binding UsesWheelSelection}"
-                                                                Orientation="Horizontal"
-                                                                Spacing="12">
-                                                                <CheckBox Content="FL" IsChecked="{Binding IsFrontLeftSelected}" />
-                                                                <CheckBox Content="FR" IsChecked="{Binding IsFrontRightSelected}" />
-                                                                <CheckBox Content="RL" IsChecked="{Binding IsRearLeftSelected}" />
-                                                                <CheckBox Content="RR" IsChecked="{Binding IsRearRightSelected}" />
-                                                            </StackPanel>
-                                                            <TextBlock
-                                                                Grid.Column="1"
-                                                                VerticalAlignment="Center"
-                                                                Classes="Body2"
-                                                                IsVisible="{Binding !UsesWheelSelection}"
-                                                                Opacity="0.5"
-                                                                Text="Applies to all tires" />
-                                                            <Button
-                                                                Grid.Column="2"
-                                                                Width="24"
-                                                                Height="24"
-                                                                Padding="0"
-                                                                VerticalAlignment="Center"
-                                                                Classes="Flat"
-                                                                Command="{Binding RemoveCommand}"
-                                                                ToolTip.Tip="Remove Output">
-                                                                <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
-                                                            </Button>
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-
-                                        <TextBlock
-                                            Classes="Body2"
-                                            IsVisible="{Binding !HasMappings}"
-                                            Opacity="0.5"
-                                            Text="No output mappings configured. Add one to route this effect." />
-                                    </StackPanel>
-
-                                    <!--  Volume  -->
-                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
-                                        <TextBlock
-                                            Grid.Column="0"
-                                            VerticalAlignment="Center"
-                                            Classes="Body2"
-                                            Opacity="0.6"
-                                            Text="Volume" />
-                                        <Grid
-                                            Grid.Column="1"
-                                            ColumnDefinitions="*,Auto"
-                                            ColumnSpacing="12">
-                                            <Slider
-                                                Grid.Column="0"
-                                                Maximum="100"
-                                                Minimum="0"
-                                                Value="{Binding Volume}" />
-                                            <TextBlock
-                                                Grid.Column="1"
-                                                MinWidth="44"
-                                                VerticalAlignment="Center"
-                                                Classes="Body2"
-                                                Text="{Binding Volume, StringFormat='{}{0:0}%'}" />
-                                        </Grid>
-                                    </Grid>
-
-                                    <!--  Frequency  -->
-                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
-                                        <TextBlock
-                                            Grid.Column="0"
-                                            VerticalAlignment="Center"
-                                            Classes="Body2"
-                                            Opacity="0.6"
-                                            Text="Frequency" />
-                                        <Grid
-                                            Grid.Column="1"
-                                            ColumnDefinitions="*,Auto"
-                                            ColumnSpacing="12">
-                                            <Slider
-                                                Grid.Column="0"
-                                                Maximum="120"
-                                                Minimum="20"
-                                                Value="{Binding Frequency}" />
-                                            <TextBlock
-                                                Grid.Column="1"
-                                                MinWidth="44"
-                                                VerticalAlignment="Center"
-                                                Classes="Body2"
-                                                Text="{Binding Frequency, StringFormat='{}{0:0} Hz'}" />
-                                        </Grid>
-                                    </Grid>
-
-                                    <!--  Min activation threshold  -->
-                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
-                                        <TextBlock
-                                            Grid.Column="0"
-                                            VerticalAlignment="Center"
-                                            Classes="Body2"
-                                            Opacity="0.6"
-                                            Text="Min %" />
-                                        <Grid
-                                            Grid.Column="1"
-                                            ColumnDefinitions="*,Auto"
-                                            ColumnSpacing="12">
-                                            <Slider
-                                                Grid.Column="0"
-                                                Maximum="100"
-                                                Minimum="0"
-                                                Value="{Binding MinPercent}" />
-                                            <TextBlock
-                                                Grid.Column="1"
-                                                MinWidth="44"
-                                                VerticalAlignment="Center"
-                                                Classes="Body2"
-                                                Text="{Binding MinPercent, StringFormat='{}{0:0}%'}" />
-                                        </Grid>
-                                    </Grid>
-
-                                    <!--  Max activation threshold  -->
-                                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
-                                        <TextBlock
-                                            Grid.Column="0"
-                                            VerticalAlignment="Center"
-                                            Classes="Body2"
-                                            Opacity="0.6"
-                                            Text="Max %" />
-                                        <Grid
-                                            Grid.Column="1"
-                                            ColumnDefinitions="*,Auto"
-                                            ColumnSpacing="12">
-                                            <Slider
-                                                Grid.Column="0"
-                                                Maximum="100"
-                                                Minimum="0"
-                                                Value="{Binding MaxPercent}" />
-                                            <TextBlock
-                                                Grid.Column="1"
-                                                MinWidth="44"
-                                                VerticalAlignment="Center"
-                                                Classes="Body2"
-                                                Text="{Binding MaxPercent, StringFormat='{}{0:0}%'}" />
-                                        </Grid>
-                                    </Grid>
-                                </StackPanel>
-                            </Expander>
+                    MinWidth="220"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding DefaultPresetOptions}"
+                    SelectedItem="{Binding SelectedDefaultPreset}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:BassShakerPresetOption">
+                            <TextBlock Text="{Binding Name}" />
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-
-                <!--  No inputs hint  -->
-                <TextBlock
-                    Classes="Body2"
-                    IsVisible="{Binding !HasBassShakerInputs}"
-                    Opacity="0.5"
-                    Text="No vibration effects configured yet." />
-            </StackPanel>
-
-            <!--  Add input  -->
-            <Grid
-                ColumnDefinitions="140,*"
-                ColumnSpacing="12"
-                RowDefinitions="Auto">
-                <TextBlock
-                    Grid.Column="0"
-                    VerticalAlignment="Center"
-                    Classes="Subtitle1"
-                    Opacity="0.6"
-                    Text="Add Effect" />
-                <StackPanel
-                    Grid.Column="1"
-                    Orientation="Horizontal"
-                    Spacing="8">
-                    <ComboBox
-                        MinWidth="180"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        ItemsSource="{Binding AvailableTelemetryInputs}"
-                        SelectedItem="{Binding SelectedTelemetryInput}"
-                        Theme="{StaticResource MaterialFilledComboBox}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="models:TelemetryInput">
-                                <TextBlock Text="{Binding ., Converter={x:Static converters:EnumConverters.TelemetryInputToString}}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                    <Button
-                        VerticalAlignment="Center"
-                        Command="{Binding AddBassShakerInputCommand}"
-                        Content="Add"
-                        Theme="{StaticResource MaterialOutlineButton}" />
-                </StackPanel>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
             </Grid>
 
+            <TextBlock
+                Classes="Body2"
+                Opacity="0.5"
+                Text="Presets are created and edited on the Bass Shaker page."
+                TextWrapping="Wrap" />
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Game and car overrides  -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <StackPanel Spacing="2">
+                    <TextBlock Classes="Headline6" Text="Game &amp; Car Overrides" />
+                    <TextBlock
+                        Classes="Body2"
+                        Opacity="0.5"
+                        Text="The most specific match wins: game + car, then game only, then car only, then the default preset."
+                        TextWrapping="Wrap" />
+                </StackPanel>
+                <Button
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Command="{Binding AddBassShakerOverrideCommand}"
+                    Content="Add Override"
+                    IsEnabled="{Binding HasPresets}"
+                    Theme="{StaticResource MaterialOutlineButton}" />
+            </Grid>
+
+            <ItemsControl ItemsSource="{Binding BassShakerOverrides}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:BassShakerOverrideItemViewModel">
+                        <Border
+                            Margin="0,2"
+                            Padding="8"
+                            Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}"
+                            CornerRadius="4">
+                            <Grid
+                                ColumnDefinitions="*,*,1.3*,Auto"
+                                ColumnSpacing="8">
+                                <StackPanel
+                                    Grid.Column="0"
+                                    VerticalAlignment="Center"
+                                    Spacing="2">
+                                    <TextBlock
+                                        Classes="Caption"
+                                        Opacity="0.5"
+                                        Text="Game" />
+                                    <TextBlock Text="{Binding GameName}" />
+                                </StackPanel>
+                                <StackPanel
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Spacing="2">
+                                    <TextBlock
+                                        Classes="Caption"
+                                        Opacity="0.5"
+                                        Text="Car" />
+                                    <TextBlock Text="{Binding CarName}" />
+                                </StackPanel>
+                                <StackPanel
+                                    Grid.Column="2"
+                                    VerticalAlignment="Center"
+                                    Spacing="2">
+                                    <TextBlock
+                                        Classes="Caption"
+                                        Opacity="0.5"
+                                        Text="Preset" />
+                                    <ComboBox
+                                        HorizontalAlignment="Stretch"
+                                        ItemsSource="{Binding PresetOptions}"
+                                        SelectedItem="{Binding SelectedPreset}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="viewModels:BassShakerPresetOption">
+                                                <TextBlock Text="{Binding Name}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+                                <Button
+                                    Grid.Column="3"
+                                    VerticalAlignment="Bottom"
+                                    Command="{Binding RemoveCommand}"
+                                    Content="Remove"
+                                    Theme="{StaticResource MaterialOutlineButton}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock
+                Classes="Body2"
+                IsVisible="{Binding !HasBassShakerOverrides}"
+                Opacity="0.5"
+                Text="No game or car overrides configured. The default preset will be used."
+                TextWrapping="Wrap" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

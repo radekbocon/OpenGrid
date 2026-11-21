@@ -82,7 +82,7 @@ public class AcEvoTelemetryClient : ITelemetryClient
             var snapshot = new TelemetryRecord
             {
                 Timestamp = DateTime.UtcNow,
-                Track = Track.Create(staticData.Value.Track + "_" + staticData.Value.TrackConfiguration),
+                Track = Track.Create($"{staticData.Value.Track} {staticData.Value.TrackConfiguration}"),
                 Car = Car.Create(graphicsData.Value.CarModel),
                 SessionType = session,
                 CurrentLap = graphicsData.Value.TotalLapCount + 1,

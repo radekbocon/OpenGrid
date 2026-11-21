@@ -119,6 +119,18 @@ public class SessionRepository
 
     private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryEventArgs e)
     {
+        try
+        {
+            ProcessTelemetry(e);
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Error processing telemetry");
+        }
+    }
+
+    private void ProcessTelemetry(TelemetryEventArgs e)
+    {
         if (CurrentSession is null)
         {
             StartNewSession(e);

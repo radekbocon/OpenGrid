@@ -11,6 +11,7 @@ public partial class BassShakerInputViewModel : ViewModelBase
 {
     private readonly Action _onChanged;
     private readonly Action<BassShakerInputViewModel> _onRemove;
+    private bool _isLoading;
 
     public BassShakerInputSettings Settings { get; }
     public ObservableCollection<BassShakerMappingViewModel> Mappings { get; } = [];
@@ -41,6 +42,7 @@ public partial class BassShakerInputViewModel : ViewModelBase
         Settings = settings;
         _onChanged = onChanged;
         _onRemove = onRemove;
+        _isLoading = true;
         IsEnabled = settings.IsEnabled;
         Volume = settings.Volume * 100;
         Frequency = settings.Frequency;
@@ -54,36 +56,46 @@ public partial class BassShakerInputViewModel : ViewModelBase
                 AddMappingViewModel(mapping);
             }
         }
+
+        _isLoading = false;
     }
 
     partial void OnIsEnabledChanged(bool value)
     {
         Settings.IsEnabled = value;
-        _onChanged();
+        NotifyChanged();
     }
 
     partial void OnVolumeChanged(double value)
     {
         Settings.Volume = value / 100.0;
-        _onChanged();
+        NotifyChanged();
     }
 
     partial void OnFrequencyChanged(double value)
     {
         Settings.Frequency = value;
-        _onChanged();
+        NotifyChanged();
     }
 
     partial void OnMinPercentChanged(double value)
     {
         Settings.MinPercent = value;
-        _onChanged();
+        NotifyChanged();
     }
 
     partial void OnMaxPercentChanged(double value)
     {
         Settings.MaxPercent = value;
-        _onChanged();
+        NotifyChanged();
+    }
+
+    private void NotifyChanged()
+    {
+        if (!_isLoading)
+        {
+            _onChanged();
+        }
     }
 
     [RelayCommand]
