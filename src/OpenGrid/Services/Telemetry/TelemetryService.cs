@@ -9,7 +9,7 @@ namespace OpenGrid.Services.Telemetry;
 /// </summary>
 public class TelemetryService : ITelemetryService
 {
-    private const int PollIntervalMs = 1000 / 120;
+    private const int PollIntervalMs = 1000 / 240;
 
     private readonly List<ITelemetryClient> _telemetryClients;
     private readonly SharedMemoryBridgeLauncher _sharedMemoryBridgeLauncher;
