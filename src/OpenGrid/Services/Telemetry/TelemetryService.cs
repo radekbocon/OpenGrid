@@ -161,13 +161,12 @@ public class TelemetryService : ITelemetryService
             }
             catch (OperationCanceledException)
             {
-                ConnectionStatus = TelemetryConnectionStatus.Disconnected;
+                Disconnect();
                 break;
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                ConnectionStatus = TelemetryConnectionStatus.Disconnected;
-                await Task.Delay(1000, cancellationToken); // Wait longer on error
+                Log.Error(exception, "Error reading telemetry");
             }
         }
     }

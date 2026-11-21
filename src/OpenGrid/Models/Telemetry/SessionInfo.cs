@@ -10,6 +10,7 @@ public class SessionInfo
         Track = record.Track;
         Car = record.Car;
         StartTime = record.Timestamp;
+        FileName = CreateFileName();
     }
 
     public SessionInfo(Guid id, SteamGame game, SessionType type, Car car, Track? track, DateTime startTime, string fileName)
