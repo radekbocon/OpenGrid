@@ -1,3 +1,5 @@
+using OpenGrid.Models.Telemetry;
+
 namespace OpenGrid.Models;
 
 public enum TelemetryInput
@@ -37,6 +39,63 @@ public class BassShakerConfiguration
         get => _inputs;
         set => _inputs = value ?? [];
     }
+
+    public BassShakerConfiguration Clone()
+    {
+        return new BassShakerConfiguration
+        {
+            Volume = Volume,
+            Inputs = Inputs
+                .Where(static input => input is not null)
+                .Select(static input => new BassShakerInputSettings
+                {
+                    Input = input.Input,
+                    IsEnabled = input.IsEnabled,
+                    Volume = input.Volume,
+                    Frequency = input.Frequency,
+                    MinPercent = input.MinPercent,
+                    MaxPercent = input.MaxPercent,
+                    Mappings = input.Mappings
+                        .Where(static mapping => mapping is not null)
+                        .Select(static mapping => new BassShakerMapping
+                        {
+                            Channel = mapping.Channel,
+                            Wheels = mapping.Wheels,
+                        })
+                        .ToList(),
+                })
+                .ToList(),
+        };
+    }
+}
+
+public class BassShakerPreset
+{
+    private BassShakerConfiguration _configuration = new();
+
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+
+    public BassShakerConfiguration Configuration
+    {
+        get => _configuration;
+        set => _configuration = value ?? new BassShakerConfiguration();
+    }
+}
+
+public class BassShakerPresetOverride
+{
+    /// <summary>
+    /// Steam application id of the game this override applies to. Null matches any game.
+    /// </summary>
+    public int? GameAppId { get; set; }
+
+    /// <summary>
+    /// Telemetry car key this override applies to. Null matches any car.
+    /// </summary>
+    public CarProfile? Car { get; set; }
+
+    public string PresetId { get; set; } = string.Empty;
 }
 
 public class BassShakerInputSettings

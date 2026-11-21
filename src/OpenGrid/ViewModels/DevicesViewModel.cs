@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using OpenGrid.Controls;
 using OpenGrid.Models;
+using OpenGrid.Services;
 using OpenGrid.Services.Dashboard;
 using OpenGrid.Services.Devices;
 using OpenGrid.Services.Sound;
@@ -16,6 +17,8 @@ public partial class DevicesViewModel : ViewModelBase
     private readonly IDashboardService _dashboardService;
     private readonly DashboardLauncher _dashboardLauncher;
     private readonly IBassShakerService _bassShakerService;
+    private readonly IBassShakerPresetService _bassShakerPresetService;
+    private readonly ICarConfigService _carConfigService;
 
     public ObservableCollection<DeviceItemViewModel> Devices { get; }
 
@@ -28,12 +31,14 @@ public partial class DevicesViewModel : ViewModelBase
 
     public bool IsDeviceSelected => SelectedDevice is not null;
 
-    public DevicesViewModel(IDeviceService deviceService, IDashboardService dashboardService, DashboardLauncher dashboardLauncher, IBassShakerService bassShakerService)
+    public DevicesViewModel(IDeviceService deviceService, IDashboardService dashboardService, DashboardLauncher dashboardLauncher, IBassShakerService bassShakerService, IBassShakerPresetService bassShakerPresetService, ICarConfigService carConfigService)
     {
         _deviceService = deviceService;
         _dashboardService = dashboardService;
         _dashboardLauncher = dashboardLauncher;
         _bassShakerService = bassShakerService;
+        _bassShakerPresetService = bassShakerPresetService;
+        _carConfigService = carConfigService;
         IsMenuItem = true;
         Devices = [];
     }
@@ -81,7 +86,7 @@ public partial class DevicesViewModel : ViewModelBase
         DeviceItemViewModel deviceItem = device.DeviceType switch
         {
             DeviceType.Display => new DisplayDeviceItemViewModel(_deviceService, _dashboardService, _dashboardLauncher, OnRemove),
-            DeviceType.Sound => new SoundDeviceItemViewModel(_deviceService, _bassShakerService, OnRemove),
+            DeviceType.Sound => new SoundDeviceItemViewModel(_deviceService, _bassShakerService, _bassShakerPresetService, _carConfigService, OnRemove),
             _ => throw new ArgumentOutOfRangeException(nameof(device.DeviceType), device.DeviceType, "Unsupported device type"),
         };
         deviceItem.Init(device);

@@ -1,6 +1,6 @@
 namespace OpenGrid.Models;
 
-public class CarProfile
+public record CarProfile
 {
     public string Name { get; init; } = string.Empty;
     public int MaxRpm { get; set; } = 8000;
