@@ -27,6 +27,16 @@ public partial class SettingsViewModel : ViewModelBase
         set => _settingsService.RecordingRateHz = value;
     }
 
+    public bool DriveMozaWheelLedsFromTelemetry
+    {
+        get => _settingsService.DriveMozaWheelLedsFromTelemetry;
+        set
+        {
+            _settingsService.DriveMozaWheelLedsFromTelemetry = value;
+            OnPropertyChanged();
+        }
+    }
+
     public SettingsViewModel(ISettingsService settingsService, IThemeService themeService)
     {
         _settingsService = settingsService;

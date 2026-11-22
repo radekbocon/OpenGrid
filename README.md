@@ -18,6 +18,7 @@ Includes and launches shared memory bridge inside games proton prefix.
 - Show live dashboards on the phone, tablet or host machine
 - Save sessions in to .csv files, show and compare laps on the charts
 - Basic bass shaker support (more effects are coming)
+- Serial MOZA device discovery and wheel RPM LEDs driven by game telemetry
 - Save bass shaker presets and assign a default preset per sound device
 - Override the default preset for specific games, cars, or a game + car combination
 - Tray icon
@@ -57,6 +58,15 @@ dotnet run --project OpenGrid
 ```
 
 The build automatically publishes `OpenGridBridge` as a single-file Win-x64 executable alongside the main output.
+
+### MOZA devices
+
+OpenGrid scans `/dev/serial/by-id` (and `SerialPort.GetPortNames()`) for MOZA devices. Add one from **Devices → Add Device**. To let game telemetry drive the wheel RPM LEDs:
+
+1. Make sure **Settings → MOZA → Drive wheel LEDs from telemetry** is enabled (global master switch, on by default).
+2. On the device details page, enable **Drive Wheel LEDs** and set the number of RPM LEDs.
+
+Wheel LED colours and idle behaviour remain configured on the wheel / in Pit House. OpenGrid only sends the lit-LED bitmask.
 
 ## Contributing
 

@@ -9,6 +9,7 @@ using OpenGrid.Views;
 using Microsoft.Extensions.DependencyInjection;
 using OpenGrid.Services;
 using OpenGrid.Services.Dashboard;
+using OpenGrid.Services.Devices.Moza;
 using OpenGrid.Services.SessionPersist;
 using OpenGrid.Services.Sound;
 using OpenGrid.Services.Telemetry;
@@ -61,7 +62,8 @@ public class App : Application
             var sessionRepository = Program.ServiceProvider.GetRequiredService<SessionRepository>();
 
             _ = Program.ServiceProvider.GetRequiredService<IBassShakerService>();
-            
+            _ = Program.ServiceProvider.GetRequiredService<IMozaDeviceService>();
+
             SetupTrayIcon(desktop, sessionRepository);
         }
 
@@ -160,6 +162,16 @@ public class App : Application
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Error disposing bass shaker service");
+        }
+
+        try
+        {
+            var mozaDeviceService = Program.ServiceProvider.GetService<IMozaDeviceService>();
+            mozaDeviceService?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Error disposing MOZA device service");
         }
     }
 

@@ -79,6 +79,10 @@
         <DependentUpon>DisplayDeviceItemView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Views\MozaDeviceItemView.axaml.cs">
+        <DependentUpon>MozaDeviceItemView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
       <Compile Update="Views\SoundDeviceItemView.axaml.cs">
         <DependentUpon>SoundDeviceItemView.axaml</DependentUpon>
         <SubType>Code</SubType>
