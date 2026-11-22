@@ -10,6 +10,9 @@ public class SerialDeviceSerializer : IDeviceSerializer
         ArgumentNullException.ThrowIfNull(json);
 
         var dto = JsonSerializer.Deserialize<SerialDeviceDto>(json);
+        var totalLedCount = dto?.RpmLedCount is > 0 and <= RpmLedSegment.MaxLeds
+            ? dto.RpmLedCount.Value
+            : 10;
 
         return dto switch
         {
@@ -27,7 +30,8 @@ public class SerialDeviceSerializer : IDeviceSerializer
                 ProductId = dto.ProductId,
                 Category = dto.Category,
                 DriveLedsWithTelemetry = dto.DriveLedsWithTelemetry ?? true,
-                RpmLedCount = dto.RpmLedCount is > 0 and <= 32 ? dto.RpmLedCount.Value : 10,
+                RpmLedCount = totalLedCount,
+                RpmSegments = ReadSegments(dto.RpmSegments, totalLedCount),
             }
         };
     }
@@ -37,6 +41,8 @@ public class SerialDeviceSerializer : IDeviceSerializer
         ArgumentNullException.ThrowIfNull(device);
 
         var serialDevice = device as SerialDevice;
+        var totalLedCount = Math.Clamp(serialDevice?.RpmLedCount ?? 10, 1, RpmLedSegment.MaxLeds);
+        var segments = RpmLedSegment.Normalize(serialDevice?.RpmSegments, totalLedCount);
 
         var dto = new SerialDeviceDto
         {
@@ -51,10 +57,64 @@ public class SerialDeviceSerializer : IDeviceSerializer
             ProductId = serialDevice?.ProductId ?? 0,
             Category = serialDevice?.Category ?? MozaDeviceCategory.Unknown,
             DriveLedsWithTelemetry = serialDevice?.DriveLedsWithTelemetry ?? true,
-            RpmLedCount = serialDevice?.RpmLedCount ?? 10,
+            RpmLedCount = totalLedCount,
+            RpmSegments = segments.Select(x => new RpmLedSegmentDto
+            {
+                ThresholdPercent = x.ThresholdPercent,
+                Flicker = x.Flicker,
+                Leds = x.Leds.Take(totalLedCount).Select(led => (string?)led).ToList(),
+            }).ToList(),
         };
 
         return JsonSerializer.Serialize(dto);
+    }
+
+    private static List<RpmLedSegment> ReadSegments(
+        List<RpmLedSegmentDto>? dtoSegments,
+        int totalLedCount)
+    {
+        if (dtoSegments is not { Count: > 0 })
+        {
+            return RpmLedSegment.CreateDefault(totalLedCount);
+        }
+
+        if (dtoSegments.All(x => x.Leds is not { Count: > 0 }))
+        {
+            return RpmLedSegment.Normalize(LegacyFrames(dtoSegments, totalLedCount), totalLedCount);
+        }
+
+        var segments = dtoSegments.Select(x => new RpmLedSegment(
+            x.Leds ?? [],
+            x.ThresholdPercent,
+            x.Flicker));
+
+        return RpmLedSegment.Normalize(segments, totalLedCount);
+    }
+
+    /// <summary>
+    /// Older configurations stored additive segments. Convert them into
+    /// cumulative frames so their visual behaviour is preserved.
+    /// </summary>
+    private static List<RpmLedSegment> LegacyFrames(
+        List<RpmLedSegmentDto> dtoSegments,
+        int totalLedCount)
+    {
+        var cumulative = new List<string?>();
+        var frames = new List<RpmLedSegment>();
+
+        foreach (var dto in dtoSegments.OrderBy(x => x.ThresholdPercent))
+        {
+            var count = Math.Clamp(dto.LedCount, 0, totalLedCount - cumulative.Count);
+            var color = string.IsNullOrWhiteSpace(dto.Color) ? "G" : dto.Color;
+            cumulative.AddRange(Enumerable.Repeat<string?>(color, count));
+
+            frames.Add(new RpmLedSegment(
+                Enumerable.Range(0, totalLedCount)
+                    .Select(i => i < cumulative.Count ? cumulative[i] : RpmLedSegment.OffLed),
+                dto.ThresholdPercent));
+        }
+
+        return frames;
     }
 
     private class SerialDeviceDto
@@ -71,5 +131,17 @@ public class SerialDeviceSerializer : IDeviceSerializer
         public MozaDeviceCategory Category { get; init; }
         public bool? DriveLedsWithTelemetry { get; init; }
         public int? RpmLedCount { get; init; }
+        public List<RpmLedSegmentDto>? RpmSegments { get; init; }
+    }
+
+    private class RpmLedSegmentDto
+    {
+        public int ThresholdPercent { get; init; }
+        public bool Flicker { get; init; }
+        public List<string?>? Leds { get; init; }
+
+        // Legacy fields, used only when migrating older configurations.
+        public int LedCount { get; init; }
+        public string? Color { get; init; }
     }
 }

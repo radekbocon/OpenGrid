@@ -224,13 +224,41 @@ public sealed class MozaDeviceService : IMozaDeviceService
             return;
         }
 
-        var ledCount = connection.Device.RpmLedCount;
-        var activeMask = CalculateActiveMask(_lastTelemetry, ledCount);
+        var segments = RpmLedSegment.Normalize(
+            connection.Device.RpmSegments,
+            connection.Device.RpmLedCount);
+        var activeFrame = SelectActiveFrame(_lastTelemetry, segments);
 
-        connection.WriteLeds(activeMask, _lastTelemetry.EngineRpm);
+        connection.WriteFrame(activeFrame, connection.Device.RpmLedCount, _lastTelemetry.EngineRpm);
     }
 
-    private uint CalculateActiveMask(TelemetryRecord telemetry, int ledCount)
+    /// <summary>
+    /// Frames are ordered by threshold. The last frame whose threshold has been
+    /// reached replaces the previous one, so each RPM step shows one complete
+    /// configured LED pattern.
+    /// </summary>
+    private RpmLedSegment? SelectActiveFrame(
+        TelemetryRecord telemetry,
+        IReadOnlyList<RpmLedSegment> segments)
+    {
+        var referenceRpm = GetReferenceRpm(telemetry);
+        var fraction = Math.Clamp(telemetry.EngineRpm / Math.Max(referenceRpm, 1f), 0f, 1f) * 100f;
+
+        RpmLedSegment? active = null;
+        foreach (var segment in segments)
+        {
+            if (fraction < segment.ThresholdPercent)
+            {
+                break;
+            }
+
+            active = segment;
+        }
+
+        return active;
+    }
+
+    private float GetReferenceRpm(TelemetryRecord telemetry)
     {
         var profile = string.IsNullOrWhiteSpace(telemetry.Car.Name)
             ? null
@@ -243,19 +271,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
         // Use the car's redline when available so the last LEDs light up close
         // to the shift point, like Pit House's RPM telemetry.
         var redline = profile?.RedlineRpm ?? 0;
-        var referenceRpm = redline > 0
-            ? Math.Min(redline, maxRpm)
-            : maxRpm;
-
-        var fraction = Math.Clamp(telemetry.EngineRpm / Math.Max(referenceRpm, 1f), 0f, 1f);
-        var count = Math.Clamp(ledCount, 1, 32);
-        var litCount = (int)Math.Ceiling(fraction * count);
-        if (litCount <= 0)
-        {
-            return 0;
-        }
-
-        return litCount >= 32 ? uint.MaxValue : (1u << litCount) - 1;
+        return redline > 0 ? Math.Min(redline, maxRpm) : maxRpm;
     }
 
     public void Dispose()
@@ -281,6 +297,8 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
     private sealed class MozaConnection
     {
+        private static readonly long FlickerIntervalTicks = Stopwatch.Frequency / 5; // 200 ms
+
         private readonly SerialPort _port;
         private readonly Action<string> _statusChanged;
         private readonly object _writeLock = new();
@@ -289,6 +307,10 @@ public sealed class MozaDeviceService : IMozaDeviceService
         private uint _lastActiveMask;
         private bool _ledsInitialized;
         private byte? _previousTelemetryMode;
+        private string? _lastColorSignature;
+        private string? _lastFrameId;
+        private bool _flickerOn = true;
+        private long _lastFlickerToggle;
 
         public MozaConnection(SerialDevice device, Action<string> statusChanged)
         {
@@ -326,13 +348,44 @@ public sealed class MozaDeviceService : IMozaDeviceService
             }
         }
 
-        public void WriteLeds(uint activeMask, float engineRpm)
+        public void WriteFrame(RpmLedSegment? frame, int totalLedCount, float engineRpm)
         {
             lock (_writeLock)
             {
+                var frameId = frame is null
+                    ? "off"
+                    : $"{frame.ThresholdPercent}:{frame.Flicker}:{string.Join(',', frame.Leds)}";
+
+                if (frameId != _lastFrameId)
+                {
+                    _flickerOn = true;
+                    _lastFlickerToggle = Stopwatch.GetTimestamp();
+                    _lastFrameId = frameId;
+                }
+
+                var lightsOn = true;
+                if (frame?.Flicker == true)
+                {
+                    var now = Stopwatch.GetTimestamp();
+                    if (now - _lastFlickerToggle >= FlickerIntervalTicks)
+                    {
+                        _flickerOn = !_flickerOn;
+                        _lastFlickerToggle = now;
+                    }
+
+                    lightsOn = _flickerOn;
+                }
+
+                var leds = frame?.Leds ??
+                    Enumerable.Repeat(RpmLedSegment.OffLed, totalLedCount).ToList();
+
+                ApplyRpmColors(leds, totalLedCount);
+
+                var activeMask = lightsOn ? RpmLedSegment.BuildMask(leds) : 0u;
+
                 // At zero RPM, send the all-off frame only once when the bar
                 // drains. Continuous zero frames keep the wheel in the live LED
-                // pipeline with nothing lit, hiding the configured idle colours.
+                // pipeline with nothing lit, hiding the configured LED colours.
                 var repeatedIdleFrame = activeMask == 0 && _lastActiveMask == 0;
                 _lastActiveMask = activeMask;
 
@@ -347,13 +400,6 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
                 if (!rpmFrame.AsSpan().SequenceEqual(_lastLedFrame))
                 {
-                    Log.Debug(
-                        "Writing MOZA wheel LEDs on {Port}: rpm={Rpm:F0}, active=0x{Active:X4}, rpmFrame={RpmFrame}, buttonsFrame={ButtonsFrame}",
-                        Device.PortName,
-                        engineRpm,
-                        mask,
-                        Convert.ToHexString(rpmFrame),
-                        Convert.ToHexString(buttonsFrame));
                     _lastLedFrame = rpmFrame;
                 }
 
@@ -388,6 +434,10 @@ public sealed class MozaDeviceService : IMozaDeviceService
                 _lastActiveMask = 0;
                 _ledsInitialized = false;
                 _previousTelemetryMode = null;
+                _lastColorSignature = null;
+                _lastFrameId = null;
+                _flickerOn = true;
+                _lastFlickerToggle = 0;
 
                 ClosePort();
             }
@@ -399,31 +449,37 @@ public sealed class MozaDeviceService : IMozaDeviceService
         }
 
         /// <summary>
-        /// Boxflat's default RPM palette, used only when the wheel does not
-        /// answer the stored-colour reads.
+        /// Replays the active frame's exact LED colours into the wheel's
+        /// volatile live colour buffer. This is the boxflat startup step that
+        /// makes the bitmask frames light up in the configured colours.
         /// </summary>
-        private static byte[] DefaultRpmColors(int ledCount)
+        private void ApplyRpmColors(IEnumerable<string?> leds, int totalLedCount)
         {
-            var colors = new byte[ledCount * 3];
-            for (var i = 0; i < ledCount; i++)
+            if (!_port.IsOpen)
             {
-                var rgb = i < 3
-                    ? new byte[] { 0, 255, 0 }
-                    : i < 7
-                        ? new byte[] { 255, 0, 0 }
-                        : new byte[] { 0, 0, 255 };
-
-                rgb.CopyTo(colors, i * 3);
+                return;
             }
 
-            return colors;
+            var colors = RpmLedSegment.BuildColors(leds, totalLedCount);
+            var signature = Convert.ToHexString(colors);
+            if (signature == _lastColorSignature)
+            {
+                return;
+            }
+
+            var ledCount = colors.Length / 3;
+            for (var start = 0; start < ledCount; start += 5)
+            {
+                WriteRaw(MozaProtocol.BuildWheelRpmColorChunkFrame(start, colors));
+            }
+
+            _lastColorSignature = signature;
         }
 
         /// <summary>
-        /// The wheel's live LED frame buffer is volatile. Replay the stored
-        /// RPM colours into it and switch the wheel into telemetry mode before
-        /// sending any active-LED bitmasks; otherwise the bitmask selects LEDs
-        /// whose live colour is black and they stay dark.
+        /// The wheel's live LED frame buffer is volatile. Match boxflat's
+        /// startup order: all-off frames, telemetry mode on, then the configured
+        /// RPM colours. Only after that do the telemetry bitmasks light LEDs.
         /// </summary>
         private void InitializeWheelLeds()
         {
@@ -450,43 +506,6 @@ public sealed class MozaDeviceService : IMozaDeviceService
                     Log.Debug("Could not read MOZA wheel telemetry mode on {Port}", Device.PortName);
                 }
 
-                var ledCount = Math.Clamp(Device.RpmLedCount, 1, 16);
-                var colors = new byte[ledCount * 3];
-                var colorsRead = 0;
-
-                for (var i = 0; i < ledCount; i++)
-                {
-                    var color = ReadWheelValue(
-                        MozaProtocol.BuildWheelRpmColorReadFrame(i),
-                        [
-                            MozaProtocol.WheelStaticColorCommand,
-                            MozaProtocol.WheelRpmLedGroup,
-                            MozaProtocol.WheelStaticColorSubId,
-                            (byte)i,
-                        ],
-                        3);
-
-                    if (color is not { Length: 3 })
-                    {
-                        break;
-                    }
-
-                    color.CopyTo(colors, i * 3);
-                    colorsRead++;
-                }
-
-                if (colorsRead < ledCount)
-                {
-                    colors = DefaultRpmColors(ledCount);
-                    Log.Warning(
-                        "Read {Count}/{Total} stored RPM LED colours from MOZA wheel on {Port}; using fallback palette",
-                        colorsRead,
-                        ledCount,
-                        Device.PortName);
-                }
-
-                // Match boxflat's startup order: all-off telemetry frames,
-                // telemetry mode on, then the live colour chunks.
                 WriteRaw(MozaProtocol.BuildWheelRpmLedFrameLegacy(0));
                 WriteRaw(MozaProtocol.BuildWheelButtonsLedFrameLegacy(0));
 
@@ -509,15 +528,13 @@ public sealed class MozaDeviceService : IMozaDeviceService
                     Log.Debug("Requested telemetry LED mode on {Port}", Device.PortName);
                 }
 
-                for (var start = 0; start < ledCount; start += 5)
-                {
-                    WriteRaw(MozaProtocol.BuildWheelRpmColorChunkFrame(start, colors));
-                }
+                var initialFrame = RpmLedSegment
+                    .Normalize(Device.RpmSegments, Device.RpmLedCount)
+                    .FirstOrDefault();
 
-                Log.Debug(
-                    "Sent {Count} RPM LED colours to MOZA wheel on {Port}",
-                    colorsRead == ledCount ? colorsRead : ledCount,
-                    Device.PortName);
+                ApplyRpmColors(
+                    initialFrame?.Leds ?? Enumerable.Repeat(RpmLedSegment.OffLed, Device.RpmLedCount),
+                    Device.RpmLedCount);
             }
             catch (Exception ex)
             {

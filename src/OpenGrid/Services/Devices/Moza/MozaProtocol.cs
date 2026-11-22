@@ -33,8 +33,6 @@ public static class MozaProtocol
     public const byte WheelButtonsLedGroup = 0x01;
 
     public const byte WheelTelemetryModeCommand = 0x1C;
-    public const byte WheelStaticColorCommand = 0x1F;
-    public const byte WheelStaticColorSubId = 0xFF;
     public const byte WheelTelemetryModeActive = 0x01;
 
     /// <summary>
@@ -83,22 +81,6 @@ public static class MozaProtocol
     }
 
     /// <summary>
-    /// Windowed 8-byte RPM bitmask ([active u32 LE][window u32 LE]) used by
-    /// current wheel firmware. The window defines the addressable LEDs and the
-    /// active mask the LEDs that are currently lit.
-    /// </summary>
-    public static byte[] BuildWheelRpmLedFrame(uint activeMask, uint windowMask)
-    {
-        Span<byte> payload = stackalloc byte[10];
-        payload[0] = WheelRpmBitmaskCommand;
-        payload[1] = WheelRpmLedGroup;
-        BinaryPrimitives.WriteUInt32LittleEndian(payload[2..], activeMask);
-        BinaryPrimitives.WriteUInt32LittleEndian(payload[6..], windowMask);
-
-        return BuildFrame(WheelWriteGroup, WheelDeviceId, payload);
-    }
-
-    /// <summary>
     /// Legacy 2-byte RPM bitmask used by older wheels and by boxflat's
     /// wheel-send-rpm-telemetry command.
     /// </summary>
@@ -124,31 +106,6 @@ public static class MozaProtocol
         BinaryPrimitives.WriteUInt16LittleEndian(payload[2..], activeMask);
 
         return BuildFrame(WheelWriteGroup, WheelDeviceId, payload);
-    }
-
-    public static uint WindowMaskForLedCount(int ledCount)
-    {
-        var count = Math.Clamp(ledCount, 1, 32);
-        return count == 32 ? uint.MaxValue : (1u << count) - 1;
-    }
-
-    /// <summary>
-    /// Reads one RPM LED's stored (static) RGB colour from the wheel. These are
-    /// the colours the user configured in Pit House / on the wheel itself.
-    /// </summary>
-    public static byte[] BuildWheelRpmColorReadFrame(int ledIndex)
-    {
-        Span<byte> payload = stackalloc byte[7];
-        payload[0] = WheelStaticColorCommand;
-        payload[1] = WheelRpmLedGroup;
-        payload[2] = WheelStaticColorSubId;
-        payload[3] = (byte)ledIndex;
-        // Read requests still carry the value-length bytes, zeroed.
-        payload[4] = 0;
-        payload[5] = 0;
-        payload[6] = 0;
-
-        return BuildFrame(WheelReadGroup, WheelDeviceId, payload);
     }
 
     /// <summary>

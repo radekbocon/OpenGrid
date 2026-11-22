@@ -1,4 +1,6 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
 using OpenGrid.Models;
 using OpenGrid.Services.Devices;
@@ -14,7 +16,8 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
 
     public override MaterialIconKind IconKind => MaterialIconKind.Gauge;
 
-    public IReadOnlyList<int> RpmLedOptions { get; } = Enumerable.Range(1, 16).ToArray();
+    public IReadOnlyList<int> FrameLengthOptions { get; } =
+        Enumerable.Range(1, RpmLedSegment.MaxLeds).ToArray();
 
     public string PortName => (Device as SerialDevice)?.PortName ?? "-";
 
@@ -22,11 +25,13 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
 
     public string Category => (Device as SerialDevice)?.Category.ToString() ?? "-";
 
+    public ObservableCollection<MozaRpmSegmentViewModel> RpmSegments { get; } = [];
+
     [ObservableProperty]
     public partial bool DriveLedsWithTelemetry { get; set; }
 
     [ObservableProperty]
-    public partial int RpmLedCount { get; set; } = 10;
+    public partial int FrameLength { get; set; } = 10;
 
     public MozaDeviceItemViewModel(
         IDeviceService deviceService,
@@ -44,8 +49,25 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         if (device is SerialDevice serialDevice)
         {
             DriveLedsWithTelemetry = serialDevice.DriveLedsWithTelemetry;
-            RpmLedCount = Math.Clamp(serialDevice.RpmLedCount, 1, RpmLedOptions.Count);
-            serialDevice.RpmLedCount = RpmLedCount;
+            FrameLength = Math.Clamp(serialDevice.RpmLedCount, 1, RpmLedSegment.MaxLeds);
+            serialDevice.RpmLedCount = FrameLength;
+
+            if (serialDevice.RpmSegments.Count == 0)
+            {
+                serialDevice.RpmSegments = RpmLedSegment.CreateDefault(FrameLength);
+            }
+
+            RpmSegments.Clear();
+            foreach (var segment in RpmLedSegment.Normalize(serialDevice.RpmSegments, FrameLength))
+            {
+                RpmSegments.Add(new MozaRpmSegmentViewModel(
+                    segment,
+                    FrameLength,
+                    OnRpmSegmentChanged,
+                    RemoveRpmSegment));
+            }
+
+            ReindexSegments();
             _mozaDeviceService.ConfigureDevice(serialDevice);
         }
         else
@@ -66,14 +88,65 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         SaveAndConfigure();
     }
 
-    partial void OnRpmLedCountChanged(int value)
+    partial void OnFrameLengthChanged(int value)
     {
+        if (_isInitializing || !_isInitialized)
+        {
+            return;
+        }
+
+        foreach (var segment in RpmSegments)
+        {
+            segment.Resize(FrameLength);
+        }
+
         SaveAndConfigure();
     }
 
     protected override void OnDeviceSettingsChanged()
     {
         SaveAndConfigure();
+    }
+
+    [RelayCommand]
+    private void AddRpmSegment()
+    {
+        var frame = new RpmLedSegment(
+            Enumerable.Repeat(RpmLedSegment.OffLed, FrameLength),
+            100);
+
+        RpmSegments.Add(new MozaRpmSegmentViewModel(
+            frame,
+            FrameLength,
+            OnRpmSegmentChanged,
+            RemoveRpmSegment));
+
+        ReindexSegments();
+        SaveAndConfigure();
+    }
+
+    private void RemoveRpmSegment(MozaRpmSegmentViewModel segment)
+    {
+        if (RpmSegments.Count <= 1 || !RpmSegments.Remove(segment))
+        {
+            return;
+        }
+
+        ReindexSegments();
+        SaveAndConfigure();
+    }
+
+    private void OnRpmSegmentChanged()
+    {
+        SaveAndConfigure();
+    }
+
+    private void ReindexSegments()
+    {
+        for (var i = 0; i < RpmSegments.Count; i++)
+        {
+            RpmSegments[i].Index = i + 1;
+        }
     }
 
     private void SaveAndConfigure()
@@ -87,7 +160,8 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         }
 
         serialDevice.DriveLedsWithTelemetry = DriveLedsWithTelemetry;
-        serialDevice.RpmLedCount = Math.Clamp(RpmLedCount, 1, RpmLedOptions.Count);
+        serialDevice.RpmLedCount = FrameLength;
+        serialDevice.RpmSegments = RpmSegments.Select(x => x.ToModel()).ToList();
         DeviceService.SaveDevice(serialDevice);
         _mozaDeviceService.ConfigureDevice(serialDevice);
     }

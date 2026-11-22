@@ -14,11 +14,61 @@
     <Application.Resources>
         <converters:LapTimeConverter x:Key="LapTimeConverter" />
         <x:Double x:Key="MaxPageWidth">1200</x:Double>
+        <!--
+            Required by Avalonia's built-in ColorPicker themes; Material.Avalonia
+            does not define this legacy Fluent/Simple resource.
+        -->
+        <SolidColorBrush x:Key="ThemeForegroundBrush" Color="White" />
     </Application.Resources>
 
     <Application.Styles>
         <avalonia:MaterialIconStyles />
         <themes:MaterialTheme />
+        <!--
+            Material.Avalonia has no ColorPicker theme; include the compact
+            built-in Simple theme so colour pickers render correctly.
+        -->
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
+        <!--
+            Show the ColorPicker as only its colour swatch. The DropDownButton
+            keeps its flyout (and therefore click-to-pick behaviour), but its
+            template is reduced to the colour content with no arrow/border.
+        -->
+        <Style Selector="ColorPicker /template/ DropDownButton">
+            <Setter Property="Template">
+                <ControlTemplate TargetType="DropDownButton">
+                    <Border
+                        Width="{TemplateBinding Width}"
+                        Height="{TemplateBinding Height}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                        <ContentPresenter
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <!-- The Simple theme rounds only the left corners of the swatch because
+             it originally sat next to a dropdown arrow. Round all corners. -->
+        <Style Selector="ColorPicker">
+            <Setter Property="Content">
+                <Template>
+                    <Panel>
+                        <Border
+                            Margin="1"
+                            Background="{DynamicResource ColorControlCheckeredBackgroundBrush}"
+                            CornerRadius="{TemplateBinding CornerRadius}" />
+                        <Border
+                            Margin="1"
+                            Background="{TemplateBinding HsvColor, Converter={StaticResource ToBrushConverter}}"
+                            CornerRadius="{TemplateBinding CornerRadius}" />
+                    </Panel>
+                </Template>
+            </Setter>
+        </Style>
         <dialogHostAvalonia:DialogHostStyles />
         <Style Selector="TextBlock.InvalidLap">
             <Setter Property="Foreground" Value="Red" />
