@@ -92,7 +92,7 @@ public class SessionRepository
             StopRecording();
         }
     }
-
+    
     public void StartRecording()
     {
         IsRecording = true;

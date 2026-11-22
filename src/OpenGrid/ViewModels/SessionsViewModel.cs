@@ -1,22 +1,20 @@
 using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DialogHostAvalonia;
 using OpenGrid.Controls;
 using OpenGrid.Models.Telemetry;
 using OpenGrid.Services;
 using OpenGrid.Services.SessionPersist;
-using OpenGrid.Services.Telemetry;
 
 namespace OpenGrid.ViewModels;
 
 public partial class SessionsViewModel : ViewModelBase
 {
     private readonly SessionRepository _sessionRepository;
-    private readonly ITelemetryService _telemetryService;
     private readonly INavigationService _navigationService;
 
-    [ObservableProperty] public partial bool CanStartRecording { get; private set; }
+    public bool CanStartRecording => !IsRecording;
+    public bool CanStopRecording => IsRecording;
 
     public ObservableCollection<SessionInfo> Sessions { get; private set; } = [];
 
@@ -24,20 +22,18 @@ public partial class SessionsViewModel : ViewModelBase
 
     public bool IsRecording => _sessionRepository.IsRecording;
 
-    public SessionsViewModel(SessionRepository sessionRepository, ITelemetryService telemetryService,
-        INavigationService navigationService)
+    public SessionsViewModel(SessionRepository sessionRepository, INavigationService navigationService)
     {
         _sessionRepository = sessionRepository;
-        _telemetryService = telemetryService;
         _navigationService = navigationService;
-
-        CanStartRecording = _telemetryService.ConnectionStatus == TelemetryConnectionStatus.Connected;
         IsMenuItem = true;
     }
 
     private void SessionRepositoryOnIsRecordingChanged(object? sender, bool e)
     {
         OnPropertyChanged(nameof(IsRecording));
+        OnPropertyChanged(nameof(CanStartRecording));
+        OnPropertyChanged(nameof(CanStopRecording));
         
         // Reload sessions when recording stops
         if (!IsRecording)
@@ -46,15 +42,9 @@ public partial class SessionsViewModel : ViewModelBase
         }
     }
 
-    private void TelemetryServiceOnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
-    {
-        CanStartRecording = e == TelemetryConnectionStatus.Connected;
-    }
-
     protected override async Task OnLoadedAsync()
     {
         _sessionRepository.IsRecordingChanged += SessionRepositoryOnIsRecordingChanged;
-        _telemetryService.TelemetryStatusChanged += TelemetryServiceOnTelemetryStatusChanged;
         await GetSessionsAsync();
         
         await base.OnLoadedAsync();
@@ -63,7 +53,6 @@ public partial class SessionsViewModel : ViewModelBase
     protected override Task OnUnloadedAsync()
     {
         _sessionRepository.IsRecordingChanged -= SessionRepositoryOnIsRecordingChanged;
-        _telemetryService.TelemetryStatusChanged -= TelemetryServiceOnTelemetryStatusChanged;
         
         return base.OnUnloadedAsync();
     }
@@ -76,11 +65,13 @@ public partial class SessionsViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasMultipleLapSessions));
     }
 
-    [RelayCommand(CanExecute = nameof(CanStartRecording))]
+    [RelayCommand]
     private void StartSession()
     {
         _sessionRepository.StartRecording();
         OnPropertyChanged(nameof(IsRecording));
+        OnPropertyChanged(nameof(CanStartRecording));
+        OnPropertyChanged(nameof(CanStopRecording));
     }
 
     [RelayCommand]
@@ -88,6 +79,8 @@ public partial class SessionsViewModel : ViewModelBase
     {
         _sessionRepository.StopRecording();
         OnPropertyChanged(nameof(IsRecording));
+        OnPropertyChanged(nameof(CanStartRecording));
+        OnPropertyChanged(nameof(CanStopRecording));
     }
 
     [RelayCommand]
