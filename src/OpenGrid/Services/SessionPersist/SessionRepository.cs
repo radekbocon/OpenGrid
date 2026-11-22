@@ -238,6 +238,7 @@ public class SessionRepository
                 File.Delete(filePath);
             }
             Log.Information("Discarded empty session from {Game} on {Track} with no valid laps", session.Info.Game.Name, session.Info.Track?.Name);
+            CurrentSession = null;
             return;
         }
 

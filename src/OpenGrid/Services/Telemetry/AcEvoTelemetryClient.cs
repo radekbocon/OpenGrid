@@ -77,6 +77,11 @@ public class AcEvoTelemetryClient : ITelemetryClient
                 AcEvoSessionType.Cruise => SessionType.Practice,
                 _ => SessionType.Unknown,
             };
+            
+            if (session == SessionType.Unknown)
+            {
+                return null;
+            }
 
             // Create telemetry snapshot
             var snapshot = new TelemetryRecord
