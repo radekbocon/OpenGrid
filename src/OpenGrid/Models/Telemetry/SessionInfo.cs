@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace OpenGrid.Models.Telemetry;
 
 public class SessionInfo
@@ -13,9 +10,10 @@ public class SessionInfo
         Track = record.Track;
         Car = record.Car;
         StartTime = record.Timestamp;
+        FileName = CreateFileName();
     }
 
-    public SessionInfo(Guid id, SteamGame game, SessionType type, Car car, Track? track, DateTime startTime)
+    public SessionInfo(Guid id, SteamGame game, SessionType type, Car car, Track? track, DateTime startTime, string fileName)
     {
         Id = id;
         Game = game;
@@ -23,15 +21,18 @@ public class SessionInfo
         Car = car;
         Track = track;
         StartTime = startTime;
+        FileName = fileName;
     }
 
-    public Guid Id { get; init; }
-    public SteamGame Game { get; init; }
+    public Guid Id { get; }
+    public SteamGame Game { get; }
     public SessionType Type { get; }
     public Car? Car { get; }
     public Track? Track { get;  }
     public DateTime StartTime { get; set; }
     public List<LapInfo> LapInfo { get; set; } = [];
+    public string FileName { get; } = string.Empty;
 
-    public string FileName => $"{Car}-{Track}-{Type}-{Id}.csv";
+    public string CreateFileName() => $"{Car}-{Track}-{Type}-{Id}.csv";
+    
 }

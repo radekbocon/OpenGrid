@@ -59,7 +59,7 @@ public partial class CarsViewModel : ViewModelBase
     
     private void OnCarConfigRemoved(object? sender, CarProfile e)
     {
-        var toRemove = Cars.FirstOrDefault(x => x.CarKey == e.CarKey);
+        var toRemove = Cars.FirstOrDefault(x => x.CarKey == e.Name);
         if (toRemove is null) return;
         
         Cars.Remove(toRemove);

@@ -35,7 +35,7 @@ internal sealed class BassShakerOutput : IDisposable
         _channelCount = Math.Clamp(deviceSpec.Channels, 1, 2);
         _smoothingAlpha = 1 - Math.Exp(-1 / (SmoothingTimeConstantSeconds * _sampleRate));
         Volatile.Write(ref _deviceVolume, deviceVolume);
-        _channels = inputs.Select(x => new InputChannel(x)).ToArray();
+        _channels = CreateChannels(inputs);
         _inputSettings = inputs;
         _audioCallback = OnAudioCallback;
 
@@ -64,23 +64,49 @@ internal sealed class BassShakerOutput : IDisposable
     public void Reconfigure(double deviceVolume, IReadOnlyList<BassShakerInputSettings> inputs)
     {
         Volatile.Write(ref _deviceVolume, deviceVolume);
-        _channels = inputs.Select(x => new InputChannel(x)).ToArray();
+        _channels = CreateChannels(inputs);
         _inputSettings = inputs;
     }
 
     public bool HasInputs(double deviceVolume, IReadOnlyList<BassShakerInputSettings> inputs)
     {
+        if (_deviceVolume != deviceVolume)
+        {
+            return false;
+        }
+
         var current = _inputSettings;
-        return _deviceVolume == deviceVolume
-            && current.Count == inputs.Count
-            && current.SequenceEqual(inputs, ReferenceEqualityComparer.Instance);
+        if (current.Count != inputs.Count)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < inputs.Count; i++)
+        {
+            var currentInput = current[i];
+            var input = inputs[i];
+            if (!ReferenceEquals(currentInput, input) || currentInput.Mappings.Count != input.Mappings.Count)
+            {
+                return false;
+            }
+
+            for (var j = 0; j < input.Mappings.Count; j++)
+            {
+                if (!ReferenceEquals(currentInput.Mappings[j], input.Mappings[j]))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     public void ApplyTelemetry(TelemetryRecord telemetry)
     {
         foreach (var channel in _channels)
         {
-            var normalized = TelemetryInputResolver.GetNormalized(channel.Settings, telemetry);
+            var normalized = TelemetryInputResolver.GetNormalized(channel.Settings, channel.Mapping.Wheels, telemetry);
             Volatile.Write(ref channel.Normalized, normalized);
         }
     }
@@ -124,7 +150,7 @@ internal sealed class BassShakerOutput : IDisposable
                 }
 
                 var value = channel.SmoothedGain * Math.Sin(channel.Phase);
-                switch (channel.Settings.Channel)
+                switch (channel.Mapping.Channel)
                 {
                     case BassShakerChannel.Right:
                         rightSample += value;
@@ -148,6 +174,14 @@ internal sealed class BassShakerOutput : IDisposable
         }
 
         SDL.PutAudioStreamData(stream, MemoryMarshal.Cast<float, byte>(buffer.AsSpan(0, sampleCount)), sampleCount * sizeof(float));
+    }
+
+    private static InputChannel[] CreateChannels(IReadOnlyList<BassShakerInputSettings> inputs)
+    {
+        return inputs
+            .SelectMany(static input => input.Mappings
+                .Select(mapping => new InputChannel(input, mapping)))
+            .ToArray();
     }
 
     private static uint ResolveDeviceInstance(string deviceId)
@@ -196,9 +230,10 @@ internal sealed class BassShakerOutput : IDisposable
         }
     }
 
-    private sealed class InputChannel(BassShakerInputSettings settings)
+    private sealed class InputChannel(BassShakerInputSettings settings, BassShakerMapping mapping)
     {
         public BassShakerInputSettings Settings { get; } = settings;
+        public BassShakerMapping Mapping { get; } = mapping;
         public double Normalized;
         public double SmoothedGain;
         public double Phase;

@@ -44,7 +44,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CanStopRecording))]
     public partial bool IsRecording { get; set; }
 
-    public bool CanStartRecording => ConnectionStatus == TelemetryConnectionStatus.Connected && !IsRecording;
+    public bool CanStartRecording => !IsRecording;
     public bool CanStopRecording => IsRecording;
 
     public MainWindowViewModel(INavigationService navigationService,
@@ -67,6 +67,7 @@ public partial class MainWindowViewModel : ViewModelBase
             new MenuItem { Icon = MaterialIconKind.ChartLine, Label = "Sessions", ViewModelType = typeof(SessionsViewModel) },
             new MenuItem { Icon = MaterialIconKind.Gauge, Label = "Dashboards", ViewModelType = typeof(DashboardsViewModel) },
             new MenuItem { Icon = MaterialIconKind.Car, Label = "Cars", ViewModelType = typeof(CarsViewModel) },
+            new MenuItem { Icon = MaterialIconKind.SurroundSound, Label = "Bass Shaker", ViewModelType = typeof(BassShakerPresetsViewModel) },
             new MenuItem { Icon = MaterialIconKind.Devices, Label = "Devices", ViewModelType = typeof(DevicesViewModel) },
             new MenuItem { Icon = MaterialIconKind.Cog, Label = "Settings", ViewModelType = typeof(SettingsViewModel) },
         ];

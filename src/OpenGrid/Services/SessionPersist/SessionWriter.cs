@@ -76,7 +76,7 @@ public class SessionWriter
 
     public void WriteFull(SessionDetails session)
     {
-        var filePath = Path.Combine(_telemetryFolder, session.Info.FileName);
+        var filePath = Path.Combine(_telemetryFolder, session.Info.CreateFileName());
         using var writer = new StreamWriter(filePath);
         using var csv = new CsvWriter(writer, CsvConfig);
 
@@ -144,7 +144,7 @@ public class SessionWriter
                     var metaRow = csv.GetRecord<SessionMetaRow?>();
                     if (metaRow is not null)
                     {
-                        sessionInfo = SessionMetaRow.ToSessionInfo(metaRow);
+                        sessionInfo = SessionMetaRow.ToSessionInfo(metaRow, filePath);
                     }
 
                     break;

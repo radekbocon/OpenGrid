@@ -15,16 +15,8 @@ public static class TelemetryJsonSerializer
         return JsonSerializer.Serialize(new
         {
             timestamp = record.Timestamp,
-            car = new
-            {
-                key = record.Car.Key,
-                displayName = record.Car.DisplayName
-            },
-            track = new
-            {
-                key = record.Track.Key,
-                displayName = record.Track.DisplayName
-            },
+            carName = record.Car.Name,
+            trackName = record.Track.Name,
             sessionType = record.SessionType.ToString(),
             currentLap = record.CurrentLap,
             speedKmh = record.SpeedKmh,

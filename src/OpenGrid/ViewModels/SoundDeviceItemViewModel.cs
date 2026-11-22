@@ -1,8 +1,12 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DialogHostAvalonia;
 using Material.Icons;
+using OpenGrid.Controls;
 using OpenGrid.Models;
+using OpenGrid.Models.Telemetry;
+using OpenGrid.Services;
 using OpenGrid.Services.Devices;
 using OpenGrid.Services.Sound;
 
@@ -11,60 +15,57 @@ namespace OpenGrid.ViewModels;
 public partial class SoundDeviceItemViewModel : DeviceItemViewModel
 {
     private readonly IBassShakerService _bassShakerService;
+    private readonly IBassShakerPresetService _presetService;
+    private readonly ICarConfigService _carConfigService;
+    private bool _isRefreshingPresets;
 
     public override MaterialIconKind IconKind => MaterialIconKind.VolumeHigh;
 
-    public ObservableCollection<BassShakerInputViewModel> BassShakerInputs { get; } = [];
-
-    public ObservableCollection<TelemetryInput> AvailableTelemetryInputs { get; } = [];
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSelectedTelemetryInput))]
-    [NotifyCanExecuteChangedFor(nameof(AddBassShakerInputCommand))]
-    public partial TelemetryInput? SelectedTelemetryInput { get; set; }
+    public ObservableCollection<BassShakerPresetOption> DefaultPresetOptions { get; } = [];
+    public ObservableCollection<BassShakerPresetOption> PresetOptions { get; } = [];
+    public ObservableCollection<BassShakerOverrideItemViewModel> BassShakerOverrides { get; } = [];
 
     [ObservableProperty]
-    public partial double Volume { get; set; }
+    public partial BassShakerPresetOption? SelectedDefaultPreset { get; set; }
 
-    public bool HasSelectedTelemetryInput => SelectedTelemetryInput is not null;
+    public bool HasPresets => PresetOptions.Count > 0;
+    public bool HasBassShakerOverrides => BassShakerOverrides.Count > 0;
 
-    public bool HasBassShakerInputs => BassShakerInputs.Count > 0;
-
-    public SoundDeviceItemViewModel(IDeviceService deviceService, IBassShakerService bassShakerService, Action<DeviceItemViewModel> onRemove)
+    public SoundDeviceItemViewModel(
+        IDeviceService deviceService,
+        IBassShakerService bassShakerService,
+        IBassShakerPresetService presetService,
+        ICarConfigService carConfigService,
+        Action<DeviceItemViewModel> onRemove)
         : base(deviceService, onRemove)
     {
         _bassShakerService = bassShakerService;
+        _presetService = presetService;
+        _carConfigService = carConfigService;
     }
 
     protected override void InitDevice(IDevice device)
     {
-        BassShakerInputs.Clear();
-
         if (device is not SoundDevice soundDevice)
         {
-            RefreshAvailableTelemetryInputs();
+            RefreshPresetOptions(null);
+            BassShakerOverrides.Clear();
             return;
         }
 
-        soundDevice.BassShaker ??= new BassShakerConfiguration();
-
-        foreach (var inputSettings in soundDevice.BassShaker.Inputs)
-        {
-            AddBassShakerInputViewModel(inputSettings);
-        }
-
-        Volume = soundDevice.BassShaker.Volume * 100;
-        RefreshAvailableTelemetryInputs();
-        OnPropertyChanged(nameof(HasBassShakerInputs));
+        RefreshPresetOptions(soundDevice);
+        RefreshOverrides(soundDevice);
         ConfigureBassShaker();
     }
 
-    partial void OnVolumeChanged(double value)
+    partial void OnSelectedDefaultPresetChanged(BassShakerPresetOption? value)
     {
-        if (Device is not SoundDevice soundDevice || soundDevice.BassShaker is null)
+        if (_isRefreshingPresets || Device is not SoundDevice soundDevice)
+        {
             return;
+        }
 
-        soundDevice.BassShaker.Volume = value / 100.0;
+        soundDevice.DefaultBassShakerPresetId = value?.Preset?.Id;
         DeviceService.SaveDevice(soundDevice);
         ConfigureBassShaker();
     }
@@ -74,68 +75,130 @@ public partial class SoundDeviceItemViewModel : DeviceItemViewModel
         ConfigureBassShaker();
     }
 
-    [RelayCommand(CanExecute = nameof(HasSelectedTelemetryInput))]
-    private void AddBassShakerInput()
+    [RelayCommand]
+    private async Task AddBassShakerOverrideAsync()
     {
-        if (SelectedTelemetryInput is not { } input || Device is not SoundDevice soundDevice)
-            return;
-
-        soundDevice.BassShaker ??= new BassShakerConfiguration();
-
-        var settings = new BassShakerInputSettings { Input = input };
-        soundDevice.BassShaker.Inputs.Add(settings);
-        AddBassShakerInputViewModel(settings);
-
-        SelectedTelemetryInput = null;
-        RefreshAvailableTelemetryInputs();
-        OnPropertyChanged(nameof(HasBassShakerInputs));
-        SaveAndConfigure();
-    }
-
-    private void AddBassShakerInputViewModel(BassShakerInputSettings settings)
-    {
-        BassShakerInputs.Add(new BassShakerInputViewModel(settings, OnBassShakerInputChanged, OnBassShakerInputRemoved));
-    }
-
-    private void OnBassShakerInputRemoved(BassShakerInputViewModel inputViewModel)
-    {
-        if (Device is not SoundDevice soundDevice || soundDevice.BassShaker is null)
-            return;
-
-        soundDevice.BassShaker.Inputs.Remove(inputViewModel.Settings);
-        BassShakerInputs.Remove(inputViewModel);
-        RefreshAvailableTelemetryInputs();
-        OnPropertyChanged(nameof(HasBassShakerInputs));
-        SaveAndConfigure();
-    }
-
-    private void OnBassShakerInputChanged()
-    {
-        SaveAndConfigure();
-    }
-
-    private void RefreshAvailableTelemetryInputs()
-    {
-        var configuredInputs = new HashSet<TelemetryInput>(BassShakerInputs.Select(x => x.Input));
-        AvailableTelemetryInputs.Clear();
-        foreach (var input in Enum.GetValues<TelemetryInput>())
+        if (Device is not SoundDevice soundDevice || PresetOptions.Count == 0)
         {
-            if (!configuredInputs.Contains(input))
-            {
-                AvailableTelemetryInputs.Add(input);
-            }
+            return;
         }
 
-        if (SelectedTelemetryInput is not null && !configuredInputs.Contains(SelectedTelemetryInput.Value))
+        var dialog = new AddBassShakerOverrideDialog(
+            SteamGame.GetAllSupported(),
+            _carConfigService.GetAll(),
+            PresetOptions.Select(x => x.Preset).OfType<BassShakerPreset>());
+        await DialogHost.Show(dialog);
+
+        if (dialog.Result is not { } result)
         {
-            SelectedTelemetryInput = null;
+            return;
         }
+
+        var existing = soundDevice.BassShakerOverrides.FirstOrDefault(x =>
+            x.GameAppId == result.GameAppId &&
+            x.Car == result.Car);
+
+        if (existing is null)
+        {
+            soundDevice.BassShakerOverrides.Add(result);
+        }
+        else
+        {
+            existing.PresetId = result.PresetId;
+        }
+
+        DeviceService.SaveDevice(soundDevice);
+        RefreshOverrides(soundDevice);
+        ConfigureBassShaker();
+    }
+
+    private void RemoveOverride(BassShakerOverrideItemViewModel item)
+    {
+        if (Device is not SoundDevice soundDevice)
+        {
+            return;
+        }
+
+        soundDevice.BassShakerOverrides.Remove(item.Model);
+        BassShakerOverrides.Remove(item);
+        OnPropertyChanged(nameof(HasBassShakerOverrides));
+        SaveAndConfigure();
+    }
+
+    private void RefreshPresetOptions(SoundDevice? soundDevice)
+    {
+        _isRefreshingPresets = true;
+
+        DefaultPresetOptions.Clear();
+        PresetOptions.Clear();
+        DefaultPresetOptions.Add(BassShakerPresetOption.None);
+
+        foreach (var preset in _presetService.GetAll().OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            var option = new BassShakerPresetOption(preset);
+            DefaultPresetOptions.Add(option);
+            PresetOptions.Add(option);
+        }
+
+        var defaultPresetId = soundDevice?.DefaultBassShakerPresetId;
+        var selectedOption = string.IsNullOrWhiteSpace(defaultPresetId)
+            ? null
+            : DefaultPresetOptions.FirstOrDefault(x => x.Id == defaultPresetId);
+
+        if (selectedOption is null &&
+            soundDevice is not null &&
+            !string.IsNullOrWhiteSpace(defaultPresetId))
+        {
+            soundDevice.DefaultBassShakerPresetId = null;
+            DeviceService.SaveDevice(soundDevice);
+        }
+
+        SelectedDefaultPreset = selectedOption ?? BassShakerPresetOption.None;
+
+        _isRefreshingPresets = false;
+        OnPropertyChanged(nameof(HasPresets));
+    }
+
+    private void RefreshOverrides(SoundDevice soundDevice)
+    {
+        BassShakerOverrides.Clear();
+
+        foreach (var gameOverride in soundDevice.BassShakerOverrides)
+        {
+            var game = gameOverride.GameAppId is { } appId
+                ? SteamGame.GetByAppId(appId)
+                : null;
+            var gameName = gameOverride.GameAppId is null
+                ? "Any game"
+                : game?.Name ?? "Unknown game";
+
+            var carName = gameOverride.Car is null
+                ? "Any car"
+                : gameOverride.Car.Name;
+
+            BassShakerOverrides.Add(new BassShakerOverrideItemViewModel(
+                gameOverride,
+                gameName,
+                carName,
+                PresetOptions,
+                SaveOverrides,
+                RemoveOverride));
+        }
+
+        OnPropertyChanged(nameof(HasBassShakerOverrides));
+    }
+
+    private void SaveOverrides()
+    {
+        SaveAndConfigure();
     }
 
     private void SaveAndConfigure()
     {
         if (Device is not SoundDevice soundDevice)
+        {
             return;
+        }
 
         DeviceService.SaveDevice(soundDevice);
         ConfigureBassShaker();
@@ -144,8 +207,56 @@ public partial class SoundDeviceItemViewModel : DeviceItemViewModel
     private void ConfigureBassShaker()
     {
         if (Device is not SoundDevice soundDevice)
+        {
             return;
+        }
 
         _bassShakerService.ConfigureDevice(soundDevice);
+    }
+}
+
+public sealed class BassShakerOverrideItemViewModel : ViewModelBase
+{
+    private readonly Action _save;
+    private readonly Action<BassShakerOverrideItemViewModel> _remove;
+    private BassShakerPresetOption? _selectedPreset;
+
+    public BassShakerPresetOverride Model { get; }
+    public string GameName { get; }
+    public string CarName { get; }
+    public IReadOnlyList<BassShakerPresetOption> PresetOptions { get; }
+    public IRelayCommand RemoveCommand { get; }
+
+    public BassShakerPresetOption? SelectedPreset
+    {
+        get => _selectedPreset;
+        set
+        {
+            if (!SetProperty(ref _selectedPreset, value))
+            {
+                return;
+            }
+
+            Model.PresetId = value?.Id ?? string.Empty;
+            _save();
+        }
+    }
+
+    public BassShakerOverrideItemViewModel(
+        BassShakerPresetOverride model,
+        string gameName,
+        string carName,
+        IReadOnlyList<BassShakerPresetOption> presetOptions,
+        Action save,
+        Action<BassShakerOverrideItemViewModel> remove)
+    {
+        Model = model;
+        GameName = gameName;
+        CarName = carName;
+        PresetOptions = presetOptions;
+        _save = save;
+        _remove = remove;
+        _selectedPreset = presetOptions.FirstOrDefault(x => x.Id == model.PresetId);
+        RemoveCommand = new RelayCommand(() => _remove(this));
     }
 }

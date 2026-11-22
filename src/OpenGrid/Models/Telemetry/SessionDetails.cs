@@ -24,7 +24,7 @@ public class SessionDetails
                 .OrderBy(x => x.Number)
                 .ToList();
 
-            _laps.MinBy(x => x.Time)?.IsFastest = true;
+            _laps.OrderBy(x => x.Time).FirstOrDefault(x => x.IsValid)?.IsFastest = true;
             return _laps;
         }
     }

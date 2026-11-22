@@ -18,6 +18,12 @@ public record TelemetryRecord
     public Gear CurrentGear { get; init; }
     public float EngineRpm { get; init; }
     public TireStats TireTemperatures { get; init; }
+
+    /// <summary>
+    /// Longitudinal wheel speed per wheel in metres per second. Signed when reversing.
+    /// </summary>
+    public TireStats WheelSpeeds { get; init; }
+
     public TimeSpan LapTime { get; init; }
     public float Distance { get; init; }
     public float MaxRpm { get; init; }

@@ -5,39 +5,21 @@ namespace OpenGrid.Models.Telemetry;
 
 public readonly record struct Track
 {
-    public string Key { get; }
-    public string DisplayName => CleanTrackName(Key);
-    public static Track Unknown { get; } = new("unknown_track");
+    public string Name { get; }
+    public static Track Unknown { get; } = new("Unknown track");
 
-    private Track(string key)
+    private Track(string name)
     {
-        Key = key;
+        Name = name;
     }
     
-    public static Track Create(string? key)
+    public static Track Create(string? name)
     {
-        return string.IsNullOrWhiteSpace(key) ? Unknown : new Track(key);
+        return string.IsNullOrWhiteSpace(name) ? Unknown : new Track(name);
     }
 
-
-    public override string ToString() => DisplayName;
-
-    private static string CleanTrackName(string? key)
+    public override string ToString()
     {
-        if (key is null)
-        {
-            return string.Empty;
-        }
-        
-        var name = key.Trim();
-
-        if (name.StartsWith("ks_", StringComparison.OrdinalIgnoreCase))
-        {
-            name = name[3..];
-        }
-
-        name = name.Replace("_", " ");
-
-        return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
+        return Name;
     }
 }

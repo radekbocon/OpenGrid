@@ -7,7 +7,7 @@ namespace OpenGrid.Services;
 public interface ICarConfigService
 {
     IReadOnlyList<CarProfile> GetAll();
-    CarProfile? GetByCarKey(string carKey);
+    CarProfile? GetByCarName(string carName);
     void Save(CarProfile car);
     void Remove(string carKey);
     event EventHandler<CarProfile>? CarAdded;

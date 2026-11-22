@@ -9,6 +9,7 @@ using OpenGrid.Views;
 using Microsoft.Extensions.DependencyInjection;
 using OpenGrid.Services;
 using OpenGrid.Services.Dashboard;
+using OpenGrid.Services.SessionPersist;
 using OpenGrid.Services.Sound;
 using OpenGrid.Services.Telemetry;
 
@@ -57,41 +58,64 @@ public class App : Application
             var dashboardLaunchService = Program.ServiceProvider.GetRequiredService<DashboardLauncher>();
             dashboardLaunchService.HandleTrigger(DashboardLaunchTrigger.OnAppStart);
 
+            var sessionRepository = Program.ServiceProvider.GetRequiredService<SessionRepository>();
+
             _ = Program.ServiceProvider.GetRequiredService<IBassShakerService>();
             
-
-            using var iconStream = AssetLoader.Open(new Uri("avares://OpenGrid/Assets/icon.png"));
-            _trayIcon = new TrayIcon
-            {
-                Icon = new WindowIcon(iconStream),
-                ToolTipText = "OpenGrid",
-                Menu = [],
-            };
-
-            var showItem = new NativeMenuItem("Show OpenGrid");
-            showItem.Click += (_, _) => ShowMainWindow(desktop);
-
-            var exitItem = new NativeMenuItem("Exit OpenGrid");
-            exitItem.Click += (_, _) =>
-            {
-                _trayIcon?.Dispose();
-                _trayIcon = null;
-                desktop.Shutdown();
-            };
-
-            _trayIcon.Menu.Items.Add(showItem);
-            _trayIcon.Menu.Items.Add(new NativeMenuItemSeparator());
-            _trayIcon.Menu.Items.Add(exitItem);
-
-            _trayIcon.Clicked += (_, _) => ShowMainWindow(desktop);
+            SetupTrayIcon(desktop, sessionRepository);
         }
 
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop, SessionRepository sessionRepository)
+    {
+        using var iconStream = AssetLoader.Open(new Uri("avares://OpenGrid/Assets/icon.png"));
+        _trayIcon = new TrayIcon
+        {
+            Icon = new WindowIcon(iconStream),
+            ToolTipText = "OpenGrid",
+            Menu = [],
+        };
+
+        var showItem = new NativeMenuItem("Show OpenGrid");
+        showItem.Click += (_, _) => ShowMainWindow(desktop);
+
+        var exitItem = new NativeMenuItem("Exit OpenGrid");
+        exitItem.Click += (_, _) =>
+        {
+            _trayIcon?.Dispose();
+            _trayIcon = null;
+            desktop.Shutdown();
+        };
+            
+        var startRecordingItem = new NativeMenuItem("Start Recording");
+        startRecordingItem.Click += (_, _) => sessionRepository.StartRecording();
+        startRecordingItem.IsEnabled = !sessionRepository.IsRecording;
+            
+        var stopRecordingItem = new NativeMenuItem("Stop Recording");
+        stopRecordingItem.Click += (_, _) => sessionRepository.StopRecording();
+        stopRecordingItem.IsEnabled = sessionRepository.IsRecording;
+            
+
+        sessionRepository.IsRecordingChanged += (_, isRecording) =>
+        {
+            startRecordingItem.IsEnabled = !isRecording;
+            stopRecordingItem.IsEnabled = isRecording;
+        };
+
+        _trayIcon.Menu.Items.Add(startRecordingItem);
+        _trayIcon.Menu.Items.Add(stopRecordingItem);
+        _trayIcon.Menu.Items.Add(new NativeMenuItemSeparator());
+        _trayIcon.Menu.Items.Add(showItem);
+        _trayIcon.Menu.Items.Add(exitItem);
+
+        _trayIcon.Clicked += (_, _) => ShowMainWindow(desktop);
+            
         if (_trayIcon != null)
         {
             TrayIcon.SetIcons(this, [_trayIcon]);
         }
-
-        base.OnFrameworkInitializationCompleted();
     }
 
     private void MainWindowOnClosing(object? sender, WindowClosingEventArgs e)

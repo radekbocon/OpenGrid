@@ -1,0 +1,91 @@
+<UserControl
+    x:Class="OpenGrid.Controls.AddBassShakerOverrideDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:OpenGrid.Controls"
+    xmlns:models="clr-namespace:OpenGrid.Models"
+    xmlns:vm="using:OpenGrid.ViewModels"
+    x:DataType="local:AddBassShakerOverrideDialog">
+    <Grid
+        MinWidth="460"
+        Margin="24"
+        RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+        RowSpacing="16">
+        <TextBlock Classes="H6" Text="Add Game / Car Override" />
+        <Grid
+            Grid.Row="1"
+            ColumnDefinitions="110,*"
+            ColumnSpacing="12">
+            <TextBlock VerticalAlignment="Center" Text="Game" />
+            <ComboBox
+                x:Name="GameComboBox"
+                Grid.Column="1"
+                ItemsSource="{Binding Games}"
+                SelectedItem="{Binding SelectedGame}"
+                SelectionChanged="OnSelectionChanged">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:SteamGame">
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+        <Grid
+            Grid.Row="2"
+            ColumnDefinitions="110,*"
+            ColumnSpacing="12">
+            <TextBlock VerticalAlignment="Center" Text="Car" />
+            <ComboBox
+                x:Name="CarComboBox"
+                Grid.Column="1"
+                ItemsSource="{Binding Cars}"
+                SelectedItem="{Binding SelectedCar}"
+                SelectionChanged="OnSelectionChanged">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CarPickerOption">
+                        <TextBlock Text="{Binding DisplayName}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+        <Grid
+            Grid.Row="3"
+            ColumnDefinitions="110,*"
+            ColumnSpacing="12">
+            <TextBlock VerticalAlignment="Center" Text="Preset" />
+            <ComboBox
+                x:Name="PresetComboBox"
+                Grid.Column="1"
+                ItemsSource="{Binding Presets}"
+                SelectedItem="{Binding SelectedPreset}"
+                SelectionChanged="OnSelectionChanged">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:BassShakerPreset">
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+        <TextBlock
+            Grid.Row="4"
+            Classes="Body2"
+            Opacity="0.6"
+            Text="Select a game, a car, or both. The override only applies when the game and/or car matches."
+            TextWrapping="Wrap" />
+        <StackPanel
+            Grid.Row="5"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button
+                Click="CancelClick"
+                Content="Cancel"
+                Theme="{StaticResource MaterialOutlineButton}" />
+            <Button
+                x:Name="AddButton"
+                Click="AddClick"
+                Content="Add"
+                IsEnabled="False" />
+        </StackPanel>
+    </Grid>
+</UserControl>

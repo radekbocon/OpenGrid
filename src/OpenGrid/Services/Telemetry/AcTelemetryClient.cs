@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using Serilog;
 using OpenGrid.Models;
 using OpenGrid.Models.Telemetry;
@@ -11,9 +10,9 @@ namespace OpenGrid.Services.Telemetry;
 /// </summary>
 public class AcTelemetryClient : ITelemetryClient
 {
-    private bool IsConnected => File.Exists(AcConstants.ShmPhysicsPath) &&
-                                File.Exists(AcConstants.ShmGraphicsPath) &&
-                                File.Exists(AcConstants.ShmStaticPath);
+    private bool IsConnected => File.Exists(AcConstants.ShmAcPhysicsPath) &&
+                                File.Exists(AcConstants.ShmAcGraphicsPath) &&
+                                File.Exists(AcConstants.ShmAcStaticPath);
 
     public async Task<bool> ConnectAsync(CancellationToken cancellationToken)
     {
@@ -31,7 +30,7 @@ public class AcTelemetryClient : ITelemetryClient
         }
         catch (Exception e)
         {
-            Log.Error(e, "Error connecting to telemetry: {0}", e.Message);
+            Log.Error(e, "Error connecting to telemetry: {Message}", e.Message);
         }
 
         return false;
@@ -39,24 +38,9 @@ public class AcTelemetryClient : ITelemetryClient
 
     public void Stop()
     {
-        TryDeleteFile(AcConstants.ShmPhysicsPath);
-        TryDeleteFile(AcConstants.ShmGraphicsPath);
-        TryDeleteFile(AcConstants.ShmStaticPath);
-    }
-
-    private static void TryDeleteFile(string path)
-    {
-        try
-        {
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Could not delete file: {Path}", path);
-        }
+        ShmHelper.TryDeleteFile(AcConstants.ShmAcPhysicsPath);
+        ShmHelper.TryDeleteFile(AcConstants.ShmAcGraphicsPath);
+        ShmHelper.TryDeleteFile(AcConstants.ShmAcStaticPath);
     }
 
     public TelemetryRecord? ReadTelemetry()
@@ -68,9 +52,9 @@ public class AcTelemetryClient : ITelemetryClient
                 return null;
             }
 
-            var physicsData = ReadStructFromFile<SPageFilePhysics>(AcConstants.ShmPhysicsPath, 2048);
-            var graphicsData = ReadStructFromFile<SPageFileGraphic>(AcConstants.ShmGraphicsPath, 2048);
-            var staticData = ReadStructFromFile<SPageFileStatic>(AcConstants.ShmStaticPath, 2048);
+            var physicsData = ShmHelper.ReadStructFromFile<SPageFilePhysics>(AcConstants.ShmAcPhysicsPath);
+            var graphicsData = ShmHelper.ReadStructFromFile<SPageFileGraphic>(AcConstants.ShmAcGraphicsPath);
+            var staticData = ShmHelper.ReadStructFromFile<SPageFileStatic>(AcConstants.ShmAcStaticPath);
 
             if (physicsData == null || graphicsData == null || staticData == null)
             {
@@ -83,8 +67,8 @@ public class AcTelemetryClient : ITelemetryClient
             var snapshot = new TelemetryRecord
             {
                 Timestamp = DateTime.UtcNow,
-                Track = Track.Create(staticData.Value.Track),
-                Car = Car.Create(staticData.Value.CarModel),
+                Track = Track.Create(TrackPretty(staticData.Value.Track)),
+                Car = Car.Create(CarModelPretty(staticData.Value.CarModel)),
                 SessionType = graphicsData.Value.Session,
                 CurrentLap = graphicsData.Value.CompletedLaps,
                 SpeedKmh = physicsData.Value.SpeedKmh,
@@ -96,6 +80,7 @@ public class AcTelemetryClient : ITelemetryClient
                 CurrentGear = (Gear)physicsData.Value.Gear,
                 EngineRpm = physicsData.Value.Rpms,
                 TireTemperatures = physicsData.Value.TyreTemp,
+                WheelSpeeds = WheelSlipCalculator.ToWheelSpeeds(physicsData.Value.WheelAngularSpeed, staticData.Value.TyreRadius),
                 LapTime = TimeSpan.FromMilliseconds(graphicsData.Value.CurrentTime),
                 Distance = graphicsData.Value.DistanceTraveled,
                 MaxRpm = staticData.Value.MaxRpm,
@@ -124,58 +109,11 @@ public class AcTelemetryClient : ITelemetryClient
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error reading telemetry: {0}", ex.Message);
+            Log.Error(ex, "Error reading telemetry: {Message}", ex.Message);
             return null;
         }
     }
-    
-    private static T? ReadStructFromFile<T>(string filePath, int size) where T : struct
-    {
-        try
-        {
-            if (!File.Exists(filePath))
-            {
-                return null;
-            }
 
-            using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            var bytes = new byte[size];
-            var read = fs.Read(bytes, 0, size);
-            return read < size ? null : BytesToStruct<T>(bytes, size);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error reading struct from file: {0}", ex.Message);
-            return null;
-        }
-    }
-    
-    private static T? BytesToStruct<T>(byte[] data, int size) where T : struct
-    {
-        try
-        {
-            if (data.Length < size)
-            {
-                return null;
-            }
-
-            var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-            try
-            {
-                var ptr = handle.AddrOfPinnedObject();
-                var result = Marshal.PtrToStructure<T>(ptr);
-                return result;
-            }
-            finally
-            {
-                handle.Free();
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error converting bytes to struct: {0}", ex.Message);
-            return null;
-        }
-    }
+    private static string CarModelPretty(string carModel) => AcCars.GetName(carModel);
+    private static string TrackPretty(string track) => AcTracks.GetName(track);
 }
-

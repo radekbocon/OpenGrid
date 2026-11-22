@@ -21,6 +21,8 @@ public class SoundDeviceSerializer : IDeviceSerializer
                 Name = dto.Name,
                 Description = dto.Description,
                 IsEnabled = dto.IsEnabled,
+                DefaultBassShakerPresetId = dto.DefaultBassShakerPresetId,
+                BassShakerOverrides = dto.BassShakerOverrides ?? [],
                 BassShaker = dto.BassShaker,
             }
         };
@@ -30,6 +32,8 @@ public class SoundDeviceSerializer : IDeviceSerializer
     {
         ArgumentNullException.ThrowIfNull(device);
 
+        var soundDevice = device as SoundDevice;
+
         var dto = new SoundDeviceDto
         {
             Id = device.Id,
@@ -37,7 +41,9 @@ public class SoundDeviceSerializer : IDeviceSerializer
             Name = device.Name,
             Description = device.Description,
             IsEnabled = device.IsEnabled,
-            BassShaker = device is SoundDevice soundDevice ? soundDevice.BassShaker : null,
+            DefaultBassShakerPresetId = soundDevice?.DefaultBassShakerPresetId,
+            BassShakerOverrides = soundDevice?.BassShakerOverrides ?? [],
+            BassShaker = soundDevice?.BassShaker,
         };
 
         return JsonSerializer.Serialize(dto);
@@ -50,6 +56,8 @@ public class SoundDeviceSerializer : IDeviceSerializer
         public required string Name { get; init; }
         public string? Description { get; init; }
         public required bool IsEnabled { get; init; }
+        public string? DefaultBassShakerPresetId { get; init; }
+        public List<BassShakerPresetOverride>? BassShakerOverrides { get; init; }
         public BassShakerConfiguration? BassShaker { get; init; }
     }
 }

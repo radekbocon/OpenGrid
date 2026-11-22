@@ -1,8 +1,4 @@
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Serilog;
 using OpenGrid.Models;
 
@@ -16,19 +12,19 @@ public class SharedMemoryBridgeLauncher
     {
         try
         {
-            Log.Information("Launching bridge for game: {0}", steamGame.AppId);
+            Log.Information("Launching bridge for game: {Id}", steamGame.AppId);
             var bridgeExePath = Path.Combine(AppContext.BaseDirectory, "OpenGridBridge.exe");
 
             if (!File.Exists(bridgeExePath))
             {
-                Log.Error("Bridge executable not found: {0}", bridgeExePath);
+                Log.Error("Bridge executable not found: {Path}", bridgeExePath);
                 return;
             }
 
             var compatDataDir = ProtonHelper.FindCompatDataDir(steamGame.AppId);
             if (compatDataDir == null)
             {
-                Log.Error("Steam compatibility data not found for app {AppId}.", steamGame.AppId);
+                Log.Error("Steam compatibility data not found for app {AppId}", steamGame.AppId);
                 return;
             }
 
@@ -38,7 +34,7 @@ public class SharedMemoryBridgeLauncher
             var startInfo = new ProcessStartInfo
             {
                 FileName = winePath,
-                Arguments = bridgeExePath,
+                Arguments = BuildArguments(bridgeExePath, steamGame),
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -80,9 +76,14 @@ public class SharedMemoryBridgeLauncher
         }
         catch (Exception exception)
         {
-            Log.Error(exception, "Error launching bridge: {0}", exception.Message);
+            Log.Error(exception, "Error launching bridge: {Message}", exception.Message);
             throw;
         }
+    }
+
+    private static string BuildArguments(string bridgePath, SteamGame steamGame)
+    {
+        return $"\"{bridgePath}\" --appid {steamGame.AppId}";
     }
 
     private static void OnBridgeOutputDataReceived(object sender, DataReceivedEventArgs e)
@@ -128,9 +129,9 @@ public class SharedMemoryBridgeLauncher
     {
         try
         {
-            TryDeleteFile(AcConstants.ShmPhysicsPath);
-            TryDeleteFile(AcConstants.ShmGraphicsPath);
-            TryDeleteFile(AcConstants.ShmStaticPath);
+            TryDeleteFile(AcConstants.ShmAcPhysicsPath);
+            TryDeleteFile(AcConstants.ShmAcGraphicsPath);
+            TryDeleteFile(AcConstants.ShmAcStaticPath);
         }
         catch (Exception ex)
         {

@@ -92,7 +92,7 @@ public class SessionRepository
             StopRecording();
         }
     }
-
+    
     public void StartRecording()
     {
         IsRecording = true;
@@ -118,6 +118,18 @@ public class SessionRepository
     }
 
     private void TelemetryServiceOnTelemetryReceived(object? sender, TelemetryEventArgs e)
+    {
+        try
+        {
+            ProcessTelemetry(e);
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Error processing telemetry");
+        }
+    }
+
+    private void ProcessTelemetry(TelemetryEventArgs e)
     {
         if (CurrentSession is null)
         {
@@ -160,6 +172,11 @@ public class SessionRepository
 
     private void StartNewSession(TelemetryEventArgs e)
     {
+        if (e.Telemetry.SessionType == SessionType.Unknown)
+        {
+            return;
+        }
+        
         CurrentSession = new SessionDetails(e.Game, e.Telemetry);
         _currentFileWriter = _sessionWriter.CreateFile(CurrentSession);
         _lastRecordTimestamp = e.Telemetry.Timestamp;
@@ -191,7 +208,7 @@ public class SessionRepository
                 var resetIndex = -1;
                 for (var index = 1; index < records.Count; index++)
                 {
-                    if (records[index].Distance <= records[index - 1].Distance)
+                    if (records[index].Distance < records[index - 1].Distance)
                     {
                         resetIndex = index;
                         break;
@@ -220,12 +237,14 @@ public class SessionRepository
             {
                 File.Delete(filePath);
             }
-            Log.Information("Discarded empty session from {Game} on {Track} with no valid laps", session.Info.Game, session.Info.Track);
+            Log.Information("Discarded empty session from {Game} on {Track} with no valid laps", session.Info.Game.Name, session.Info.Track?.Name);
+            CurrentSession = null;
             return;
         }
 
-        Log.Information("Saved {Game} on {Track} with {Count} lap(s)", session.Info.Game, session.Info.Track, lapRecords.Count);
+        Log.Information("Saved {Game} on {Track} with {Count} lap(s)", session.Info.Game.Name, session.Info.Track?.Name, lapRecords.Count);
         _sessionWriter.WriteFull(session);
+        CurrentSession = null;
     }
 
     public void DeleteLap(SessionDetails details, int lapNumber)
@@ -245,6 +264,9 @@ public class SessionRepository
 
     private bool IsNewSession(TelemetryRecord record)
     {
-        return record.SessionType != CurrentSession?.Info.Type || record.Track != CurrentSession?.Info.Track || record.Car != CurrentSession?.Info.Car;
+        return record.SessionType != CurrentSession?.Info.Type 
+               || record.Track != CurrentSession?.Info.Track 
+               || record.Car != CurrentSession?.Info.Car
+               || (CurrentSession != null && record.SessionType == SessionType.Unknown);
     }
 }
