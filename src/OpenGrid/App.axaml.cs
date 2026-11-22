@@ -100,8 +100,11 @@ public class App : Application
 
         sessionRepository.IsRecordingChanged += (_, isRecording) =>
         {
-            startRecordingItem.IsEnabled = !isRecording;
-            stopRecordingItem.IsEnabled = isRecording;
+            Dispatcher.Invoke(() =>
+            {
+                startRecordingItem.IsEnabled = !isRecording;
+                stopRecordingItem.IsEnabled = isRecording;
+            });
         };
 
         _trayIcon.Menu.Items.Add(startRecordingItem);
