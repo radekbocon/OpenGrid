@@ -44,7 +44,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CanStopRecording))]
     public partial bool IsRecording { get; set; }
 
-    public bool CanStartRecording => ConnectionStatus == TelemetryConnectionStatus.Connected && !IsRecording;
+    public bool CanStartRecording => !IsRecording;
     public bool CanStopRecording => IsRecording;
 
     public MainWindowViewModel(INavigationService navigationService,

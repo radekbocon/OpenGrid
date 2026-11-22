@@ -24,11 +24,11 @@
                 <Button
                     Command="{Binding StartSessionCommand}"
                     Content="Start Recording"
-                    IsVisible="{Binding !IsRecording}" />
+                    IsVisible="{Binding CanStartRecording}" />
                 <Button
                     Command="{Binding StopSessionCommand}"
                     Content="Stop Recording"
-                    IsVisible="{Binding IsRecording}" />
+                    IsVisible="{Binding CanStopRecording}" />
                 <Button
                     Command="{Binding OpenLapComparisonCommand}"
                     Content="Compare Laps"
