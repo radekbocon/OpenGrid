@@ -18,6 +18,13 @@ public static class TelemetryInputResolver
 
     private static (double Value, double ReferenceMax) GetValueAndReference(BassShakerInputSettings settings, WheelSelection wheels, TelemetryRecord telemetry)
     {
+        // AC sends some garbage speeds while still in menu/garage
+        // This may trigger wheel lock effects while stationary
+        if (telemetry.Distance < 0.5)
+        {
+            return (0, 1);
+        }
+        
         if (settings.Input is TelemetryInput.WheelLock or TelemetryInput.WheelSpin)
         {
             // Reversing makes the wheel speeds oppose the vehicle speed, which looks like a lock.
