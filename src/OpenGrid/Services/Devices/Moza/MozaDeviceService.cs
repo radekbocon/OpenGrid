@@ -52,8 +52,8 @@ public sealed class MozaDeviceService : IMozaDeviceService
         _telemetryService.TelemetryReceived += OnTelemetryReceived;
         _telemetryService.TelemetryStatusChanged += OnTelemetryStatusChanged;
         _settingsService.SettingsChanged += OnSettingsChanged;
-
-        RefreshDevices();
+        
+        Task.Run(RefreshDevices);
     }
 
     public void RefreshDevices()
