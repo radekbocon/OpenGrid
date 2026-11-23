@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OpenGrid.Models;
 using OpenGrid.Services;
@@ -25,16 +24,6 @@ public partial class SettingsViewModel : ViewModelBase
     {
         get => _settingsService.RecordingRateHz;
         set => _settingsService.RecordingRateHz = value;
-    }
-
-    public bool DriveMozaWheelLedsFromTelemetry
-    {
-        get => _settingsService.DriveMozaWheelLedsFromTelemetry;
-        set
-        {
-            _settingsService.DriveMozaWheelLedsFromTelemetry = value;
-            OnPropertyChanged();
-        }
     }
 
     public SettingsViewModel(ISettingsService settingsService, IThemeService themeService)

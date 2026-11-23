@@ -50,7 +50,7 @@ public partial class MozaRpmSegmentViewModel : ObservableObject
     public int ThresholdPercent => ParseInt(ThresholdPercentText, 1, 100);
 
     public RpmLedSegment ToModel() => new(
-        Leds.Select(x => x.Value),
+        Leds.Select(x => x.Color).ToList(),
         ThresholdPercent,
         Flicker);
 

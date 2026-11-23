@@ -1,3 +1,5 @@
+using Avalonia.Media;
+
 namespace OpenGrid.Models;
 
 /// <summary>
@@ -10,22 +12,22 @@ public sealed class RpmLedSegment
     /// <summary>The wheel telemetry bitmask supports 16 RPM LEDs.</summary>
     public const int MaxLeds = 16;
 
-    public const string OffLed = "[]";
+    public static readonly Color OffLed = new(255, 0, 0, 0);
 
     public int ThresholdPercent { get; set; } = 100;
 
     /// <summary>Blink this whole frame on/off while it is active.</summary>
     public bool Flicker { get; set; }
 
-    public List<string> Leds { get; set; } = [];
+    public List<Color> Leds { get; set; } = [];
 
     public RpmLedSegment()
     {
     }
 
-    public RpmLedSegment(IEnumerable<string?> leds, int thresholdPercent, bool flicker = false)
+    public RpmLedSegment(IEnumerable<Color> leds, int thresholdPercent, bool flicker = false)
     {
-        Leds = leds.Select(x => x ?? OffLed).ToList();
+        Leds = leds.ToList();
         ThresholdPercent = thresholdPercent;
         Flicker = flicker;
     }
@@ -44,85 +46,9 @@ public sealed class RpmLedSegment
         }
     }
 
-    public static bool IsOff(string? value)
+    public static bool IsOff(Color value)
     {
-        var text = value?.Trim();
-        if (string.IsNullOrEmpty(text) ||
-            text is "[]" or "[ ]" or "-" or "." or "_" or "off" or "0" or "black")
-        {
-            return true;
-        }
-
-        var hex = text.TrimStart('#');
-        if (hex.Length == 3)
-        {
-            hex = string.Concat(hex.Select(c => $"{c}{c}"));
-        }
-        else if (hex.Length == 8)
-        {
-            hex = hex[..6];
-        }
-
-        // A black LED is physically indistinguishable from an off LED.
-        return hex.Equals("000000", StringComparison.OrdinalIgnoreCase);
-    }
-
-    /// <summary>
-    /// Parses one LED cell. Returns <see langword="null"/> for an off cell.
-    /// Single-letter codes G/R/Y/B/O/P/C/W are accepted alongside the longer
-    /// colour names and #RRGGBB hex values.
-    /// </summary>
-    public static (byte R, byte G, byte B)? TryParseLed(string? value) =>
-        IsOff(value) ? null : ParseColor(value);
-
-    public static (byte R, byte G, byte B) ParseColor(string? value)
-    {
-        var text = value?.Trim();
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return (0, 255, 0);
-        }
-
-        switch (text.ToLowerInvariant())
-        {
-            case "g":
-            case "green": return (0, 255, 0);
-            case "r":
-            case "red": return (255, 0, 0);
-            case "y":
-            case "yellow": return (255, 255, 0);
-            case "b":
-            case "blue": return (0, 0, 255);
-            case "o":
-            case "orange": return (255, 128, 0);
-            case "p":
-            case "purple": return (128, 0, 255);
-            case "c":
-            case "cyan": return (0, 255, 255);
-            case "w":
-            case "white": return (255, 255, 255);
-        }
-
-        var hex = text.TrimStart('#');
-        if (hex.Length == 3)
-        {
-            hex = string.Concat(hex.Select(c => $"{c}{c}"));
-        }
-
-        if (hex.Length == 8)
-        {
-            hex = hex[..6];
-        }
-
-        if (hex.Length == 6 &&
-            byte.TryParse(hex[..2], System.Globalization.NumberStyles.HexNumber, null, out var r) &&
-            byte.TryParse(hex[2..4], System.Globalization.NumberStyles.HexNumber, null, out var g) &&
-            byte.TryParse(hex[4..6], System.Globalization.NumberStyles.HexNumber, null, out var b))
-        {
-            return (r, g, b);
-        }
-
-        return (0, 255, 0);
+        return value == OffLed;
     }
 
     /// <summary>
@@ -156,7 +82,7 @@ public sealed class RpmLedSegment
             .ToList();
     }
 
-    public static uint BuildMask(IEnumerable<string?> leds)
+    public static uint BuildMask(IEnumerable<Color> leds)
     {
         uint mask = 0;
         var index = 0;
@@ -183,7 +109,7 @@ public sealed class RpmLedSegment
     /// Converts one frame into the RGB triplets expected by the wheel's live
     /// colour chunks. Off LEDs are sent as black.
     /// </summary>
-    public static byte[] BuildColors(IEnumerable<string?> leds, int totalLedCount)
+    public static byte[] BuildColors(IEnumerable<Color> leds, int totalLedCount)
     {
         var count = Math.Clamp(totalLedCount, 1, MaxLeds);
         var colors = new byte[count * 3];
@@ -196,12 +122,9 @@ public sealed class RpmLedSegment
                 break;
             }
 
-            if (TryParseLed(led) is { } rgb)
-            {
-                colors[index * 3] = rgb.R;
-                colors[index * 3 + 1] = rgb.G;
-                colors[index * 3 + 2] = rgb.B;
-            }
+            colors[index * 3] = led.R;
+            colors[index * 3 + 1] = led.G;
+            colors[index * 3 + 2] = led.B;
 
             index++;
         }
@@ -217,38 +140,38 @@ public sealed class RpmLedSegment
     {
         var total = Math.Clamp(totalLedCount, 1, MaxLeds);
 
-        int green;
-        int yellow;
-        int blue;
+        int greenCount;
+        int yellowCount;
+        int blueCount;
 
         if (total < 3)
         {
-            green = 1;
-            yellow = total >= 2 ? 1 : 0;
-            blue = total >= 3 ? 1 : 0;
+            greenCount = 1;
+            yellowCount = total >= 2 ? 1 : 0;
+            blueCount = total >= 3 ? 1 : 0;
         }
         else
         {
-            green = Math.Max(1, total / 3);
-            yellow = Math.Max(1, (total - green) / 2);
-            blue = total - green - yellow;
-            if (blue < 1)
+            greenCount = Math.Max(1, total / 3);
+            yellowCount = Math.Max(1, (total - greenCount) / 2);
+            blueCount = total - greenCount - yellowCount;
+            if (blueCount < 1)
             {
-                blue = 1;
-                yellow = Math.Max(1, total - green - blue);
+                blueCount = 1;
+                yellowCount = Math.Max(1, total - greenCount - blueCount);
             }
         }
 
         return
         [
-            new RpmLedSegment(Frame(total, (green, "G")), 80),
-            new RpmLedSegment(Frame(total, (green, "G"), (yellow, "Y")), 90),
-            new RpmLedSegment(Frame(total, (green, "G"), (yellow, "Y"), (blue, "B")), 95),
-            new RpmLedSegment(Enumerable.Repeat("B", total), 100, true),
+            new RpmLedSegment(Frame(total, (greenCount, Colors.Green)), 80),
+            new RpmLedSegment(Frame(total, (greenCount, Colors.Green), (yellowCount, Colors.Yellow)), 90),
+            new RpmLedSegment(Frame(total, (greenCount, Colors.Green), (yellowCount, Colors.Yellow), (blueCount, Colors.Red)), 95),
+            new RpmLedSegment(Enumerable.Repeat(Colors.Red, total), 100, true),
         ];
     }
 
-    private static List<string> Frame(int total, params (int Count, string Color)[] parts)
+    private static List<Color> Frame(int total, params (int Count, Color Color)[] parts)
     {
         var frame = Enumerable.Repeat(OffLed, total).ToList();
         var offset = 0;

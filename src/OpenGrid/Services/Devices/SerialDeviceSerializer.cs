@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Avalonia.Media;
 using OpenGrid.Models;
 
 namespace OpenGrid.Services.Devices;
@@ -62,7 +63,7 @@ public class SerialDeviceSerializer : IDeviceSerializer
             {
                 ThresholdPercent = x.ThresholdPercent,
                 Flicker = x.Flicker,
-                Leds = x.Leds.Take(totalLedCount).Select(led => (string?)led).ToList(),
+                Leds = x.Leds.Take(totalLedCount).Select(led => led.ToString()).ToList(),
             }).ToList(),
         };
 
@@ -78,43 +79,12 @@ public class SerialDeviceSerializer : IDeviceSerializer
             return RpmLedSegment.CreateDefault(totalLedCount);
         }
 
-        if (dtoSegments.All(x => x.Leds is not { Count: > 0 }))
-        {
-            return RpmLedSegment.Normalize(LegacyFrames(dtoSegments, totalLedCount), totalLedCount);
-        }
-
         var segments = dtoSegments.Select(x => new RpmLedSegment(
-            x.Leds ?? [],
+            x.Leds?.Select(Color.Parse).ToList() ?? [],
             x.ThresholdPercent,
             x.Flicker));
 
         return RpmLedSegment.Normalize(segments, totalLedCount);
-    }
-
-    /// <summary>
-    /// Older configurations stored additive segments. Convert them into
-    /// cumulative frames so their visual behaviour is preserved.
-    /// </summary>
-    private static List<RpmLedSegment> LegacyFrames(
-        List<RpmLedSegmentDto> dtoSegments,
-        int totalLedCount)
-    {
-        var cumulative = new List<string?>();
-        var frames = new List<RpmLedSegment>();
-
-        foreach (var dto in dtoSegments.OrderBy(x => x.ThresholdPercent))
-        {
-            var count = Math.Clamp(dto.LedCount, 0, totalLedCount - cumulative.Count);
-            var color = string.IsNullOrWhiteSpace(dto.Color) ? "G" : dto.Color;
-            cumulative.AddRange(Enumerable.Repeat<string?>(color, count));
-
-            frames.Add(new RpmLedSegment(
-                Enumerable.Range(0, totalLedCount)
-                    .Select(i => i < cumulative.Count ? cumulative[i] : RpmLedSegment.OffLed),
-                dto.ThresholdPercent));
-        }
-
-        return frames;
     }
 
     private class SerialDeviceDto
@@ -138,10 +108,6 @@ public class SerialDeviceSerializer : IDeviceSerializer
     {
         public int ThresholdPercent { get; init; }
         public bool Flicker { get; init; }
-        public List<string?>? Leds { get; init; }
-
-        // Legacy fields, used only when migrating older configurations.
-        public int LedCount { get; init; }
-        public string? Color { get; init; }
+        public List<string>? Leds { get; init; }
     }
 }

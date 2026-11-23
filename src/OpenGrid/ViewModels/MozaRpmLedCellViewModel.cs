@@ -1,6 +1,5 @@
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OpenGrid.Models;
 
 namespace OpenGrid.ViewModels;
 
@@ -14,42 +13,17 @@ public partial class MozaRpmLedCellViewModel : ObservableObject
     private readonly Action _onChanged;
     private bool _updating;
 
-    public MozaRpmLedCellViewModel(int index, string? value, Action onChanged)
+    public MozaRpmLedCellViewModel(int index, Color color, Action onChanged)
     {
         Index = index;
         _onChanged = onChanged;
-
-        var normalized = string.IsNullOrWhiteSpace(value) ? RpmLedSegment.OffLed : value.Trim();
-        var rgb = RpmLedSegment.TryParseLed(normalized);
-
-        _value = normalized;
-        _color = rgb is { } parsed
-            ? Color.FromRgb(parsed.R, parsed.G, parsed.B)
-            : Colors.Black;
+        Color = color;
     }
 
     public int Index { get; }
 
     [ObservableProperty]
-    private string _value;
-
-    [ObservableProperty]
-    private Color _color;
-
-    partial void OnValueChanged(string value)
-    {
-        if (_updating)
-        {
-            return;
-        }
-
-        _updating = true;
-        Color = RpmLedSegment.TryParseLed(value) is { } rgb
-            ? Color.FromRgb(rgb.R, rgb.G, rgb.B)
-            : Colors.Black;
-        _updating = false;
-        _onChanged();
-    }
+    public partial Color Color { get; set; }
 
     partial void OnColorChanged(Color value)
     {
@@ -59,11 +33,8 @@ public partial class MozaRpmLedCellViewModel : ObservableObject
         }
 
         _updating = true;
-        Value = ToHex(value);
+        Color = value;
         _updating = false;
         _onChanged();
     }
-
-    private static string ToHex(Color color) =>
-        $"#{color.R:X2}{color.G:X2}{color.B:X2}";
 }

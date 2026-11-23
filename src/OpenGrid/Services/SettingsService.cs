@@ -56,16 +56,6 @@ public sealed class SettingsService : ISettingsService
         }
     }
 
-    public bool DriveMozaWheelLedsFromTelemetry
-    {
-        get => _userSettings.DriveMozaWheelLedsFromTelemetry;
-        set
-        {
-            _userSettings.DriveMozaWheelLedsFromTelemetry = value;
-            Save();
-        }
-    }
-
     public ObservableSet<int> AutoConnectGameAppIds
     {
         get => _userSettings.AutoConnectGameAppIds;

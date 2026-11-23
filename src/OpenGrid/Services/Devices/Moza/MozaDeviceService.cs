@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Ports;
+using Avalonia.Media;
 using OpenGrid.Models;
 using OpenGrid.Models.Telemetry;
 using OpenGrid.Services.Telemetry;
@@ -91,12 +92,11 @@ public sealed class MozaDeviceService : IMozaDeviceService
             }
 
             Log.Debug(
-                "Configuring MOZA device {DeviceId} ({Name}): enabled={Enabled}, leds={DriveLeds}, global={Global}, category={Category}",
+                "Configuring MOZA device {DeviceId} ({Name}): enabled={Enabled}, leds={DriveLeds}, category={Category}",
                 device.Id,
                 device.Name,
                 device.IsEnabled,
                 device.DriveLedsWithTelemetry,
-                _settingsService.DriveMozaWheelLedsFromTelemetry,
                 device.Category);
 
             if (IsActive(device))
@@ -120,9 +120,8 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
     private bool IsActive(SerialDevice device)
     {
-        if (!device.IsEnabled ||
-            !device.DriveLedsWithTelemetry ||
-            !_settingsService.DriveMozaWheelLedsFromTelemetry)
+        if (!device.IsEnabled
+            || !device.DriveLedsWithTelemetry)
         {
             return false;
         }
@@ -453,7 +452,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
         /// volatile live colour buffer. This is the boxflat startup step that
         /// makes the bitmask frames light up in the configured colours.
         /// </summary>
-        private void ApplyRpmColors(IEnumerable<string?> leds, int totalLedCount)
+        private void ApplyRpmColors(IEnumerable<Color> leds, int totalLedCount)
         {
             if (!_port.IsOpen)
             {

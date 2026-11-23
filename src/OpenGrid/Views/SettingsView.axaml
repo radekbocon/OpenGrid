@@ -68,32 +68,6 @@
                 Margin="0,16,0,0"
                 Classes="Subtitle1"
                 FontWeight="SemiBold"
-                Text="MOZA" />
-            <controls:Card Padding="16,16">
-                <StackPanel Spacing="8">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
-                            <TextBlock
-                                Classes="Body2"
-                                Text="Drive wheel LEDs from telemetry" />
-                            <TextBlock
-                                Classes="Caption"
-                                Opacity="0.6"
-                                Text="Master switch for the RPM LEDs on MOZA wheels. Also enable the device in Devices → MOZA."
-                                TextWrapping="Wrap" />
-                        </StackPanel>
-                        <ToggleSwitch
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            IsChecked="{Binding DriveMozaWheelLedsFromTelemetry}" />
-                    </Grid>
-                </StackPanel>
-            </controls:Card>
-
-            <TextBlock
-                Margin="0,16,0,0"
-                Classes="Subtitle1"
-                FontWeight="SemiBold"
                 Text="Recording" />
             <controls:Card Padding="16,8">
                 <Grid ColumnDefinitions="*,Auto">
