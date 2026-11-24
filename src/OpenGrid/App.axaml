@@ -51,8 +51,10 @@
                 </ControlTemplate>
             </Setter>
         </Style>
-        <!-- The Simple theme rounds only the left corners of the swatch because
-             it originally sat next to a dropdown arrow. Round all corners. -->
+        <!--
+            The Simple theme rounds only the left corners of the swatch because
+            it originally sat next to a dropdown arrow. Round all corners.
+        -->
         <Style Selector="ColorPicker">
             <Setter Property="Content">
                 <Template>
@@ -60,10 +62,15 @@
                         <Border
                             Margin="1"
                             Background="{DynamicResource ColorControlCheckeredBackgroundBrush}"
+                            BorderBrush="{DynamicResource MaterialDividerBrush}"
+                            BorderThickness="1"
                             CornerRadius="{TemplateBinding CornerRadius}" />
                         <Border
                             Margin="1"
-                            Background="{TemplateBinding HsvColor, Converter={StaticResource ToBrushConverter}}"
+                            Background="{TemplateBinding HsvColor,
+                                                         Converter={StaticResource ToBrushConverter}}"
+                            BorderBrush="{DynamicResource MaterialDividerBrush}"
+                            BorderThickness="1"
                             CornerRadius="{TemplateBinding CornerRadius}" />
                     </Panel>
                 </Template>
