@@ -228,7 +228,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
             connection.Device.RpmLedCount);
         var activeFrame = SelectActiveFrame(_lastTelemetry, segments);
 
-        connection.WriteFrame(activeFrame, connection.Device.RpmLedCount, _lastTelemetry.EngineRpm);
+        connection.WriteFrame(activeFrame, connection.Device.RpmLedCount);
     }
 
     /// <summary>
@@ -347,7 +347,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
             }
         }
 
-        public void WriteFrame(RpmLedSegment? frame, int totalLedCount, float engineRpm)
+        public void WriteFrame(RpmLedSegment? frame, int totalLedCount)
         {
             lock (_writeLock)
             {
@@ -395,7 +395,12 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
                 var mask = activeMask > ushort.MaxValue ? ushort.MaxValue : (ushort)activeMask;
                 var rpmFrame = MozaProtocol.BuildWheelRpmLedFrameLegacy(mask);
-                var buttonsFrame = MozaProtocol.BuildWheelButtonsLedFrameLegacy(mask);
+
+                // Do not feed group 0x01 (button telemetry). The wheel switches its
+                // RGB buttons to the live buffer when it sees that frame, but this
+                // service only loads colours into the RPM group (0x00). With no
+                // group-1 colour data the buttons render black. OpenGrid owns the
+                // RPM strip only; leave button LEDs to the wheel / Pit House.
 
                 if (!rpmFrame.AsSpan().SequenceEqual(_lastLedFrame))
                 {
@@ -412,7 +417,6 @@ public sealed class MozaDeviceService : IMozaDeviceService
                     if (_port.IsOpen)
                     {
                         _port.Write(rpmFrame, 0, rpmFrame.Length);
-                        _port.Write(buttonsFrame, 0, buttonsFrame.Length);
                     }
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
@@ -476,9 +480,11 @@ public sealed class MozaDeviceService : IMozaDeviceService
         }
 
         /// <summary>
-        /// The wheel's live LED frame buffer is volatile. Match boxflat's
-        /// startup order: all-off frames, telemetry mode on, then the configured
+        /// The wheel's RPM live LED frame buffer is volatile. Match boxflat's
+        /// startup order: all-off RPM frame, telemetry mode on, then the configured
         /// RPM colours. Only after that do the telemetry bitmasks light LEDs.
+        /// The button group is deliberately not touched: feeding it would take over
+        /// the RGB buttons without the matching group-1 colour data and go dark.
         /// </summary>
         private void InitializeWheelLeds()
         {
@@ -506,7 +512,6 @@ public sealed class MozaDeviceService : IMozaDeviceService
                 }
 
                 WriteRaw(MozaProtocol.BuildWheelRpmLedFrameLegacy(0));
-                WriteRaw(MozaProtocol.BuildWheelButtonsLedFrameLegacy(0));
 
                 if (_previousTelemetryMode is { } previousMode &&
                     previousMode != MozaProtocol.WheelTelemetryModeActive)

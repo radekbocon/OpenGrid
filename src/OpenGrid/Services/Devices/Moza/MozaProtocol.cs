@@ -30,7 +30,6 @@ public static class MozaProtocol
     public const byte WheelRpmColorsCommand = 0x19;
     public const byte WheelRpmBitmaskCommand = 0x1A;
     public const byte WheelRpmLedGroup = 0x00;
-    public const byte WheelButtonsLedGroup = 0x01;
 
     public const byte WheelTelemetryModeCommand = 0x1C;
     public const byte WheelTelemetryModeActive = 0x01;
@@ -89,20 +88,6 @@ public static class MozaProtocol
         Span<byte> payload = stackalloc byte[4];
         payload[0] = WheelRpmBitmaskCommand;
         payload[1] = WheelRpmLedGroup;
-        BinaryPrimitives.WriteUInt16LittleEndian(payload[2..], activeMask);
-
-        return BuildFrame(WheelWriteGroup, WheelDeviceId, payload);
-    }
-
-    /// <summary>
-    /// Boxflat mirrors the RPM bitmask onto the buttons group as well. The
-    /// wheel uses that companion frame to keep its live LED pipeline engaged.
-    /// </summary>
-    public static byte[] BuildWheelButtonsLedFrameLegacy(ushort activeMask)
-    {
-        Span<byte> payload = stackalloc byte[4];
-        payload[0] = WheelRpmBitmaskCommand;
-        payload[1] = WheelButtonsLedGroup;
         BinaryPrimitives.WriteUInt16LittleEndian(payload[2..], activeMask);
 
         return BuildFrame(WheelWriteGroup, WheelDeviceId, payload);
