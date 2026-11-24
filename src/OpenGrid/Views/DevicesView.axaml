@@ -123,6 +123,9 @@
                             <DataTemplate x:DataType="vm:DisplayDeviceItemViewModel">
                                 <views:DisplayDeviceItemView DataContext="{Binding}" />
                             </DataTemplate>
+                            <DataTemplate x:DataType="vm:MozaDeviceItemViewModel">
+                                <views:MozaDeviceItemView DataContext="{Binding}" />
+                            </DataTemplate>
                             <DataTemplate x:DataType="vm:SoundDeviceItemViewModel">
                                 <views:SoundDeviceItemView DataContext="{Binding}" />
                             </DataTemplate>

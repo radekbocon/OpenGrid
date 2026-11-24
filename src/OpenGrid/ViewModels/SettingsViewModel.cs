@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OpenGrid.Models;
 using OpenGrid.Services;

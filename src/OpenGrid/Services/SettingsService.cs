@@ -8,6 +8,7 @@ internal record UserSettings
     public bool MinimizeToTray { get; set; } = true;
     public string? SelectedTheme { get; set; }
     public int RecordingRateHz { get; set; } = 30;
+    public bool DriveMozaWheelLedsFromTelemetry { get; set; } = true;
     public ObservableSet<int> AutoConnectGameAppIds { get; set; } = [];
     public ObservableSet<int> AutoRecordingGameAppIds { get; set; } = [];
 }
@@ -22,6 +23,8 @@ public sealed class SettingsService : ISettingsService
     {
         MinimizeToTray = true
     };
+
+    public event EventHandler? SettingsChanged;
 
     public bool MinimizeToTray
     {
@@ -83,6 +86,7 @@ public sealed class SettingsService : ISettingsService
                 Directory.CreateDirectory(dir);
             }
             File.WriteAllText(SettingsPath, JsonSerializer.Serialize(_userSettings));
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)
         {

@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform;
 using OpenGrid.Models;
+using OpenGrid.Services.Devices.Moza;
 using Serilog;
 
 namespace OpenGrid.Services.Devices;
@@ -23,6 +24,7 @@ public sealed class DeviceService : IDeviceService
         _serializers = new Dictionary<DeviceType, IDeviceSerializer>
         {
             { DeviceType.Display, new DisplayDeviceSerializer() },
+            { DeviceType.MozaSerial, new MozaSerialDeviceSerializer() },
             { DeviceType.Sound, new SoundDeviceSerializer() },
         };
         GetPersistedDevices();
@@ -32,6 +34,7 @@ public sealed class DeviceService : IDeviceService
     {
         var screens = EnumerateScreens();
         var soundDevices = EnumerateSoundDevices();
+        var mozaPorts = MozaSerialPortEnumerator.Enumerate();
         var persistedDevices = LoadPersistedDevices();
 
         foreach (var device in persistedDevices)
@@ -40,6 +43,14 @@ public sealed class DeviceService : IDeviceService
             {
                 case DisplayDevice displayDevice:
                     displayDevice.Screen = screens.FirstOrDefault(x => x.DisplayName == device.Id);
+                    break;
+                case ISerialDevice serialDevice:
+                    // The MOZA service overrides this with the actual port state
+                    // while it owns the connection.
+                    serialDevice.Status = mozaPorts.Any(x =>
+                            x.Id == device.Id || x.PortName == serialDevice.PortName)
+                        ? DeviceConnectionStatus.Connected
+                        : DeviceConnectionStatus.Disconnected;
                     break;
                 case SoundDevice soundDevice:
                     soundDevice.Status = soundDevices.Any(x => x.Id == device.Id)
@@ -57,6 +68,7 @@ public sealed class DeviceService : IDeviceService
     {
         var screens = EnumerateScreens();
         var soundDevices = EnumerateSoundDevices();
+        var mozaPorts = MozaSerialPortEnumerator.Enumerate();
         var saved = LoadPersistedDevices();
         var savedIds = new HashSet<string>(saved.Select(d => d.Id));
         var newDevices = new List<IDevice>();
@@ -94,6 +106,33 @@ public sealed class DeviceService : IDeviceService
                 Name = soundDevice.Name,
                 Description = soundDevice.Description,
                 IsEnabled = true,
+            };
+            newDevices.Add(device);
+        }
+
+        foreach (var mozaPort in mozaPorts)
+        {
+            // Older builds saved a tty-based id. Recognise the same physical
+            // port by its stable path so we don't offer it as a duplicate.
+            if (savedIds.Contains(mozaPort.Id) ||
+                saved.OfType<ISerialDevice>().Any(x => x.PortName == mozaPort.PortName))
+            {
+                continue;
+            }
+
+            var device = new MozaSerialDevice
+            {
+                Id = mozaPort.Id,
+                DeviceType = DeviceType.MozaSerial,
+                Name = mozaPort.Name,
+                Description = mozaPort.Description,
+                IsEnabled = true,
+                PortName = mozaPort.PortName,
+                SerialNumber = mozaPort.SerialNumber,
+                VendorId = mozaPort.VendorId,
+                ProductId = mozaPort.ProductId,
+                Category = MozaDeviceCatalog.Categorize(mozaPort.ProductId),
+                Status = DeviceConnectionStatus.Connected,
             };
             newDevices.Add(device);
         }

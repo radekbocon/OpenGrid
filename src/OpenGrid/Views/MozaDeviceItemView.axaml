@@ -1,0 +1,271 @@
+<UserControl
+    x:Class="OpenGrid.Views.MozaDeviceItemView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:viewModels="clr-namespace:OpenGrid.ViewModels"
+    x:DataType="viewModels:MozaDeviceItemViewModel">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="16" Spacing="16">
+            <TextBlock Classes="Headline6" Text="MOZA Device Details" />
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Name  -->
+            <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Name" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body1"
+                    Text="{Binding Name}" />
+            </Grid>
+
+            <!--  Description  -->
+            <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Description" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body1"
+                    Text="{Binding Description, TargetNullValue='No description'}" />
+            </Grid>
+
+            <!--  Status  -->
+            <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Status" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body1"
+                    Text="{Binding Status}" />
+            </Grid>
+
+            <!--  Port  -->
+            <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Serial Port" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body2"
+                    Text="{Binding PortName}"
+                    TextWrapping="Wrap" />
+            </Grid>
+
+            <!--  Serial number  -->
+            <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Serial Number" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body2"
+                    Text="{Binding SerialNumber}"
+                    TextWrapping="Wrap" />
+            </Grid>
+
+            <!--  Category  -->
+            <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Category" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="Body2"
+                    Text="{Binding Category}" />
+            </Grid>
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <TextBlock Classes="Headline6" Text="Configuration" />
+
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+            <!--  Enabled toggle  -->
+            <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Enabled" />
+                <ToggleSwitch
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding IsEnabled}" />
+            </Grid>
+
+            <!--  Telemetry LEDs toggle  -->
+            <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="Drive Wheel LEDs" />
+                <ToggleSwitch
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding DriveLedsWithTelemetry}" />
+            </Grid>
+
+            <TextBlock
+                Margin="140,0,0,0"
+                Classes="Caption"
+                Opacity="0.6"
+                Text="Requires the global telemetry LED option in Settings."
+                TextWrapping="Wrap" />
+
+            <!--  RPM LED frames  -->
+            <TextBlock
+                Margin="140,0,0,0"
+                Classes="Subtitle1"
+                Text="RPM LED frames" />
+
+            <TextBlock
+                Margin="140,0,0,0"
+                Classes="Caption"
+                Opacity="0.6"
+                Text="Each frame defines the exact colour of every LED at a given percentage of the car's redline. The last frame whose threshold has been reached wins. Set an LED to black to turn it off. Flicker blinks the whole frame."
+                TextWrapping="Wrap" />
+
+            <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="Subtitle1"
+                    Opacity="0.6"
+                    Text="LEDs per frame" />
+                <ComboBox
+                    Grid.Column="1"
+                    MinWidth="100"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding FrameLengthOptions}"
+                    SelectedItem="{Binding FrameLength}" />
+            </Grid>
+
+            <Grid
+                Margin="140,0,0,0"
+                ColumnDefinitions="36,*,100,80,90"
+                ColumnSpacing="8">
+                <TextBlock
+                    Grid.Column="0"
+                    Classes="Caption"
+                    Opacity="0.6"
+                    Text="Frame" />
+                <TextBlock
+                    Grid.Column="1"
+                    Classes="Caption"
+                    Opacity="0.6"
+                    Text="LED pattern" />
+                <TextBlock
+                    Grid.Column="2"
+                    Classes="Caption"
+                    Opacity="0.6"
+                    Text="% redline" />
+                <TextBlock
+                    Grid.Column="3"
+                    Classes="Caption"
+                    Opacity="0.6"
+                    Text="Flicker" />
+                <TextBlock
+                    Grid.Column="4"
+                    Classes="Caption"
+                    Opacity="0.6"
+                    Text="Action" />
+            </Grid>
+
+            <ItemsControl Margin="140,0,0,0" ItemsSource="{Binding RpmSegments}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:MozaRpmSegmentViewModel">
+                        <Grid
+                            Margin="0,0,0,8"
+                            ColumnDefinitions="36,*,100,80,90"
+                            ColumnSpacing="8">
+                            <TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Classes="Body2"
+                                Text="{Binding Index, StringFormat='{}{0}.'}" />
+
+                            <ItemsControl Grid.Column="1" ItemsSource="{Binding Leds}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="2" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="viewModels:MozaRpmLedCellViewModel">
+                                        <ColorPicker
+                                            Width="24"
+                                            Height="24"
+                                            MinWidth="24"
+                                            Margin="0"
+                                            HorizontalAlignment="Center"
+                                            CornerRadius="4"
+                                            IsAlphaEnabled="False"
+                                            ToolTip.Tip="Black turns this LED off"
+                                            Color="{Binding Color, Mode=TwoWay}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBox
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Text="{Binding ThresholdPercentText, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox
+                                Grid.Column="3"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding Flicker}" />
+                            <Button
+                                Grid.Column="4"
+                                Padding="8,4"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Command="{Binding RemoveCommand}"
+                                Content="Remove" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Button
+                Margin="140,0,0,0"
+                Padding="12,6"
+                HorizontalAlignment="Left"
+                Command="{Binding AddRpmSegmentCommand}"
+                Content="Add frame" />
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -9,6 +9,7 @@ using OpenGrid.Views;
 using Microsoft.Extensions.DependencyInjection;
 using OpenGrid.Services;
 using OpenGrid.Services.Dashboard;
+using OpenGrid.Services.Devices.Moza;
 using OpenGrid.Services.SessionPersist;
 using OpenGrid.Services.Sound;
 using OpenGrid.Services.Telemetry;
@@ -58,18 +59,22 @@ public class App : Application
             var dashboardLaunchService = Program.ServiceProvider.GetRequiredService<DashboardLauncher>();
             dashboardLaunchService.HandleTrigger(DashboardLaunchTrigger.OnAppStart);
 
-            var sessionRepository = Program.ServiceProvider.GetRequiredService<SessionRepository>();
-
-            _ = Program.ServiceProvider.GetRequiredService<IBassShakerService>();
+            var bassShakerService = Program.ServiceProvider.GetRequiredService<IBassShakerService>();
+            bassShakerService.InitializeAsync().FireAndForgetSafe();
             
-            SetupTrayIcon(desktop, sessionRepository);
+            var mozaDeviceService = Program.ServiceProvider.GetRequiredService<IMozaDeviceService>();
+            mozaDeviceService.InitializeDevicesAsync().FireAndForgetSafe();
+
+            SetupTrayIcon(desktop);
         }
 
         base.OnFrameworkInitializationCompleted();
     }
 
-    private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop, SessionRepository sessionRepository)
+    private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop)
     {
+        var sessionRepository = Program.ServiceProvider.GetRequiredService<SessionRepository>();
+        
         using var iconStream = AssetLoader.Open(new Uri("avares://OpenGrid/Assets/icon.png"));
         _trayIcon = new TrayIcon
         {
@@ -160,6 +165,16 @@ public class App : Application
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Error disposing bass shaker service");
+        }
+
+        try
+        {
+            var mozaDeviceService = Program.ServiceProvider.GetService<IMozaDeviceService>();
+            mozaDeviceService?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Error disposing MOZA device service");
         }
     }
 

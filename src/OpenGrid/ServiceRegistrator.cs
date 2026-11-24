@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OpenGrid.Services;
 using OpenGrid.Services.Dashboard;
 using OpenGrid.Services.Devices;
+using OpenGrid.Services.Devices.Moza;
 using OpenGrid.Services.SessionPersist;
 using OpenGrid.Services.Sound;
 using OpenGrid.Services.Telemetry;
@@ -28,6 +29,8 @@ public static class ServiceRegistrator
         services.AddSingleton<SteamGameManager>();
         services.AddSingleton<IDashboardService, DashboardService>();
         services.AddSingleton<IDeviceService, DeviceService>();
+        services.AddSingleton<IRpmLedEffectService, RpmLedEffectService>();
+        services.AddSingleton<IMozaDeviceService, MozaDeviceService>();
         services.AddSingleton<IBassShakerPresetService, BassShakerPresetService>();
         services.AddSingleton<IBassShakerService, BassShakerService>();
         services.AddSingleton<ICarConfigService, CarConfigConfigService>();

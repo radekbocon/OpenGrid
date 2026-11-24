@@ -8,6 +8,7 @@ namespace OpenGrid.Services.Sound;
 
 public interface IBassShakerService : IDisposable
 {
+    Task InitializeAsync();
     void ConfigureDevice(SoundDevice device);
     void RemoveDevice(string deviceId);
 }
@@ -19,7 +20,7 @@ public sealed class BassShakerService : IBassShakerService
     private readonly IBassShakerPresetService _presetService;
     private readonly Dictionary<string, SoundDevice> _devices = [];
     private readonly Dictionary<string, BassShakerOutputState> _outputs = [];
-    private readonly Lock _sync = new();
+    private readonly SemaphoreSlim _sync = new(1, 1);
     private SteamGame? _currentGame;
     private Car? _currentCar;
     private bool _disposed;
@@ -36,36 +37,57 @@ public sealed class BassShakerService : IBassShakerService
         _telemetryService.TelemetryStatusChanged += OnTelemetryStatusChanged;
         _presetService.PresetUpdated += OnPresetChanged;
         _presetService.PresetRemoved += OnPresetRemoved;
+    }
 
-        lock (_sync)
+    public async Task InitializeAsync()
+    {
+        try
         {
-            foreach (var device in _deviceService.GetPersistedDevices().OfType<SoundDevice>())
+            await _sync.WaitAsync();
+            await Task.Run(() =>
             {
-                MigrateLegacyConfiguration(device);
-                _devices[device.Id] = device;
-                ConfigureDeviceInternal(device, force: true);
-            }
+                foreach (var device in _deviceService.GetPersistedDevices().OfType<SoundDevice>())
+                {
+                    MigrateLegacyConfiguration(device);
+                    _devices[device.Id] = device;
+                    ConfigureDeviceInternal(device, force: true);
+                }
+            });
+        }
+        finally
+        {
+            _sync.Release();
         }
     }
 
     public void ConfigureDevice(SoundDevice device)
     {
-        lock (_sync)
+        try
         {
+            _sync.Wait();
             _devices[device.Id] = device;
             ConfigureDeviceInternal(device, force: false);
+        }
+        finally
+        {
+            _sync.Release();
         }
     }
 
     public void RemoveDevice(string deviceId)
     {
-        lock (_sync)
+        try
         {
+            _sync.Wait();
             _devices.Remove(deviceId);
             if (_outputs.Remove(deviceId, out var output))
             {
                 output.Output.Dispose();
             }
+        }
+        finally
+        {
+            _sync.Release();
         }
     }
 
@@ -189,8 +211,9 @@ public sealed class BassShakerService : IBassShakerService
 
     private void OnPresetChanged(object? sender, BassShakerPreset preset)
     {
-        lock (_sync)
+        try
         {
+            _sync.Wait();
             foreach (var device in _devices.Values)
             {
                 if (device.DefaultBassShakerPresetId == preset.Id ||
@@ -200,12 +223,17 @@ public sealed class BassShakerService : IBassShakerService
                 }
             }
         }
+        finally
+        {
+            _sync.Release();
+        }
     }
 
     private void OnPresetRemoved(object? sender, BassShakerPreset preset)
     {
-        lock (_sync)
+        try
         {
+            _sync.Wait();
             foreach (var device in _devices.Values)
             {
                 var deviceChanged = false;
@@ -230,6 +258,10 @@ public sealed class BassShakerService : IBassShakerService
                 ConfigureDeviceInternal(device, force: true);
             }
         }
+        finally
+        {
+            _sync.Release();
+        }
     }
 
     private void RemoveOutput(string deviceId)
@@ -244,8 +276,9 @@ public sealed class BassShakerService : IBassShakerService
     {
         var telemetry = e.Telemetry;
 
-        lock (_sync)
+        try
         {
+            _sync.Wait();
             var gameChanged = _currentGame?.AppId != e.Game.AppId;
             var carChanged = _currentCar != e.Telemetry.Car;
 
@@ -265,6 +298,10 @@ public sealed class BassShakerService : IBassShakerService
                 output.Output.ApplyTelemetry(telemetry);
             }
         }
+        finally
+        {
+            _sync.Release();
+        }
     }
 
     private void OnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus status)
@@ -274,8 +311,9 @@ public sealed class BassShakerService : IBassShakerService
             return;
         }
 
-        lock (_sync)
+        try
         {
+            _sync.Wait();
             _currentGame = null;
             _currentCar = null;
 
@@ -289,6 +327,10 @@ public sealed class BassShakerService : IBassShakerService
             {
                 ConfigureDeviceInternal(device, force: false);
             }
+        }
+        finally
+        {
+            _sync.Release();
         }
     }
 
@@ -305,14 +347,19 @@ public sealed class BassShakerService : IBassShakerService
         _presetService.PresetUpdated -= OnPresetChanged;
         _presetService.PresetRemoved -= OnPresetRemoved;
 
-        lock (_sync)
+        try
         {
+            _sync.Wait();
             foreach (var output in _outputs.Values)
             {
                 output.Output.Dispose();
             }
             _outputs.Clear();
             _devices.Clear();
+        }
+        finally
+        {
+            _sync.Release();
         }
     }
 
