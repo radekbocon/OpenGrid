@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.IO.Ports;
 using Avalonia.Media;
 using OpenGrid.Models;
@@ -13,7 +12,6 @@ public interface IMozaDeviceService : IDisposable
     event EventHandler<string>? StatusChanged;
 
     void ConfigureDevice(SerialDevice device);
-    void RefreshDevices();
     void RemoveDevice(string deviceId);
 }
 
@@ -33,7 +31,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
     private readonly Lock _sync = new();
 
     private TelemetryRecord? _lastTelemetry;
-    private long _lastSendTimestamp;
+    private DateTime _lastSendTimestamp;
     private bool _disposed;
 
     public event EventHandler<string>? StatusChanged;
@@ -133,21 +131,20 @@ public sealed class MozaDeviceService : IMozaDeviceService
             or MozaDeviceCategory.Unknown;
     }
 
-    private MozaConnection GetOrCreateConnection(SerialDevice device)
+    private void GetOrCreateConnection(SerialDevice device)
     {
         if (_connections.TryGetValue(device.Id, out var connection))
         {
             connection.UpdateDevice(device);
             connection.Open();
             SendLedsToConnection(connection);
-            return connection;
+            return;
         }
 
         connection = new MozaConnection(device, OnConnectionStatusChanged);
         _connections[device.Id] = connection;
         connection.Open();
         SendLedsToConnection(connection);
-        return connection;
     }
 
     private void RemoveConnection(string deviceId)
@@ -173,17 +170,24 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
     private void OnTelemetryReceived(object? sender, TelemetryEventArgs e)
     {
-        _lastTelemetry = e.Telemetry;
-
-        var now = Stopwatch.GetTimestamp();
-        var minInterval = Stopwatch.Frequency * MinSendIntervalMs / 1000;
-        if (now - _lastSendTimestamp < minInterval)
+        try
         {
-            return;
-        }
+            _lastTelemetry = e.Telemetry;
 
-        _lastSendTimestamp = now;
-        SendLeds();
+            var now = DateTime.Now;
+            var minInterval = TimeSpan.FromMilliseconds(MinSendIntervalMs);
+            if (now - _lastSendTimestamp < minInterval)
+            {
+                return;
+            }
+
+            _lastSendTimestamp = now;
+            SendLeds();
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Error sending LEDs");
+        }
     }
 
     private void OnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus status)
@@ -296,7 +300,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
     private sealed class MozaConnection
     {
-        private static readonly long FlickerIntervalTicks = Stopwatch.Frequency / 5; // 200 ms
+        private static readonly long FlickerIntervalTicks = TimeSpan.FromMilliseconds(200).Ticks;
 
         private readonly SerialPort _port;
         private readonly Action<string> _statusChanged;
@@ -358,14 +362,14 @@ public sealed class MozaDeviceService : IMozaDeviceService
                 if (frameId != _lastFrameId)
                 {
                     _flickerOn = true;
-                    _lastFlickerToggle = Stopwatch.GetTimestamp();
+                    _lastFlickerToggle = DateTime.Now.Ticks;
                     _lastFrameId = frameId;
                 }
 
                 var lightsOn = true;
                 if (frame?.Flicker == true)
                 {
-                    var now = Stopwatch.GetTimestamp();
+                    var now = DateTime.Now.Ticks;
                     if (now - _lastFlickerToggle >= FlickerIntervalTicks)
                     {
                         _flickerOn = !_flickerOn;
@@ -557,9 +561,9 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
                 var expectedGroup = MozaProtocol.ResponseGroup(request[2]);
                 var expectedDevice = MozaProtocol.ResponseDevice(request[3]);
-                var deadline = Stopwatch.GetTimestamp() + Stopwatch.Frequency / 2;
+                var deadline = DateTime.Now + TimeSpan.FromMilliseconds(500);
 
-                while (Stopwatch.GetTimestamp() < deadline)
+                while (DateTime.Now < deadline)
                 {
                     var frame = ReadFrame(deadline);
                     if (frame is null || frame.Length < 5 || frame[1] < expectedPrefix.Length + valueLength)
@@ -594,11 +598,11 @@ public sealed class MozaDeviceService : IMozaDeviceService
             }
         }
 
-        private byte[]? ReadFrame(long deadline)
+        private byte[]? ReadFrame(DateTime deadline)
         {
             int? pendingStart = null;
 
-            while (Stopwatch.GetTimestamp() < deadline || pendingStart is not null)
+            while (DateTime.Now < deadline || pendingStart is not null)
             {
                 var start = pendingStart ?? ReadByte();
                 pendingStart = null;
