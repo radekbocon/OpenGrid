@@ -2,15 +2,15 @@ using System.Text.Json;
 using Avalonia.Media;
 using OpenGrid.Models;
 
-namespace OpenGrid.Services.Devices;
+namespace OpenGrid.Services.Devices.Moza;
 
-public class SerialDeviceSerializer : IDeviceSerializer
+public class MozaSerialDeviceSerializer : IDeviceSerializer
 {
     public IDevice? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
 
-        var dto = JsonSerializer.Deserialize<SerialDeviceDto>(json);
+        var dto = JsonSerializer.Deserialize<MozaSerialDeviceDto>(json);
         var totalLedCount = dto?.RpmLedCount is > 0 and <= RpmLedSegment.MaxLeds
             ? dto.RpmLedCount.Value
             : 10;
@@ -18,10 +18,10 @@ public class SerialDeviceSerializer : IDeviceSerializer
         return dto switch
         {
             null => null,
-            _ => new SerialDevice
+            _ => new MozaSerialDevice
             {
                 Id = dto.Id,
-                DeviceType = DeviceType.Serial,
+                DeviceType = DeviceType.MozaSerial,
                 Name = dto.Name,
                 Description = dto.Description,
                 IsEnabled = dto.IsEnabled,
@@ -41,23 +41,23 @@ public class SerialDeviceSerializer : IDeviceSerializer
     {
         ArgumentNullException.ThrowIfNull(device);
 
-        var serialDevice = device as SerialDevice;
-        var totalLedCount = Math.Clamp(serialDevice?.RpmLedCount ?? 10, 1, RpmLedSegment.MaxLeds);
-        var segments = RpmLedSegment.Normalize(serialDevice?.RpmSegments, totalLedCount);
+        var mozaDevice = device as MozaSerialDevice;
+        var totalLedCount = Math.Clamp(mozaDevice?.RpmLedCount ?? 10, 1, RpmLedSegment.MaxLeds);
+        var segments = RpmLedSegment.Normalize(mozaDevice?.RpmSegments, totalLedCount);
 
-        var dto = new SerialDeviceDto
+        var dto = new MozaSerialDeviceDto
         {
             Id = device.Id,
-            DeviceType = DeviceType.Serial,
+            DeviceType = DeviceType.MozaSerial,
             Name = device.Name,
             Description = device.Description,
             IsEnabled = device.IsEnabled,
-            PortName = serialDevice?.PortName,
-            SerialNumber = serialDevice?.SerialNumber,
-            VendorId = serialDevice?.VendorId ?? 0,
-            ProductId = serialDevice?.ProductId ?? 0,
-            Category = serialDevice?.Category ?? MozaDeviceCategory.Unknown,
-            DriveLedsWithTelemetry = serialDevice?.DriveLedsWithTelemetry ?? true,
+            PortName = (device as ISerialDevice)?.PortName,
+            SerialNumber = (device as ISerialDevice)?.SerialNumber,
+            VendorId = (device as ISerialDevice)?.VendorId ?? 0,
+            ProductId = (device as ISerialDevice)?.ProductId ?? 0,
+            Category = mozaDevice?.Category ?? MozaDeviceCategory.Unknown,
+            DriveLedsWithTelemetry = mozaDevice?.DriveLedsWithTelemetry ?? true,
             RpmLedCount = totalLedCount,
             RpmSegments = segments.Select(x => new RpmLedSegmentDto
             {
@@ -87,7 +87,7 @@ public class SerialDeviceSerializer : IDeviceSerializer
         return RpmLedSegment.Normalize(segments, totalLedCount);
     }
 
-    private class SerialDeviceDto
+    private class MozaSerialDeviceDto
     {
         public required string Id { get; init; }
         public DeviceType DeviceType { get; init; }

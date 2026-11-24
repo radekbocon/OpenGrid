@@ -19,6 +19,6 @@ public enum DeviceConnectionStatus
 public enum DeviceType
 {
     Display,
-    Serial,
+    MozaSerial,
     Sound,
 }

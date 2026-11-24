@@ -24,7 +24,7 @@ public sealed class DeviceService : IDeviceService
         _serializers = new Dictionary<DeviceType, IDeviceSerializer>
         {
             { DeviceType.Display, new DisplayDeviceSerializer() },
-            { DeviceType.Serial, new SerialDeviceSerializer() },
+            { DeviceType.MozaSerial, new MozaSerialDeviceSerializer() },
             { DeviceType.Sound, new SoundDeviceSerializer() },
         };
         GetPersistedDevices();
@@ -44,7 +44,7 @@ public sealed class DeviceService : IDeviceService
                 case DisplayDevice displayDevice:
                     displayDevice.Screen = screens.FirstOrDefault(x => x.DisplayName == device.Id);
                     break;
-                case SerialDevice serialDevice:
+                case ISerialDevice serialDevice:
                     // The MOZA service overrides this with the actual port state
                     // while it owns the connection.
                     serialDevice.Status = mozaPorts.Any(x =>
@@ -115,15 +115,15 @@ public sealed class DeviceService : IDeviceService
             // Older builds saved a tty-based id. Recognise the same physical
             // port by its stable path so we don't offer it as a duplicate.
             if (savedIds.Contains(mozaPort.Id) ||
-                saved.OfType<SerialDevice>().Any(x => x.PortName == mozaPort.PortName))
+                saved.OfType<ISerialDevice>().Any(x => x.PortName == mozaPort.PortName))
             {
                 continue;
             }
 
-            var device = new SerialDevice
+            var device = new MozaSerialDevice
             {
                 Id = mozaPort.Id,
-                DeviceType = DeviceType.Serial,
+                DeviceType = DeviceType.MozaSerial,
                 Name = mozaPort.Name,
                 Description = mozaPort.Description,
                 IsEnabled = true,

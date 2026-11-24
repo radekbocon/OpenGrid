@@ -11,7 +11,7 @@ public interface IMozaDeviceService : IDisposable
 {
     event EventHandler<string>? StatusChanged;
 
-    void ConfigureDevice(SerialDevice device);
+    void ConfigureDevice(MozaSerialDevice device);
     void RemoveDevice(string deviceId);
 }
 
@@ -64,8 +64,8 @@ public sealed class MozaDeviceService : IMozaDeviceService
             }
 
             var activeDevices = _deviceService.GetPersistedDevices()
-                .OfType<SerialDevice>()
-                .Where(IsActive)
+                .OfType<MozaSerialDevice>()
+                .Where(device => device.IsRpmLedActive())
                 .ToList();
 
             foreach (var deviceId in _connections.Keys.Except(activeDevices.Select(x => x.Id)).ToList())
@@ -80,7 +80,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
         }
     }
 
-    public void ConfigureDevice(SerialDevice device)
+    public void ConfigureDevice(MozaSerialDevice device)
     {
         lock (_sync)
         {
@@ -97,7 +97,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
                 device.DriveLedsWithTelemetry,
                 device.Category);
 
-            if (IsActive(device))
+            if (device.IsRpmLedActive())
             {
                 GetOrCreateConnection(device);
             }
@@ -116,22 +116,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
         }
     }
 
-    private bool IsActive(SerialDevice device)
-    {
-        if (!device.IsEnabled
-            || !device.DriveLedsWithTelemetry)
-        {
-            return false;
-        }
-
-        // Wheel LED commands are routed to the wheelbase / hub serial port.
-        return device.Category is MozaDeviceCategory.WheelBase
-            or MozaDeviceCategory.Wheel
-            or MozaDeviceCategory.Hub
-            or MozaDeviceCategory.Unknown;
-    }
-
-    private void GetOrCreateConnection(SerialDevice device)
+    private void GetOrCreateConnection(MozaSerialDevice device)
     {
         if (_connections.TryGetValue(device.Id, out var connection))
         {
@@ -227,9 +212,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
             return;
         }
 
-        var segments = RpmLedSegment.Normalize(
-            connection.Device.RpmSegments,
-            connection.Device.RpmLedCount);
+        var segments = connection.Device.GetNormalizedRpmSegments();
         var activeFrame = SelectActiveFrame(_lastTelemetry, segments);
 
         connection.WriteFrame(activeFrame, connection.Device.RpmLedCount);
@@ -315,7 +298,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
         private bool _flickerOn = true;
         private long _lastFlickerToggle;
 
-        public MozaConnection(SerialDevice device, Action<string> statusChanged)
+        public MozaConnection(MozaSerialDevice device, Action<string> statusChanged)
         {
             Device = device;
             _statusChanged = statusChanged;
@@ -326,9 +309,9 @@ public sealed class MozaDeviceService : IMozaDeviceService
             };
         }
 
-        public SerialDevice Device { get; private set; }
+        public MozaSerialDevice Device { get; private set; }
 
-        public void UpdateDevice(SerialDevice device)
+        public void UpdateDevice(MozaSerialDevice device)
         {
             if (ReferenceEquals(Device, device))
             {

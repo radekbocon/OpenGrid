@@ -107,7 +107,7 @@ public partial class DevicesViewModel : ViewModelBase
         DeviceItemViewModel deviceItem = device.DeviceType switch
         {
             DeviceType.Display => new DisplayDeviceItemViewModel(_deviceService, _dashboardService, _dashboardLauncher, OnRemove),
-            DeviceType.Serial => new MozaDeviceItemViewModel(_deviceService, _mozaDeviceService, OnRemove),
+            DeviceType.MozaSerial => new MozaDeviceItemViewModel(_deviceService, _mozaDeviceService, OnRemove),
             DeviceType.Sound => new SoundDeviceItemViewModel(_deviceService, _bassShakerService, _bassShakerPresetService, _carConfigService, OnRemove),
             _ => throw new ArgumentOutOfRangeException(nameof(device.DeviceType), device.DeviceType, "Unsupported device type"),
         };
@@ -121,9 +121,9 @@ public partial class DevicesViewModel : ViewModelBase
         {
             _bassShakerService.RemoveDevice(soundDevice.Id);
         }
-        else if (item.Device is SerialDevice serialDevice)
+        else if (item.Device is MozaSerialDevice mozaDevice)
         {
-            _mozaDeviceService.RemoveDevice(serialDevice.Id);
+            _mozaDeviceService.RemoveDevice(mozaDevice.Id);
         }
 
         Devices.Remove(item);

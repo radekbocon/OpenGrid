@@ -19,11 +19,11 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
     public IReadOnlyList<int> FrameLengthOptions { get; } =
         Enumerable.Range(1, RpmLedSegment.MaxLeds).ToArray();
 
-    public string PortName => (Device as SerialDevice)?.PortName ?? "-";
+    public string PortName => (Device as MozaSerialDevice)?.PortName ?? "-";
 
-    public string SerialNumber => (Device as SerialDevice)?.SerialNumber ?? "-";
+    public string SerialNumber => (Device as MozaSerialDevice)?.SerialNumber ?? "-";
 
-    public string Category => (Device as SerialDevice)?.Category.ToString() ?? "-";
+    public string Category => (Device as MozaSerialDevice)?.Category.ToString() ?? "-";
 
     public ObservableCollection<MozaRpmSegmentViewModel> RpmSegments { get; } = [];
 
@@ -46,7 +46,7 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
     {
         _isInitializing = true;
 
-        if (device is SerialDevice serialDevice)
+        if (device is MozaSerialDevice serialDevice)
         {
             DriveLedsWithTelemetry = serialDevice.DriveLedsWithTelemetry;
             FrameLength = Math.Clamp(serialDevice.RpmLedCount, 1, RpmLedSegment.MaxLeds);
@@ -154,7 +154,7 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         // DeviceItemViewModel.Init sets IsEnabled before InitDevice runs, which
         // raises OnDeviceSettingsChanged. Ignore that callback until the VM has
         // loaded the persisted values, otherwise the defaults overwrite them.
-        if (!_isInitialized || _isInitializing || Device is not SerialDevice serialDevice)
+        if (!_isInitialized || _isInitializing || Device is not MozaSerialDevice serialDevice)
         {
             return;
         }
