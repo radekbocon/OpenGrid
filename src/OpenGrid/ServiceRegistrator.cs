@@ -29,6 +29,7 @@ public static class ServiceRegistrator
         services.AddSingleton<SteamGameManager>();
         services.AddSingleton<IDashboardService, DashboardService>();
         services.AddSingleton<IDeviceService, DeviceService>();
+        services.AddSingleton<IRpmLedEffectService, RpmLedEffectService>();
         services.AddSingleton<IMozaDeviceService, MozaDeviceService>();
         services.AddSingleton<IBassShakerPresetService, BassShakerPresetService>();
         services.AddSingleton<IBassShakerService, BassShakerService>();

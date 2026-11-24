@@ -26,7 +26,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
     private readonly ITelemetryService _telemetryService;
     private readonly IDeviceService _deviceService;
     private readonly ISettingsService _settingsService;
-    private readonly ICarConfigService _carConfigService;
+    private readonly IRpmLedEffectService _rpmLedEffectService;
     private readonly Dictionary<string, MozaConnection> _connections = [];
     private readonly Lock _sync = new();
 
@@ -40,12 +40,12 @@ public sealed class MozaDeviceService : IMozaDeviceService
         ITelemetryService telemetryService,
         IDeviceService deviceService,
         ISettingsService settingsService,
-        ICarConfigService carConfigService)
+        IRpmLedEffectService rpmLedEffectService)
     {
         _telemetryService = telemetryService;
         _deviceService = deviceService;
         _settingsService = settingsService;
-        _carConfigService = carConfigService;
+        _rpmLedEffectService = rpmLedEffectService;
 
         _telemetryService.TelemetryReceived += OnTelemetryReceived;
         _telemetryService.TelemetryStatusChanged += OnTelemetryStatusChanged;
@@ -139,6 +139,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
             return;
         }
 
+        _rpmLedEffectService.Reset(deviceId);
         connection.Close();
         connection.Dispose();
     }
@@ -207,58 +208,15 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
     private void SendLedsToConnection(MozaConnection connection)
     {
-        if (_lastTelemetry is null)
+        var snapshot = _rpmLedEffectService.Evaluate(connection.Device, _lastTelemetry);
+        if (snapshot is null)
         {
             return;
         }
 
-        var segments = connection.Device.GetNormalizedRpmSegments();
-        var activeFrame = SelectActiveFrame(_lastTelemetry, segments);
-
-        connection.WriteFrame(activeFrame, connection.Device.RpmLedCount);
+        connection.WriteFrame(snapshot, connection.Device.RpmLedCount);
     }
 
-    /// <summary>
-    /// Frames are ordered by threshold. The last frame whose threshold has been
-    /// reached replaces the previous one, so each RPM step shows one complete
-    /// configured LED pattern.
-    /// </summary>
-    private RpmLedSegment? SelectActiveFrame(
-        TelemetryRecord telemetry,
-        IReadOnlyList<RpmLedSegment> segments)
-    {
-        var referenceRpm = GetReferenceRpm(telemetry);
-        var fraction = Math.Clamp(telemetry.EngineRpm / Math.Max(referenceRpm, 1f), 0f, 1f) * 100f;
-
-        RpmLedSegment? active = null;
-        foreach (var segment in segments)
-        {
-            if (fraction < segment.ThresholdPercent)
-            {
-                break;
-            }
-
-            active = segment;
-        }
-
-        return active;
-    }
-
-    private float GetReferenceRpm(TelemetryRecord telemetry)
-    {
-        var profile = string.IsNullOrWhiteSpace(telemetry.Car.Name)
-            ? null
-            : _carConfigService.GetByCarName(telemetry.Car.Name);
-
-        var maxRpm = telemetry.MaxRpm > 0
-            ? telemetry.MaxRpm
-            : profile?.MaxRpm ?? 8000;
-
-        // Use the car's redline when available so the last LEDs light up close
-        // to the shift point, like Pit House's RPM telemetry.
-        var redline = profile?.RedlineRpm ?? 0;
-        return redline > 0 ? Math.Min(redline, maxRpm) : maxRpm;
-    }
 
     public void Dispose()
     {
@@ -283,20 +241,15 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
     private sealed class MozaConnection
     {
-        private static readonly long FlickerIntervalTicks = TimeSpan.FromMilliseconds(200).Ticks;
-
         private readonly SerialPort _port;
         private readonly Action<string> _statusChanged;
-        private readonly object _writeLock = new();
+        private readonly Lock _writeLock = new();
         private DeviceConnectionStatus _status = DeviceConnectionStatus.Disconnected;
         private byte[]? _lastLedFrame;
         private uint _lastActiveMask;
         private bool _ledsInitialized;
         private byte? _previousTelemetryMode;
         private string? _lastColorSignature;
-        private string? _lastFrameId;
-        private bool _flickerOn = true;
-        private long _lastFlickerToggle;
 
         public MozaConnection(MozaSerialDevice device, Action<string> statusChanged)
         {
@@ -334,40 +287,13 @@ public sealed class MozaDeviceService : IMozaDeviceService
             }
         }
 
-        public void WriteFrame(RpmLedSegment? frame, int totalLedCount)
+        public void WriteFrame(RpmLedEffectSnapshot snapshot, int totalLedCount)
         {
             lock (_writeLock)
             {
-                var frameId = frame is null
-                    ? "off"
-                    : $"{frame.ThresholdPercent}:{frame.Flicker}:{string.Join(',', frame.Leds)}";
+                ApplyRpmColors(snapshot.Leds, totalLedCount);
 
-                if (frameId != _lastFrameId)
-                {
-                    _flickerOn = true;
-                    _lastFlickerToggle = DateTime.Now.Ticks;
-                    _lastFrameId = frameId;
-                }
-
-                var lightsOn = true;
-                if (frame?.Flicker == true)
-                {
-                    var now = DateTime.Now.Ticks;
-                    if (now - _lastFlickerToggle >= FlickerIntervalTicks)
-                    {
-                        _flickerOn = !_flickerOn;
-                        _lastFlickerToggle = now;
-                    }
-
-                    lightsOn = _flickerOn;
-                }
-
-                var leds = frame?.Leds ??
-                    Enumerable.Repeat(RpmLedSegment.OffLed, totalLedCount).ToList();
-
-                ApplyRpmColors(leds, totalLedCount);
-
-                var activeMask = lightsOn ? RpmLedSegment.BuildMask(leds) : 0u;
+                var activeMask = snapshot.ActiveMask;
 
                 // At zero RPM, send the all-off frame only once when the bar
                 // drains. Continuous zero frames keep the wheel in the live LED
@@ -425,9 +351,6 @@ public sealed class MozaDeviceService : IMozaDeviceService
                 _ledsInitialized = false;
                 _previousTelemetryMode = null;
                 _lastColorSignature = null;
-                _lastFrameId = null;
-                _flickerOn = true;
-                _lastFlickerToggle = 0;
 
                 ClosePort();
             }

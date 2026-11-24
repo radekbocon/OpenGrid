@@ -5,7 +5,7 @@ namespace OpenGrid.Models;
 /// <summary>
 /// A MOZA Racing serial device with RPM LED telemetry support.
 /// </summary>
-public class MozaSerialDevice : ISerialDevice
+public class MozaSerialDevice : ISerialDevice, IRpmLedTelemetryDevice
 {
     public required string Id { get; init; }
     public DeviceType DeviceType { get; init; } = DeviceType.MozaSerial;
