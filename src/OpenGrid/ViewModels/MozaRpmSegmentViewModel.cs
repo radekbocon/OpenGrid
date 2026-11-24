@@ -26,8 +26,7 @@ public partial class MozaRpmSegmentViewModel : ObservableObject
         _thresholdPercentText = Math.Clamp(segment.ThresholdPercent, 1, 100).ToString();
         _flicker = segment.Flicker;
 
-        var count = Math.Clamp(frameLength, 1, RpmLedSegment.MaxLeds);
-        for (var i = 0; i < count; i++)
+        for (var i = 0; i < frameLength; i++)
         {
             Leds.Add(new MozaRpmLedCellViewModel(
                 i + 1,
@@ -56,16 +55,14 @@ public partial class MozaRpmSegmentViewModel : ObservableObject
 
     public void Resize(int frameLength)
     {
-        var count = Math.Clamp(frameLength, 1, RpmLedSegment.MaxLeds);
-
-        while (Leds.Count < count)
+        while (Leds.Count < frameLength)
         {
             Leds.Add(new MozaRpmLedCellViewModel(Leds.Count + 1, RpmLedSegment.OffLed, _onChanged));
         }
 
-        if (Leds.Count > count)
+        if (Leds.Count > frameLength)
         {
-            while (Leds.Count > count)
+            while (Leds.Count > frameLength)
             {
                 Leds.RemoveAt(Leds.Count - 1);
             }

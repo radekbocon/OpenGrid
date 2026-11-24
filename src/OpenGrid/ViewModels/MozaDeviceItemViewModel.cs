@@ -10,6 +10,8 @@ namespace OpenGrid.ViewModels;
 
 public partial class MozaDeviceItemViewModel : DeviceItemViewModel
 {
+    private const int MaxRpmLeds = 16;
+    
     private readonly IMozaDeviceService _mozaDeviceService;
     private bool _isInitializing;
     private bool _isInitialized;
@@ -17,7 +19,7 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
     public override MaterialIconKind IconKind => MaterialIconKind.Gauge;
 
     public IReadOnlyList<int> FrameLengthOptions { get; } =
-        Enumerable.Range(1, RpmLedSegment.MaxLeds).ToArray();
+        Enumerable.Range(1, MaxRpmLeds).ToArray();
 
     public string PortName => (Device as MozaSerialDevice)?.PortName ?? "-";
 
@@ -49,7 +51,7 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         if (device is MozaSerialDevice serialDevice)
         {
             DriveLedsWithTelemetry = serialDevice.DriveLedsWithTelemetry;
-            FrameLength = Math.Clamp(serialDevice.RpmLedCount, 1, RpmLedSegment.MaxLeds);
+            FrameLength = Math.Clamp(serialDevice.RpmLedCount, 1, MaxRpmLeds);
             serialDevice.RpmLedCount = FrameLength;
 
             if (serialDevice.RpmSegments.Count == 0)
@@ -68,7 +70,7 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
             }
 
             ReindexSegments();
-            _mozaDeviceService.ConfigureDevice(serialDevice);
+            _mozaDeviceService.ConfigureDeviceAsync(serialDevice).FireAndForgetSafe();
         }
         else
         {
@@ -163,6 +165,6 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         serialDevice.RpmLedCount = FrameLength;
         serialDevice.RpmSegments = RpmSegments.Select(x => x.ToModel()).ToList();
         DeviceService.SaveDevice(serialDevice);
-        _mozaDeviceService.ConfigureDevice(serialDevice);
+        _mozaDeviceService.ConfigureDeviceAsync(serialDevice).FireAndForgetSafe();
     }
 }

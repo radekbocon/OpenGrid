@@ -11,7 +11,8 @@ public interface IMozaDeviceService : IDisposable
 {
     event EventHandler<string>? StatusChanged;
 
-    void ConfigureDevice(MozaSerialDevice device);
+    Task InitializeDevicesAsync();
+    Task ConfigureDeviceAsync(MozaSerialDevice device);
     void RemoveDevice(string deviceId);
 }
 
@@ -28,7 +29,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
     private readonly ISettingsService _settingsService;
     private readonly IRpmLedEffectService _rpmLedEffectService;
     private readonly Dictionary<string, MozaConnection> _connections = [];
-    private readonly Lock _sync = new();
+    private readonly SemaphoreSlim _sync = new(1, 1);
 
     private TelemetryRecord? _lastTelemetry;
     private DateTime _lastSendTimestamp;
@@ -50,14 +51,14 @@ public sealed class MozaDeviceService : IMozaDeviceService
         _telemetryService.TelemetryReceived += OnTelemetryReceived;
         _telemetryService.TelemetryStatusChanged += OnTelemetryStatusChanged;
         _settingsService.SettingsChanged += OnSettingsChanged;
-        
-        Task.Run(RefreshDevices);
     }
 
-    public void RefreshDevices()
+    public async Task InitializeDevicesAsync()
     {
-        lock (_sync)
+        try
         {
+            await _sync.WaitAsync();
+
             if (_disposed)
             {
                 return;
@@ -75,15 +76,21 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
             foreach (var device in activeDevices)
             {
-                GetOrCreateConnection(device);
+                await GetOrCreateConnectionAsync(device);
             }
+        }
+        finally
+        {
+            _sync.Release();
         }
     }
 
-    public void ConfigureDevice(MozaSerialDevice device)
+    public async Task ConfigureDeviceAsync(MozaSerialDevice device)
     {
-        lock (_sync)
+        try
         {
+            await _sync.WaitAsync();
+
             if (_disposed)
             {
                 return;
@@ -99,37 +106,49 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
             if (device.IsRpmLedActive())
             {
-                GetOrCreateConnection(device);
+                await GetOrCreateConnectionAsync(device);
             }
             else
             {
                 RemoveConnection(device.Id);
             }
         }
+        finally
+        {
+            _sync.Release();
+        }
     }
 
     public void RemoveDevice(string deviceId)
     {
-        lock (_sync)
+        try
         {
+            _sync.Wait();
             RemoveConnection(deviceId);
+        }
+        finally
+        {
+            _sync.Release();
         }
     }
 
-    private void GetOrCreateConnection(MozaSerialDevice device)
+    private async Task GetOrCreateConnectionAsync(MozaSerialDevice device)
     {
-        if (_connections.TryGetValue(device.Id, out var connection))
+        await Task.Run(() =>
         {
-            connection.UpdateDevice(device);
+            if (_connections.TryGetValue(device.Id, out var connection))
+            {
+                connection.UpdateDevice(device);
+                connection.Open();
+                SendLedsToConnection(connection);
+                return;
+            }
+
+            connection = new MozaConnection(device, OnConnectionStatusChanged);
+            _connections[device.Id] = connection;
             connection.Open();
             SendLedsToConnection(connection);
-            return;
-        }
-
-        connection = new MozaConnection(device, OnConnectionStatusChanged);
-        _connections[device.Id] = connection;
-        connection.Open();
-        SendLedsToConnection(connection);
+        });
     }
 
     private void RemoveConnection(string deviceId)
@@ -151,7 +170,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
     private void OnSettingsChanged(object? sender, EventArgs e)
     {
-        RefreshDevices();
+        InitializeDevicesAsync().FireAndForgetSafe();
     }
 
     private void OnTelemetryReceived(object? sender, TelemetryEventArgs e)
@@ -195,9 +214,14 @@ public sealed class MozaDeviceService : IMozaDeviceService
     private void SendLeds()
     {
         List<MozaConnection> connections;
-        lock (_sync)
+        try
         {
+            _sync.Wait();
             connections = _connections.Values.ToList();
+        }
+        finally
+        {
+            _sync.Release();
         }
 
         foreach (var connection in connections)
@@ -220,8 +244,10 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
     public void Dispose()
     {
-        lock (_sync)
+        try
         {
+            _sync.Wait();
+
             if (_disposed)
             {
                 return;
@@ -236,6 +262,10 @@ public sealed class MozaDeviceService : IMozaDeviceService
             {
                 RemoveConnection(deviceId);
             }
+        }
+        finally
+        {
+            _sync.Release();
         }
     }
 
@@ -293,7 +323,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
             {
                 ApplyRpmColors(snapshot.Leds, totalLedCount);
 
-                var activeMask = snapshot.ActiveMask;
+                var activeMask = snapshot.LightsOn ? BuildMask(snapshot.Leds) : 0u;
 
                 // At zero RPM, send the all-off frame only once when the bar
                 // drains. Continuous zero frames keep the wheel in the live LED
@@ -332,7 +362,8 @@ public sealed class MozaDeviceService : IMozaDeviceService
                         _port.Write(rpmFrame, 0, rpmFrame.Length);
                     }
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+                catch (Exception ex) when
+                    (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
                 {
                     Log.Warning(ex, "Failed to write to MOZA device {Device} on {Port}", Device.Name, Device.PortName);
                     ClosePort();
@@ -387,6 +418,24 @@ public sealed class MozaDeviceService : IMozaDeviceService
             }
 
             _lastColorSignature = signature;
+        }
+
+        public static uint BuildMask(IEnumerable<Color> leds)
+        {
+            uint mask = 0;
+            var index = 0;
+
+            foreach (var led in leds)
+            {
+                if (led != Colors.Black)
+                {
+                    mask |= 1u << index;
+                }
+
+                index++;
+            }
+
+            return mask;
         }
 
         /// <summary>

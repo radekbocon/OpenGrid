@@ -59,19 +59,22 @@ public class App : Application
             var dashboardLaunchService = Program.ServiceProvider.GetRequiredService<DashboardLauncher>();
             dashboardLaunchService.HandleTrigger(DashboardLaunchTrigger.OnAppStart);
 
-            var sessionRepository = Program.ServiceProvider.GetRequiredService<SessionRepository>();
+            var bassShakerService = Program.ServiceProvider.GetRequiredService<IBassShakerService>();
+            bassShakerService.InitializeAsync().FireAndForgetSafe();
+            
+            var mozaDeviceService = Program.ServiceProvider.GetRequiredService<IMozaDeviceService>();
+            mozaDeviceService.InitializeDevicesAsync().FireAndForgetSafe();
 
-            _ = Program.ServiceProvider.GetRequiredService<IBassShakerService>();
-            _ = Program.ServiceProvider.GetRequiredService<IMozaDeviceService>();
-
-            SetupTrayIcon(desktop, sessionRepository);
+            SetupTrayIcon(desktop);
         }
 
         base.OnFrameworkInitializationCompleted();
     }
 
-    private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop, SessionRepository sessionRepository)
+    private void SetupTrayIcon(IClassicDesktopStyleApplicationLifetime desktop)
     {
+        var sessionRepository = Program.ServiceProvider.GetRequiredService<SessionRepository>();
+        
         using var iconStream = AssetLoader.Open(new Uri("avares://OpenGrid/Assets/icon.png"));
         _trayIcon = new TrayIcon
         {

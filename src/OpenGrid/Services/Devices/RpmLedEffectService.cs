@@ -5,10 +5,8 @@ using OpenGrid.Models.Telemetry;
 namespace OpenGrid.Services.Devices;
 
 public sealed record RpmLedEffectSnapshot(
-    RpmLedSegment? ActiveFrame,
     IReadOnlyList<Color> Leds,
-    bool LightsOn,
-    uint ActiveMask);
+    bool LightsOn);
 
 public interface IRpmLedEffectService
 {
@@ -46,9 +44,8 @@ public sealed class RpmLedEffectService : IRpmLedEffectService
         var activeFrame = SelectActiveFrame(telemetry, segments);
         var leds = activeFrame?.Leds ?? Enumerable.Repeat(RpmLedSegment.OffLed, device.RpmLedCount).ToList();
         var lightsOn = ResolveLightsOn(device.Id, activeFrame);
-        var activeMask = lightsOn ? RpmLedSegment.BuildMask(leds) : 0u;
 
-        return new RpmLedEffectSnapshot(activeFrame, leds, lightsOn, activeMask);
+        return new RpmLedEffectSnapshot(leds, lightsOn);
     }
 
     public void Reset(string deviceId)

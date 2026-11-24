@@ -11,7 +11,7 @@ public class MozaSerialDeviceSerializer : IDeviceSerializer
         ArgumentNullException.ThrowIfNull(json);
 
         var dto = JsonSerializer.Deserialize<MozaSerialDeviceDto>(json);
-        var totalLedCount = dto?.RpmLedCount is > 0 and <= RpmLedSegment.MaxLeds
+        var totalLedCount = dto?.RpmLedCount is > 0
             ? dto.RpmLedCount.Value
             : 10;
 
@@ -42,7 +42,7 @@ public class MozaSerialDeviceSerializer : IDeviceSerializer
         ArgumentNullException.ThrowIfNull(device);
 
         var mozaDevice = device as MozaSerialDevice;
-        var totalLedCount = Math.Clamp(mozaDevice?.RpmLedCount ?? 10, 1, RpmLedSegment.MaxLeds);
+        var totalLedCount = mozaDevice?.RpmLedCount ?? 10;
         var segments = RpmLedSegment.Normalize(mozaDevice?.RpmSegments, totalLedCount);
 
         var dto = new MozaSerialDeviceDto
