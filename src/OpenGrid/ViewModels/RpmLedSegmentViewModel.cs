@@ -9,16 +9,16 @@ namespace OpenGrid.ViewModels;
 /// One complete RPM LED frame: an exact colour for every LED, the redline
 /// percentage that activates it, and an optional flicker flag.
 /// </summary>
-public partial class MozaRpmSegmentViewModel : ObservableObject
+public partial class RpmLedSegmentViewModel : ObservableObject
 {
     private readonly Action _onChanged;
-    private readonly Action<MozaRpmSegmentViewModel> _onRemove;
+    private readonly Action<RpmLedSegmentViewModel> _onRemove;
 
-    public MozaRpmSegmentViewModel(
+    public RpmLedSegmentViewModel(
         RpmLedSegment segment,
         int frameLength,
         Action onChanged,
-        Action<MozaRpmSegmentViewModel> onRemove)
+        Action<RpmLedSegmentViewModel> onRemove)
     {
         _onChanged = onChanged;
         _onRemove = onRemove;
@@ -28,7 +28,7 @@ public partial class MozaRpmSegmentViewModel : ObservableObject
 
         for (var i = 0; i < frameLength; i++)
         {
-            Leds.Add(new MozaRpmLedCellViewModel(
+            Leds.Add(new RpmLedCellViewModel(
                 i + 1,
                 i < segment.Leds.Count ? segment.Leds[i] : RpmLedSegment.OffLed,
                 _onChanged));
@@ -44,7 +44,7 @@ public partial class MozaRpmSegmentViewModel : ObservableObject
     [ObservableProperty]
     private bool _flicker;
 
-    public ObservableCollection<MozaRpmLedCellViewModel> Leds { get; } = [];
+    public ObservableCollection<RpmLedCellViewModel> Leds { get; } = [];
 
     public int ThresholdPercent => ParseInt(ThresholdPercentText, 1, 100);
 
@@ -57,7 +57,7 @@ public partial class MozaRpmSegmentViewModel : ObservableObject
     {
         while (Leds.Count < frameLength)
         {
-            Leds.Add(new MozaRpmLedCellViewModel(Leds.Count + 1, RpmLedSegment.OffLed, _onChanged));
+            Leds.Add(new RpmLedCellViewModel(Leds.Count + 1, RpmLedSegment.OffLed, _onChanged));
         }
 
         if (Leds.Count > frameLength)

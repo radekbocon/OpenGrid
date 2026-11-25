@@ -1,0 +1,137 @@
+<UserControl
+    x:Class="OpenGrid.Views.LedPresetsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:OpenGrid.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="900"
+    x:DataType="vm:LedPresetsViewModel"
+    mc:Ignorable="d">
+
+    <Panel>
+
+        <!--  Empty state  -->
+        <StackPanel
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsVisible="{Binding !HasPresets}"
+            Spacing="8">
+            <avalonia:MaterialIcon
+                HorizontalAlignment="Center"
+                IconSize="48"
+                Kind="Lightbulb"
+                Opacity="0.4" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Classes="Subtitle1"
+                Opacity="0.5"
+                Text="No LED presets yet" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Classes="Body2"
+                Opacity="0.4"
+                Text="Create a preset, then assign it to a device or a game/car override." />
+            <Button
+                Margin="0,8,0,0"
+                Command="{Binding AddPresetCommand}"
+                Content="Create Preset" />
+        </StackPanel>
+
+        <!--  Split view: preset list (left) + editor (right)  -->
+        <Grid
+            MaxWidth="{StaticResource MaxPageWidth}"
+            ColumnDefinitions="280,*"
+            ColumnSpacing="16"
+            IsVisible="{Binding HasPresets}">
+
+            <!--  Left: preset list  -->
+            <materialControls:Card Grid.Column="0" Padding="0">
+                <Grid RowDefinitions="*,Auto">
+                    <ListBox
+                        ItemsSource="{Binding Presets}"
+                        SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
+                        SelectionMode="Single">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:LedPresetItemViewModel">
+                                <Grid
+                                    Margin="8"
+                                    ColumnDefinitions="Auto,*,Auto"
+                                    ColumnSpacing="8">
+                                    <avalonia:MaterialIcon
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        IconSize="24"
+                                        Kind="Lightbulb" />
+                                    <StackPanel
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Spacing="2">
+                                        <TextBlock
+                                            Classes="Subtitle1"
+                                            Text="{Binding Name}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <TextBlock
+                                            Classes="Caption"
+                                            Opacity="0.5"
+                                            Text="{Binding Summary}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <StackPanel
+                        Grid.Row="1"
+                        Margin="8"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Button
+                            Command="{Binding AddPresetCommand}"
+                            Content="New"
+                            Theme="{StaticResource MaterialOutlineButton}" />
+                        <Button
+                            Command="{Binding DuplicatePresetCommand}"
+                            Content="Duplicate"
+                            IsEnabled="{Binding IsPresetSelected}"
+                            Theme="{StaticResource MaterialOutlineButton}" />
+                        <Button
+                            Command="{Binding RemovePresetCommand}"
+                            Content="Delete"
+                            IsEnabled="{Binding IsPresetSelected}"
+                            Theme="{StaticResource MaterialOutlineButton}" />
+                    </StackPanel>
+                </Grid>
+            </materialControls:Card>
+
+            <!--  Right: preset editor  -->
+            <materialControls:Card Grid.Column="1" IsVisible="{Binding IsPresetSelected}">
+                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="16">
+                    <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Classes="Subtitle1"
+                            Opacity="0.6"
+                            Text="Preset Name" />
+                        <TextBox
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            Text="{Binding SelectedPreset.Name, Mode=TwoWay}"
+                            Theme="{StaticResource MaterialFilledTextBox}" />
+                    </Grid>
+
+                    <Rectangle
+                        Grid.Row="1"
+                        Height="1"
+                        Fill="{DynamicResource MaterialDividerBrush}" />
+
+                    <ScrollViewer Grid.Row="2">
+                        <ContentControl Content="{Binding Editor}" />
+                    </ScrollViewer>
+                </Grid>
+            </materialControls:Card>
+        </Grid>
+    </Panel>
+</UserControl>

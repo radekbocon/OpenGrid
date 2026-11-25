@@ -1,0 +1,131 @@
+<UserControl
+    x:Class="OpenGrid.Controls.DevicePresetSettingsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:OpenGrid.Controls"
+    xmlns:vm="using:OpenGrid.ViewModels"
+    x:DataType="vm:DevicePresetSettingsViewModel">
+
+    <StackPanel Spacing="16">
+
+        <!--  Default preset  -->
+        <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+            <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Classes="Subtitle1"
+                Opacity="0.6"
+                Text="Default Preset" />
+            <ComboBox
+                Grid.Column="1"
+                MinWidth="220"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                ItemsSource="{Binding DefaultPresetOptions}"
+                SelectedItem="{Binding SelectedDefaultPreset}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PresetOption">
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+
+        <TextBlock
+            Classes="Body2"
+            Opacity="0.5"
+            Text="Presets are created and edited on the Presets page."
+            TextWrapping="Wrap" />
+
+        <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+        <!--  Game and car overrides  -->
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <StackPanel Spacing="2">
+                <TextBlock Classes="Headline6" Text="Game &amp; Car Overrides" />
+                <TextBlock
+                    Classes="Body2"
+                    Opacity="0.5"
+                    Text="The most specific match wins: game + car, then game only, then car only, then the default preset."
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <Button
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                Command="{Binding AddOverrideCommand}"
+                Content="Add Override"
+                IsEnabled="{Binding HasPresets}"
+                Theme="{StaticResource MaterialOutlineButton}" />
+        </Grid>
+
+        <ItemsControl ItemsSource="{Binding Overrides}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:PresetOverrideItemViewModel">
+                    <Border
+                        Margin="0,2"
+                        Padding="8"
+                        Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}"
+                        CornerRadius="4">
+                        <Grid
+                            ColumnDefinitions="*,*,1.3*,Auto"
+                            ColumnSpacing="8">
+                            <StackPanel
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Spacing="2">
+                                <TextBlock
+                                    Classes="Caption"
+                                    Opacity="0.5"
+                                    Text="Game" />
+                                <TextBlock Text="{Binding GameName}" />
+                            </StackPanel>
+                            <StackPanel
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Spacing="2">
+                                <TextBlock
+                                    Classes="Caption"
+                                    Opacity="0.5"
+                                    Text="Car" />
+                                <TextBlock Text="{Binding CarName}" />
+                            </StackPanel>
+                            <StackPanel
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Spacing="2">
+                                <TextBlock
+                                    Classes="Caption"
+                                    Opacity="0.5"
+                                    Text="Preset" />
+                                <ComboBox
+                                    HorizontalAlignment="Stretch"
+                                    ItemsSource="{Binding PresetOptions}"
+                                    SelectedItem="{Binding SelectedPreset}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:PresetOption">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                            <Button
+                                Grid.Column="3"
+                                VerticalAlignment="Bottom"
+                                Command="{Binding RemoveCommand}"
+                                Content="Remove"
+                                Theme="{StaticResource MaterialOutlineButton}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <TextBlock
+            Classes="Body2"
+            IsVisible="{Binding !HasOverrides}"
+            Opacity="0.5"
+            Text="No game or car overrides configured. The default preset will be used."
+            TextWrapping="Wrap" />
+
+    </StackPanel>
+</UserControl>

@@ -1,8 +1,7 @@
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using Material.Icons;
 using OpenGrid.Models;
+using OpenGrid.Services;
 using OpenGrid.Services.Devices;
 using OpenGrid.Services.Devices.Moza;
 
@@ -10,16 +9,18 @@ namespace OpenGrid.ViewModels;
 
 public partial class MozaDeviceItemViewModel : DeviceItemViewModel
 {
-    private const int MaxRpmLeds = 16;
-    
+    private const int MaxLeds = 16;
+
     private readonly IMozaDeviceService _mozaDeviceService;
+    private readonly ILedPresetService _presetService;
+    private readonly IRpmLedEffectService _rpmLedEffectService;
     private bool _isInitializing;
     private bool _isInitialized;
 
     public override MaterialIconKind IconKind => MaterialIconKind.Gauge;
 
-    public IReadOnlyList<int> FrameLengthOptions { get; } =
-        Enumerable.Range(1, MaxRpmLeds).ToArray();
+    public IReadOnlyList<int> LedCountOptions { get; } =
+        Enumerable.Range(1, MaxLeds).ToArray();
 
     public string PortName => (Device as MozaSerialDevice)?.PortName ?? "-";
 
@@ -27,21 +28,31 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
 
     public string Category => (Device as MozaSerialDevice)?.Category.ToString() ?? "-";
 
-    public ObservableCollection<MozaRpmSegmentViewModel> RpmSegments { get; } = [];
+    public DevicePresetSettingsViewModel PresetSettings { get; }
 
     [ObservableProperty]
-    public partial bool DriveLedsWithTelemetry { get; set; }
+    private bool _driveLedsWithTelemetry;
 
     [ObservableProperty]
-    public partial int FrameLength { get; set; } = 10;
+    private int _ledCount = 10;
 
     public MozaDeviceItemViewModel(
         IDeviceService deviceService,
         IMozaDeviceService mozaDeviceService,
+        ILedPresetService presetService,
+        IRpmLedEffectService rpmLedEffectService,
+        ICarConfigService carConfigService,
         Action<DeviceItemViewModel> onRemove)
         : base(deviceService, onRemove)
     {
         _mozaDeviceService = mozaDeviceService;
+        _presetService = presetService;
+        _rpmLedEffectService = rpmLedEffectService;
+
+        PresetSettings = new DevicePresetSettingsViewModel(
+            carConfigService,
+            static id => new LedPresetOverride { PresetId = id },
+            OnPresetSettingsChanged);
     }
 
     protected override void InitDevice(IDevice device)
@@ -51,30 +62,20 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         if (device is MozaSerialDevice serialDevice)
         {
             DriveLedsWithTelemetry = serialDevice.DriveLedsWithTelemetry;
-            FrameLength = Math.Clamp(serialDevice.RpmLedCount, 1, MaxRpmLeds);
-            serialDevice.RpmLedCount = FrameLength;
+            LedCount = Math.Clamp(serialDevice.RpmLedCount, 1, MaxLeds);
+            serialDevice.RpmLedCount = LedCount;
 
-            if (serialDevice.RpmSegments.Count == 0)
-            {
-                serialDevice.RpmSegments = RpmLedSegment.CreateDefault(FrameLength);
-            }
+            PresetSettings.Initialize(
+                _presetService.GetAll().Select(x => new PresetOption(x)),
+                serialDevice.DefaultLedPresetId,
+                serialDevice.LedOverrides);
 
-            RpmSegments.Clear();
-            foreach (var segment in RpmLedSegment.Normalize(serialDevice.RpmSegments, FrameLength))
-            {
-                RpmSegments.Add(new MozaRpmSegmentViewModel(
-                    segment,
-                    FrameLength,
-                    OnRpmSegmentChanged,
-                    RemoveRpmSegment));
-            }
-
-            ReindexSegments();
             _mozaDeviceService.ConfigureDeviceAsync(serialDevice).FireAndForgetSafe();
         }
         else
         {
             DriveLedsWithTelemetry = false;
+            PresetSettings.Initialize([], null, []);
         }
 
         OnPropertyChanged(nameof(PortName));
@@ -90,16 +91,11 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         SaveAndConfigure();
     }
 
-    partial void OnFrameLengthChanged(int value)
+    partial void OnLedCountChanged(int value)
     {
         if (_isInitializing || !_isInitialized)
         {
             return;
-        }
-
-        foreach (var segment in RpmSegments)
-        {
-            segment.Resize(FrameLength);
         }
 
         SaveAndConfigure();
@@ -110,45 +106,16 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         SaveAndConfigure();
     }
 
-    [RelayCommand]
-    private void AddRpmSegment()
+    private void OnPresetSettingsChanged()
     {
-        var frame = new RpmLedSegment(
-            Enumerable.Repeat(RpmLedSegment.OffLed, FrameLength),
-            100);
-
-        RpmSegments.Add(new MozaRpmSegmentViewModel(
-            frame,
-            FrameLength,
-            OnRpmSegmentChanged,
-            RemoveRpmSegment));
-
-        ReindexSegments();
-        SaveAndConfigure();
-    }
-
-    private void RemoveRpmSegment(MozaRpmSegmentViewModel segment)
-    {
-        if (RpmSegments.Count <= 1 || !RpmSegments.Remove(segment))
+        if (Device is not MozaSerialDevice serialDevice)
         {
             return;
         }
 
-        ReindexSegments();
+        serialDevice.DefaultLedPresetId = PresetSettings.SelectedPresetId;
+        _rpmLedEffectService.Reset(serialDevice.Id);
         SaveAndConfigure();
-    }
-
-    private void OnRpmSegmentChanged()
-    {
-        SaveAndConfigure();
-    }
-
-    private void ReindexSegments()
-    {
-        for (var i = 0; i < RpmSegments.Count; i++)
-        {
-            RpmSegments[i].Index = i + 1;
-        }
     }
 
     private void SaveAndConfigure()
@@ -162,8 +129,7 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         }
 
         serialDevice.DriveLedsWithTelemetry = DriveLedsWithTelemetry;
-        serialDevice.RpmLedCount = FrameLength;
-        serialDevice.RpmSegments = RpmSegments.Select(x => x.ToModel()).ToList();
+        serialDevice.RpmLedCount = Math.Clamp(LedCount, 1, MaxLeds);
         DeviceService.SaveDevice(serialDevice);
         _mozaDeviceService.ConfigureDeviceAsync(serialDevice).FireAndForgetSafe();
     }

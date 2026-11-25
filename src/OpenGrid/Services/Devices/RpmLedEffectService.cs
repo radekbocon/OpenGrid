@@ -8,30 +8,51 @@ public sealed record RpmLedEffectSnapshot(
     IReadOnlyList<Color> Leds,
     bool LightsOn);
 
-public interface IRpmLedEffectService
+public interface IRpmLedEffectService : IDisposable
 {
-    RpmLedEffectSnapshot? Evaluate(IRpmLedTelemetryDevice device, TelemetryRecord? telemetry);
+    RpmLedEffectSnapshot? Evaluate(
+        IRpmLedTelemetryDevice device,
+        TelemetryRecord? telemetry,
+        SteamGame? game = null);
+
+    /// <summary>First frame of the default preset, used when opening a connection.</summary>
+    IReadOnlyList<Color>? GetInitialLeds(IRpmLedTelemetryDevice device);
+
     void Reset(string deviceId);
 }
 
 /// <summary>
-/// Computes generic RPM LED effect state from telemetry. Device-specific services
-/// are responsible for transporting the resolved state to hardware.
+/// Computes generic LED effect state from telemetry. The active preset is
+/// resolved per device from its default preset and game/car overrides, using
+/// the same rules as bass shakers. Device-specific services only transport the
+/// resolved state to hardware.
 /// </summary>
 public sealed class RpmLedEffectService : IRpmLedEffectService
 {
     private static readonly long FlickerIntervalTicks = TimeSpan.FromMilliseconds(200).Ticks;
 
     private readonly ICarConfigService _carConfigService;
+    private readonly IDeviceService _deviceService;
+    private readonly ILedPresetService _presetService;
     private readonly Dictionary<string, FlickerState> _flickerStates = [];
     private readonly Lock _sync = new();
+    private bool _disposed;
 
-    public RpmLedEffectService(ICarConfigService carConfigService)
+    public RpmLedEffectService(
+        ICarConfigService carConfigService,
+        IDeviceService deviceService,
+        ILedPresetService presetService)
     {
         _carConfigService = carConfigService;
+        _deviceService = deviceService;
+        _presetService = presetService;
+        _presetService.PresetRemoved += OnPresetRemoved;
     }
 
-    public RpmLedEffectSnapshot? Evaluate(IRpmLedTelemetryDevice device, TelemetryRecord? telemetry)
+    public RpmLedEffectSnapshot? Evaluate(
+        IRpmLedTelemetryDevice device,
+        TelemetryRecord? telemetry,
+        SteamGame? game = null)
     {
         ArgumentNullException.ThrowIfNull(device);
 
@@ -40,12 +61,40 @@ public sealed class RpmLedEffectService : IRpmLedEffectService
             return null;
         }
 
-        var segments = device.GetNormalizedRpmSegments();
+        var preset = device.LedOverrides.ResolvePreset(
+            device.DefaultLedPresetId,
+            game?.AppId,
+            telemetry.Car.Name,
+            _presetService.GetById);
+
+        var segments = preset is { Configuration.EffectType: LedEffectType.Rpm }
+            ? RpmLedSegment.Normalize(preset.Configuration.RpmSegments, device.RpmLedCount)
+            : [];
+
         var activeFrame = SelectActiveFrame(telemetry, segments);
         var leds = activeFrame?.Leds ?? Enumerable.Repeat(RpmLedSegment.OffLed, device.RpmLedCount).ToList();
         var lightsOn = ResolveLightsOn(device.Id, activeFrame);
 
         return new RpmLedEffectSnapshot(leds, lightsOn);
+    }
+
+    public IReadOnlyList<Color>? GetInitialLeds(IRpmLedTelemetryDevice device)
+    {
+        ArgumentNullException.ThrowIfNull(device);
+
+        var preset = device.LedOverrides.ResolvePreset(
+            device.DefaultLedPresetId,
+            null,
+            null,
+            _presetService.GetById);
+
+        if (preset is not { Configuration.EffectType: LedEffectType.Rpm })
+        {
+            return null;
+        }
+
+        return RpmLedSegment.Normalize(preset.Configuration.RpmSegments, device.RpmLedCount)
+            .FirstOrDefault()?.Leds;
     }
 
     public void Reset(string deviceId)
@@ -55,6 +104,33 @@ public sealed class RpmLedEffectService : IRpmLedEffectService
         lock (_sync)
         {
             _flickerStates.Remove(deviceId);
+        }
+    }
+
+    private void OnPresetRemoved(object? sender, LedPreset preset)
+    {
+        foreach (var device in _deviceService.GetPersistedDevices().OfType<IRpmLedTelemetryDevice>())
+        {
+            var deviceChanged = false;
+
+            if (device.DefaultLedPresetId == preset.Id)
+            {
+                device.DefaultLedPresetId = null;
+                deviceChanged = true;
+            }
+
+            if (device.LedOverrides.RemoveAll(x => x.PresetId == preset.Id) > 0)
+            {
+                deviceChanged = true;
+            }
+
+            if (!deviceChanged)
+            {
+                continue;
+            }
+
+            _deviceService.SaveDevice(device);
+            Reset(device.Id);
         }
     }
 
@@ -129,6 +205,22 @@ public sealed class RpmLedEffectService : IRpmLedEffectService
 
         var redline = profile?.RedlineRpm ?? 0;
         return redline > 0 ? Math.Min(redline, maxRpm) : maxRpm;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _presetService.PresetRemoved -= OnPresetRemoved;
+
+        lock (_sync)
+        {
+            _flickerStates.Clear();
+        }
     }
 
     private sealed class FlickerState

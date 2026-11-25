@@ -29,6 +29,7 @@ public static class ServiceRegistrator
         services.AddSingleton<SteamGameManager>();
         services.AddSingleton<IDashboardService, DashboardService>();
         services.AddSingleton<IDeviceService, DeviceService>();
+        services.AddSingleton<ILedPresetService, LedPresetService>();
         services.AddSingleton<IRpmLedEffectService, RpmLedEffectService>();
         services.AddSingleton<IMozaDeviceService, MozaDeviceService>();
         services.AddSingleton<IBassShakerPresetService, BassShakerPresetService>();
@@ -49,6 +50,8 @@ public static class ServiceRegistrator
         services.AddTransient<LapSelectionViewModel>();
         services.AddTransient<CarsViewModel>();
         services.AddTransient<BassShakerPresetsViewModel>();
+        services.AddTransient<LedPresetsViewModel>();
+        services.AddTransient<PresetsViewModel>();
 
         return services;
     }

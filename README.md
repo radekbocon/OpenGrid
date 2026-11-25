@@ -18,7 +18,8 @@ Includes and launches shared memory bridge inside games proton prefix.
 - Show live dashboards on the phone, tablet or host machine
 - Save sessions in to .csv files, show and compare laps on the charts
 - Basic bass shaker support (more effects are coming)
-- Save bass shaker presets and assign a default preset per sound device
+- Presets page with Bass Shakers and LEDs tabs
+- Save bass shaker and LED presets, then assign a default preset per device
 - Override the default preset for specific games, cars, or a game + car combination
 - Tray icon
 - Color themes

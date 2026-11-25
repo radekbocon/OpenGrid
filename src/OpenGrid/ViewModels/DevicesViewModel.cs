@@ -20,6 +20,8 @@ public partial class DevicesViewModel : ViewModelBase
     private readonly DashboardLauncher _dashboardLauncher;
     private readonly IBassShakerService _bassShakerService;
     private readonly IBassShakerPresetService _bassShakerPresetService;
+    private readonly ILedPresetService _ledPresetService;
+    private readonly IRpmLedEffectService _rpmLedEffectService;
     private readonly ICarConfigService _carConfigService;
     private bool _isStatusSubscribed;
 
@@ -34,7 +36,16 @@ public partial class DevicesViewModel : ViewModelBase
 
     public bool IsDeviceSelected => SelectedDevice is not null;
 
-    public DevicesViewModel(IDeviceService deviceService, IMozaDeviceService mozaDeviceService, IDashboardService dashboardService, DashboardLauncher dashboardLauncher, IBassShakerService bassShakerService, IBassShakerPresetService bassShakerPresetService, ICarConfigService carConfigService)
+    public DevicesViewModel(
+        IDeviceService deviceService,
+        IMozaDeviceService mozaDeviceService,
+        IDashboardService dashboardService,
+        DashboardLauncher dashboardLauncher,
+        IBassShakerService bassShakerService,
+        IBassShakerPresetService bassShakerPresetService,
+        ILedPresetService ledPresetService,
+        IRpmLedEffectService rpmLedEffectService,
+        ICarConfigService carConfigService)
     {
         _deviceService = deviceService;
         _mozaDeviceService = mozaDeviceService;
@@ -42,6 +53,8 @@ public partial class DevicesViewModel : ViewModelBase
         _dashboardLauncher = dashboardLauncher;
         _bassShakerService = bassShakerService;
         _bassShakerPresetService = bassShakerPresetService;
+        _ledPresetService = ledPresetService;
+        _rpmLedEffectService = rpmLedEffectService;
         _carConfigService = carConfigService;
         IsMenuItem = true;
         Devices = [];
@@ -107,7 +120,13 @@ public partial class DevicesViewModel : ViewModelBase
         DeviceItemViewModel deviceItem = device.DeviceType switch
         {
             DeviceType.Display => new DisplayDeviceItemViewModel(_deviceService, _dashboardService, _dashboardLauncher, OnRemove),
-            DeviceType.MozaSerial => new MozaDeviceItemViewModel(_deviceService, _mozaDeviceService, OnRemove),
+            DeviceType.MozaSerial => new MozaDeviceItemViewModel(
+                _deviceService,
+                _mozaDeviceService,
+                _ledPresetService,
+                _rpmLedEffectService,
+                _carConfigService,
+                OnRemove),
             DeviceType.Sound => new SoundDeviceItemViewModel(_deviceService, _bassShakerService, _bassShakerPresetService, _carConfigService, OnRemove),
             _ => throw new ArgumentOutOfRangeException(nameof(device.DeviceType), device.DeviceType, "Unsupported device type"),
         };

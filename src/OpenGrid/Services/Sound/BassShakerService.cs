@@ -164,49 +164,11 @@ public sealed class BassShakerService : IBassShakerService
 
     private BassShakerPreset? ResolvePreset(SoundDevice device)
     {
-        var gameAppId = _currentGame?.AppId;
-
-        var matchingOverride = device.BassShakerOverrides
-            .Where(overrideSettings => Matches(overrideSettings, gameAppId, _currentCar))
-            .OrderByDescending(static overrideSettings => GetSpecificity(overrideSettings))
-            .Select(overrideSettings => _presetService.GetById(overrideSettings.PresetId))
-            .FirstOrDefault(static preset => preset is not null);
-
-        return matchingOverride ?? _presetService.GetById(device.DefaultBassShakerPresetId);
-    }
-
-    private static bool Matches(BassShakerPresetOverride overrideSettings, int? gameAppId, Car? car)
-    {
-        var hasGame = overrideSettings.GameAppId is not null;
-        var hasCar = overrideSettings.Car is not null;
-
-        if (!hasGame && !hasCar)
-        {
-            return false;
-        }
-
-        if (overrideSettings.GameAppId is { } requiredGameAppId &&
-            (!gameAppId.HasValue || requiredGameAppId != gameAppId.Value))
-        {
-            return false;
-        }
-
-        return !hasCar ||
-               (car is not null &&
-                string.Equals(overrideSettings.Car?.Name, car.Value.Name, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static int GetSpecificity(BassShakerPresetOverride overrideSettings)
-    {
-        var score = overrideSettings.GameAppId is not null ? 2 : 0;
-        if (overrideSettings.Car is not null)
-        {
-            // A game + car match is more specific than a game-only match, which in turn
-            // is more specific than a car-only match.
-            score++;
-        }
-
-        return score;
+        return device.BassShakerOverrides.ResolvePreset(
+            device.DefaultBassShakerPresetId,
+            _currentGame?.AppId,
+            _currentCar?.Name,
+            _presetService.GetById);
     }
 
     private void OnPresetChanged(object? sender, BassShakerPreset preset)

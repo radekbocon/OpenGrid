@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Avalonia.Media;
 using OpenGrid.Models;
 
 namespace OpenGrid.Services.Devices.Moza;
@@ -11,9 +10,6 @@ public class MozaSerialDeviceSerializer : IDeviceSerializer
         ArgumentNullException.ThrowIfNull(json);
 
         var dto = JsonSerializer.Deserialize<MozaSerialDeviceDto>(json);
-        var totalLedCount = dto?.RpmLedCount is > 0
-            ? dto.RpmLedCount.Value
-            : 10;
 
         return dto switch
         {
@@ -31,8 +27,9 @@ public class MozaSerialDeviceSerializer : IDeviceSerializer
                 ProductId = dto.ProductId,
                 Category = dto.Category,
                 DriveLedsWithTelemetry = dto.DriveLedsWithTelemetry ?? true,
-                RpmLedCount = totalLedCount,
-                RpmSegments = ReadSegments(dto.RpmSegments, totalLedCount),
+                RpmLedCount = dto.RpmLedCount is > 0 ? dto.RpmLedCount.Value : 10,
+                DefaultLedPresetId = dto.DefaultLedPresetId,
+                LedOverrides = dto.LedOverrides ?? [],
             }
         };
     }
@@ -42,8 +39,6 @@ public class MozaSerialDeviceSerializer : IDeviceSerializer
         ArgumentNullException.ThrowIfNull(device);
 
         var mozaDevice = device as MozaSerialDevice;
-        var totalLedCount = mozaDevice?.RpmLedCount ?? 10;
-        var segments = RpmLedSegment.Normalize(mozaDevice?.RpmSegments, totalLedCount);
 
         var dto = new MozaSerialDeviceDto
         {
@@ -58,33 +53,12 @@ public class MozaSerialDeviceSerializer : IDeviceSerializer
             ProductId = (device as ISerialDevice)?.ProductId ?? 0,
             Category = mozaDevice?.Category ?? MozaDeviceCategory.Unknown,
             DriveLedsWithTelemetry = mozaDevice?.DriveLedsWithTelemetry ?? true,
-            RpmLedCount = totalLedCount,
-            RpmSegments = segments.Select(x => new RpmLedSegmentDto
-            {
-                ThresholdPercent = x.ThresholdPercent,
-                Flicker = x.Flicker,
-                Leds = x.Leds.Take(totalLedCount).Select(led => led.ToString()).ToList(),
-            }).ToList(),
+            RpmLedCount = mozaDevice?.RpmLedCount ?? 10,
+            DefaultLedPresetId = mozaDevice?.DefaultLedPresetId,
+            LedOverrides = mozaDevice?.LedOverrides ?? [],
         };
 
         return JsonSerializer.Serialize(dto);
-    }
-
-    private static List<RpmLedSegment> ReadSegments(
-        List<RpmLedSegmentDto>? dtoSegments,
-        int totalLedCount)
-    {
-        if (dtoSegments is not { Count: > 0 })
-        {
-            return RpmLedSegment.CreateDefault(totalLedCount);
-        }
-
-        var segments = dtoSegments.Select(x => new RpmLedSegment(
-            x.Leds?.Select(Color.Parse).ToList() ?? [],
-            x.ThresholdPercent,
-            x.Flicker));
-
-        return RpmLedSegment.Normalize(segments, totalLedCount);
     }
 
     private class MozaSerialDeviceDto
@@ -101,13 +75,7 @@ public class MozaSerialDeviceSerializer : IDeviceSerializer
         public MozaDeviceCategory Category { get; init; }
         public bool? DriveLedsWithTelemetry { get; init; }
         public int? RpmLedCount { get; init; }
-        public List<RpmLedSegmentDto>? RpmSegments { get; init; }
-    }
-
-    private class RpmLedSegmentDto
-    {
-        public int ThresholdPercent { get; init; }
-        public bool Flicker { get; init; }
-        public List<string>? Leds { get; init; }
+        public string? DefaultLedPresetId { get; init; }
+        public List<LedPresetOverride>? LedOverrides { get; init; }
     }
 }
