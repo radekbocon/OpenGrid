@@ -5,6 +5,11 @@ namespace OpenGrid.Models;
 
 public sealed class LedColorPalette : IColorPalette
 {
+    // Named palette entries used by built-in presets as well as the picker.
+    public static readonly Color Green = Color.Parse("#FF00FF00");
+    public static readonly Color Amber = Color.Parse("#FFFFC800");
+    public static readonly Color Red = Color.Parse("#FFFF0000");
+
     private static readonly Color[,] Palette =
     {
         {
@@ -20,8 +25,8 @@ public sealed class LedColorPalette : IColorPalette
             Color.Parse("#FFFF3B00"), Color.Parse("#FF00D0E0"), Color.Parse("#FF1E75FF"), Color.Parse("#FFE000FF")
         },
         {
-            Colors.White, Color.Parse("#FF00FF00"), Color.Parse("#FFD4FF33"), Color.Parse("#FFFFC800"),
-            Color.Parse("#FFFF0000"), Color.Parse("#FF00FFFF"), Color.Parse("#FF007BFF"), Color.Parse("#FFFF4DFF")
+            Colors.White, Green, Color.Parse("#FFD4FF33"), Amber,
+            Red, Color.Parse("#FF00FFFF"), Color.Parse("#FF007BFF"), Color.Parse("#FFFF4DFF")
         },
     };
 
