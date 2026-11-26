@@ -13,15 +13,18 @@ public partial class RpmLedSegmentViewModel : ObservableObject
 {
     private readonly Action _onChanged;
     private readonly Action<RpmLedSegmentViewModel> _onRemove;
+    private readonly Action<RpmLedSegmentViewModel> _onDuplicate;
 
     public RpmLedSegmentViewModel(
         RpmLedSegment segment,
         int frameLength,
         Action onChanged,
-        Action<RpmLedSegmentViewModel> onRemove)
+        Action<RpmLedSegmentViewModel> onRemove,
+        Action<RpmLedSegmentViewModel> onDuplicate)
     {
         _onChanged = onChanged;
         _onRemove = onRemove;
+        _onDuplicate = onDuplicate;
 
         _thresholdPercentText = Math.Clamp(segment.ThresholdPercent, 1, 100).ToString();
         _flicker = segment.Flicker;
@@ -75,6 +78,9 @@ public partial class RpmLedSegmentViewModel : ObservableObject
 
     [RelayCommand]
     private void Remove() => _onRemove(this);
+
+    [RelayCommand]
+    private void Duplicate() => _onDuplicate(this);
 
     private static int ParseInt(string? value, int min, int max) =>
         int.TryParse(value, out var parsed) ? Math.Clamp(parsed, min, max) : min;

@@ -2,14 +2,13 @@
     x:Class="OpenGrid.Views.LedConfigurationView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:vm="using:OpenGrid.ViewModels"
     x:DataType="vm:LedConfigurationViewModel">
 
     <StackPanel Spacing="16">
 
-        <TextBlock
-            Classes="Subtitle1"
-            Text="LED Effects" />
+        <TextBlock Classes="Subtitle1" Text="LED Effects" />
 
         <TextBlock
             Classes="Caption"
@@ -33,9 +32,7 @@
                 SelectedItem="{Binding LedCount}" />
         </Grid>
 
-        <Grid
-            ColumnDefinitions="36,*,100,80,90"
-            ColumnSpacing="8">
+        <Grid ColumnDefinitions="36,*,60,60,72" ColumnSpacing="8">
             <TextBlock
                 Grid.Column="0"
                 Classes="Caption"
@@ -68,7 +65,7 @@
                 <DataTemplate x:DataType="vm:RpmLedSegmentViewModel">
                     <Grid
                         Margin="0,0,0,8"
-                        ColumnDefinitions="36,*,100,80,90"
+                        ColumnDefinitions="36,*,60,60,72"
                         ColumnSpacing="8">
                         <TextBlock
                             Grid.Column="0"
@@ -106,13 +103,30 @@
                             Grid.Column="3"
                             VerticalAlignment="Center"
                             IsChecked="{Binding Flicker}" />
-                        <Button
+                        <StackPanel
                             Grid.Column="4"
-                            Padding="8,4"
-                            HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Command="{Binding RemoveCommand}"
-                            Content="Remove" />
+                            Orientation="Horizontal"
+                            Spacing="4">
+                            <Button
+                                Width="24"
+                                Height="24"
+                                Padding="0"
+                                Classes="Flat"
+                                Command="{Binding DuplicateCommand}"
+                                ToolTip.Tip="Duplicate frame">
+                                <avalonia:MaterialIcon IconSize="16" Kind="ContentDuplicate" />
+                            </Button>
+                            <Button
+                                Width="24"
+                                Height="24"
+                                Padding="0"
+                                Classes="Flat"
+                                Command="{Binding RemoveCommand}"
+                                ToolTip.Tip="Delete frame">
+                                <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
+                            </Button>
+                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

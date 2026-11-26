@@ -6,6 +6,7 @@
     xmlns:converters="clr-namespace:OpenGrid.Converters"
     xmlns:dialogHostAvalonia="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
     xmlns:local="using:OpenGrid"
+    xmlns:models="using:OpenGrid.Models"
     xmlns:themes="clr-namespace:Material.Styles.Themes;assembly=Material.Styles"
     RequestedThemeVariant="Dark">
     <Application.DataTemplates>
@@ -19,6 +20,7 @@
             does not define this legacy Fluent/Simple resource.
         -->
         <SolidColorBrush x:Key="ThemeForegroundBrush" Color="White" />
+        <models:LedColorPalette x:Key="LedColorPalette" />
     </Application.Resources>
 
     <Application.Styles>
@@ -29,6 +31,14 @@
             built-in Simple theme so colour pickers render correctly.
         -->
         <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Simple/Simple.xaml" />
+        <!--
+            Open colour pickers on the palette tab (index 1 in the Simple theme)
+            and use LED-friendly sim-racing colours instead of the generic palette.
+        -->
+        <Style Selector="ColorPicker">
+            <Setter Property="SelectedIndex" Value="1" />
+            <Setter Property="Palette" Value="{StaticResource LedColorPalette}" />
+        </Style>
         <!--
             Show the ColorPicker as only its colour swatch. The DropDownButton
             keeps its flyout (and therefore click-to-pick behaviour), but its

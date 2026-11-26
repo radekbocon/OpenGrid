@@ -36,7 +36,12 @@ public sealed partial class LedConfigurationViewModel : ViewModelBase
 
         foreach (var segment in RpmLedSegment.Normalize(configuration.RpmSegments, LedCount))
         {
-            Segments.Add(new RpmLedSegmentViewModel(segment, LedCount, SaveSegments, RemoveSegment));
+            Segments.Add(new RpmLedSegmentViewModel(
+                segment,
+                LedCount,
+                SaveSegments,
+                RemoveSegment,
+                DuplicateSegment));
         }
 
         ReindexSegments();
@@ -67,7 +72,27 @@ public sealed partial class LedConfigurationViewModel : ViewModelBase
             new RpmLedSegment(Enumerable.Repeat(RpmLedSegment.OffLed, LedCount), 100),
             LedCount,
             SaveSegments,
-            RemoveSegment));
+            RemoveSegment,
+            DuplicateSegment));
+
+        ReindexSegments();
+        SaveSegments();
+    }
+
+    private void DuplicateSegment(RpmLedSegmentViewModel segment)
+    {
+        var index = Segments.IndexOf(segment);
+        if (index < 0)
+        {
+            return;
+        }
+
+        Segments.Insert(index + 1, new RpmLedSegmentViewModel(
+            segment.ToModel(),
+            LedCount,
+            SaveSegments,
+            RemoveSegment,
+            DuplicateSegment));
 
         ReindexSegments();
         SaveSegments();
