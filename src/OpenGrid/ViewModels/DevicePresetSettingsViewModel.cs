@@ -18,29 +18,50 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
     private readonly ICarConfigService _carConfigService;
     private readonly Func<string, PresetOverride> _createOverride;
     private readonly Action _onChanged;
+    private readonly Action<string?>? _onSecondarySettingChanged;
     private bool _isRefreshing;
 
     public ObservableCollection<PresetOption> DefaultPresetOptions { get; } = [];
     public ObservableCollection<PresetOption> PresetOptions { get; } = [];
     public ObservableCollection<PresetOverrideItemViewModel> Overrides { get; } = [];
+    public ObservableCollection<PresetOption> SecondaryOptions { get; } = [];
 
     [ObservableProperty]
     private PresetOption? _selectedDefaultPreset;
+
+    [ObservableProperty]
+    private PresetOption? _selectedSecondaryOption;
 
     /// <summary>Null represents the "None" option.</summary>
     public string? SelectedPresetId => SelectedDefaultPreset is { Id: { Length: > 0 } id } ? id : null;
 
     public bool HasPresets => PresetOptions.Count > 0;
     public bool HasOverrides => Overrides.Count > 0;
+    public bool HasSecondarySetting => SecondaryOptions.Count > 0;
+
+    /// <summary>Name of the item being selected, e.g. "Preset" or "Dashboard".</summary>
+    public string ItemLabel { get; }
+    public string DefaultItemLabel => $"Default {ItemLabel}";
+    public string? ItemsLocationHint { get; }
+    public string EmptyOverridesHint { get; }
+    public string? SecondaryLabel { get; private set; }
 
     public DevicePresetSettingsViewModel(
         ICarConfigService carConfigService,
         Func<string, PresetOverride> createOverride,
-        Action onChanged)
+        Action onChanged,
+        string itemLabel = "Preset",
+        string? itemsLocationHint = "Presets are created and edited on the Presets page.",
+        string emptyOverridesHint = "No game or car overrides configured. The default preset will be used.",
+        Action<string?>? onSecondarySettingChanged = null)
     {
         _carConfigService = carConfigService;
         _createOverride = createOverride;
         _onChanged = onChanged;
+        _onSecondarySettingChanged = onSecondarySettingChanged;
+        ItemLabel = itemLabel;
+        ItemsLocationHint = itemsLocationHint;
+        EmptyOverridesHint = emptyOverridesHint;
     }
 
     public void Initialize(
@@ -52,6 +73,9 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
 
         DefaultPresetOptions.Clear();
         PresetOptions.Clear();
+        SecondaryOptions.Clear();
+        SecondaryLabel = null;
+        SelectedSecondaryOption = null;
         DefaultPresetOptions.Add(PresetOption.None);
 
         foreach (var preset in presets.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
@@ -76,6 +100,33 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
         _isRefreshing = false;
         OnPropertyChanged(nameof(HasPresets));
         OnPropertyChanged(nameof(HasOverrides));
+        OnPropertyChanged(nameof(HasSecondarySetting));
+    }
+
+    /// <summary>
+    /// Optional dropdown shown beside the default selector (e.g. the dashboard
+    /// auto-open trigger). Devices that do not need it simply leave it empty.
+    /// </summary>
+    public void ConfigureSecondarySetting(
+        string label,
+        IEnumerable<PresetOption> options,
+        string? selectedId)
+    {
+        _isRefreshing = true;
+
+        SecondaryLabel = label;
+        SecondaryOptions.Clear();
+        foreach (var option in options)
+        {
+            SecondaryOptions.Add(option);
+        }
+
+        SelectedSecondaryOption = SecondaryOptions.FirstOrDefault(x => x.Id == selectedId)
+                                  ?? SecondaryOptions.FirstOrDefault();
+
+        _isRefreshing = false;
+        OnPropertyChanged(nameof(SecondaryLabel));
+        OnPropertyChanged(nameof(HasSecondarySetting));
     }
 
     partial void OnSelectedDefaultPresetChanged(PresetOption? value)
@@ -84,6 +135,14 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
         if (!_isRefreshing)
         {
             _onChanged();
+        }
+    }
+
+    partial void OnSelectedSecondaryOptionChanged(PresetOption? value)
+    {
+        if (!_isRefreshing && value is not null)
+        {
+            _onSecondarySettingChanged?.Invoke(value.Id);
         }
     }
 
@@ -99,7 +158,8 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
             SteamGame.GetAllSupported(),
             _carConfigService.GetAll(),
             PresetOptions,
-            _createOverride);
+            _createOverride,
+            ItemLabel);
         await DialogHost.Show(dialog);
 
         if (dialog.Result is not { } result)
@@ -113,7 +173,8 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
             GetCarName(result.Car),
             PresetOptions,
             _onChanged,
-            RemoveOverride));
+            RemoveOverride,
+            ItemLabel));
 
         OnPropertyChanged(nameof(HasOverrides));
         _onChanged();
@@ -138,7 +199,8 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
             GetCarName(item.Car),
             PresetOptions,
             _onChanged,
-            RemoveOverride));
+            RemoveOverride,
+            ItemLabel));
     }
 
     private static string GetGameName(int? appId)
@@ -163,6 +225,7 @@ public sealed class PresetOverrideItemViewModel : ViewModelBase
     public PresetOverride Model { get; }
     public string GameName { get; }
     public string CarName { get; }
+    public string ItemLabel { get; }
     public IReadOnlyList<PresetOption> PresetOptions { get; }
     public IRelayCommand RemoveCommand { get; }
 
@@ -187,11 +250,13 @@ public sealed class PresetOverrideItemViewModel : ViewModelBase
         string carName,
         IReadOnlyList<PresetOption> presetOptions,
         Action save,
-        Action<PresetOverrideItemViewModel> remove)
+        Action<PresetOverrideItemViewModel> remove,
+        string itemLabel = "Preset")
     {
         Model = model;
         GameName = gameName;
         CarName = carName;
+        ItemLabel = itemLabel;
         PresetOptions = presetOptions;
         _save = save;
         _remove = remove;

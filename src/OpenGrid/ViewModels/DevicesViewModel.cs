@@ -119,7 +119,12 @@ public partial class DevicesViewModel : ViewModelBase
     {
         DeviceItemViewModel deviceItem = device.DeviceType switch
         {
-            DeviceType.Display => new DisplayDeviceItemViewModel(_deviceService, _dashboardService, _dashboardLauncher, OnRemove),
+            DeviceType.Display => new DisplayDeviceItemViewModel(
+                _deviceService,
+                _dashboardService,
+                _dashboardLauncher,
+                _carConfigService,
+                OnRemove),
             DeviceType.MozaSerial => new MozaDeviceItemViewModel(
                 _deviceService,
                 _mozaDeviceService,

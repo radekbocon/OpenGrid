@@ -52,7 +52,7 @@
             Grid.Row="3"
             ColumnDefinitions="110,*"
             ColumnSpacing="12">
-            <TextBlock VerticalAlignment="Center" Text="Preset" />
+            <TextBlock VerticalAlignment="Center" Text="{Binding ItemLabel}" />
             <ComboBox
                 x:Name="PresetComboBox"
                 Grid.Column="1"

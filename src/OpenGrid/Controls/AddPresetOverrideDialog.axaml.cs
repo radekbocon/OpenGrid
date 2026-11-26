@@ -16,6 +16,7 @@ public partial class AddPresetOverrideDialog : UserControl
     public IReadOnlyList<SteamGame> Games { get; }
     public IReadOnlyList<CarPickerOption> Cars { get; }
     public IReadOnlyList<PresetOption> Presets { get; }
+    public string ItemLabel { get; }
 
     public SteamGame? SelectedGame { get; set; }
     public CarPickerOption? SelectedCar { get; set; }
@@ -27,11 +28,13 @@ public partial class AddPresetOverrideDialog : UserControl
         IEnumerable<SteamGame> games,
         IEnumerable<CarProfile> cars,
         IEnumerable<PresetOption> presets,
-        Func<string, PresetOverride> createOverride)
+        Func<string, PresetOverride> createOverride,
+        string itemLabel = "Preset")
     {
         InitializeComponent();
 
         _createOverride = createOverride;
+        ItemLabel = itemLabel;
 
         var gameOptions = new List<SteamGame> { AnyGame };
         gameOptions.AddRange(games);
@@ -83,8 +86,11 @@ public partial class AddPresetOverrideDialog : UserControl
         var selectedCar = CarComboBox?.SelectedItem as CarPickerOption ?? SelectedCar;
         var selectedPreset = PresetComboBox?.SelectedItem as PresetOption ?? SelectedPreset;
 
+        var selectedCarProfile = selectedCar?.Car;
         var hasTarget = selectedGame is { AppId: >= 0 } ||
-                        !string.IsNullOrWhiteSpace(selectedCar?.DisplayName);
+                        (selectedCarProfile is { } car &&
+                         !ReferenceEquals(car, AnyCar) &&
+                         !string.IsNullOrWhiteSpace(car.Name));
         AddButton.IsEnabled = hasTarget && selectedPreset is not null;
     }
 
