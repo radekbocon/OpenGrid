@@ -17,8 +17,8 @@ public sealed class LedPresetItemViewModel : PresetItemViewModel<LedPreset>
             static (x, name) => x.Name = name,
             static x =>
             {
-                var frames = x.Configuration.RpmSegments.Count;
-                return $"{frames} {(frames == 1 ? "frame" : "frames")} · {x.Configuration.LedCount} LEDs";
+                var effects = x.Configuration.Effects.Count;
+                return $"{effects} {(effects == 1 ? "effect" : "effects")} · {x.Configuration.LedCount} LEDs";
             },
             duplicate,
             remove)

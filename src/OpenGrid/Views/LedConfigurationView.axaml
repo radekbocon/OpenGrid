@@ -3,19 +3,13 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:converters="clr-namespace:OpenGrid.Converters"
+    xmlns:models="using:OpenGrid.Models"
     xmlns:vm="using:OpenGrid.ViewModels"
     x:DataType="vm:LedConfigurationViewModel">
 
     <StackPanel Spacing="16">
-
-        <TextBlock Classes="Subtitle1" Text="LED Effects" />
-
-        <TextBlock
-            Classes="Caption"
-            Opacity="0.6"
-            Text="Each frame defines the exact colour of every LED at a given percentage of the car's redline. The last frame whose threshold has been reached wins. Set an LED to black to turn it off. Flicker blinks the whole frame. Presets work with any device that supports LED effects; frames are resized to the device's LED count."
-            TextWrapping="Wrap" />
-
+        <!--  Authoring LED count, shared by every effect  -->
         <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
             <TextBlock
                 Grid.Column="0"
@@ -32,111 +26,84 @@
                 SelectedItem="{Binding LedCount}" />
         </Grid>
 
-        <Grid ColumnDefinitions="36,*,60,60,72" ColumnSpacing="8">
-            <TextBlock
-                Grid.Column="0"
-                Classes="Caption"
-                Opacity="0.6"
-                Text="Frame" />
-            <TextBlock
-                Grid.Column="1"
-                Classes="Caption"
-                Opacity="0.6"
-                Text="LED pattern" />
-            <TextBlock
-                Grid.Column="2"
-                Classes="Caption"
-                Opacity="0.6"
-                Text="% redline" />
-            <TextBlock
-                Grid.Column="3"
-                Classes="Caption"
-                Opacity="0.6"
-                Text="Flicker" />
-            <TextBlock
-                Grid.Column="4"
-                Classes="Caption"
-                Opacity="0.6"
-                Text="Action" />
-        </Grid>
+        <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 
-        <ItemsControl ItemsSource="{Binding Segments}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="vm:RpmLedSegmentViewModel">
-                    <Grid
-                        Margin="0,0,0,8"
-                        ColumnDefinitions="36,*,60,60,72"
-                        ColumnSpacing="8">
-                        <TextBlock
-                            Grid.Column="0"
-                            VerticalAlignment="Center"
-                            Classes="Body2"
-                            Text="{Binding Index, StringFormat='{}{0}.'}" />
-
-                        <ItemsControl Grid.Column="1" ItemsSource="{Binding Leds}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" Spacing="2" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:RpmLedCellViewModel">
-                                    <ColorPicker
+        <!--  Configured effects  -->
+        <StackPanel Spacing="8">
+            <ItemsControl ItemsSource="{Binding Effects}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LedEffectViewModel">
+                        <Expander Margin="2,8" Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}">
+                            <Expander.Header>
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Subtitle1"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding EffectName}" />
+                                    <ToggleSwitch
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        IsChecked="{Binding IsEnabled}" />
+                                    <Button
+                                        Grid.Column="2"
                                         Width="24"
                                         Height="24"
-                                        MinWidth="24"
-                                        Margin="0"
-                                        HorizontalAlignment="Center"
-                                        CornerRadius="4"
-                                        IsAlphaEnabled="False"
-                                        ToolTip.Tip="Black turns this LED off"
-                                        Color="{Binding Color, Mode=TwoWay}" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                                        Padding="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Flat"
+                                        Command="{Binding RemoveCommand}"
+                                        ToolTip.Tip="Remove Effect">
+                                        <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
+                                    </Button>
+                                </Grid>
+                            </Expander.Header>
 
-                        <TextBox
-                            Grid.Column="2"
-                            VerticalAlignment="Center"
-                            Text="{Binding ThresholdPercentText, UpdateSourceTrigger=PropertyChanged}" />
-                        <CheckBox
-                            Grid.Column="3"
-                            VerticalAlignment="Center"
-                            IsChecked="{Binding Flicker}" />
-                        <StackPanel
-                            Grid.Column="4"
-                            VerticalAlignment="Center"
-                            Orientation="Horizontal"
-                            Spacing="4">
-                            <Button
-                                Width="24"
-                                Height="24"
-                                Padding="0"
-                                Classes="Flat"
-                                Command="{Binding DuplicateCommand}"
-                                ToolTip.Tip="Duplicate frame">
-                                <avalonia:MaterialIcon IconSize="16" Kind="ContentDuplicate" />
-                            </Button>
-                            <Button
-                                Width="24"
-                                Height="24"
-                                Padding="0"
-                                Classes="Flat"
-                                Command="{Binding RemoveCommand}"
-                                ToolTip.Tip="Delete frame">
-                                <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                            <ContentControl Margin="16,8,16,16" Content="{Binding}" />
+                        </Expander>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
-        <Button
-            Padding="12,6"
-            HorizontalAlignment="Left"
-            Command="{Binding AddSegmentCommand}"
-            Content="Add frame" />
+            <TextBlock
+                Classes="Body2"
+                IsVisible="{Binding !HasEffects}"
+                Opacity="0.5"
+                Text="No LED effects configured yet." />
+        </StackPanel>
 
+        <!--  Add effect  -->
+        <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+            <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Classes="Subtitle1"
+                Opacity="0.6"
+                Text="Add Effect" />
+            <StackPanel
+                Grid.Column="1"
+                Orientation="Horizontal"
+                Spacing="8">
+                <ComboBox
+                    MinWidth="180"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding AvailableEffectTypes}"
+                    SelectedItem="{Binding SelectedEffectType}"
+                    Theme="{StaticResource MaterialFilledComboBox}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:LedEffectType">
+                            <TextBlock Text="{Binding ., Converter={x:Static converters:EnumConverters.LedEffectTypeToString}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button
+                    VerticalAlignment="Center"
+                    Command="{Binding AddEffectCommand}"
+                    Content="Add"
+                    Theme="{StaticResource MaterialOutlineButton}" />
+            </StackPanel>
+        </Grid>
     </StackPanel>
 </UserControl>

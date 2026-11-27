@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Avalonia.Media;
 using OpenGrid.Models;
 using Serilog;
@@ -7,6 +8,9 @@ namespace OpenGrid.Services.Devices;
 
 public sealed class LedPresetService : ILedPresetService
 {
+    private const int MinLeds = 1;
+    private const int MaxLeds = 16;
+
     private static readonly string PresetsDirectory = Path.Combine(
         Program.AppDataDirectory,
         "led-presets");
@@ -82,19 +86,34 @@ public sealed class LedPresetService : ILedPresetService
 
     public static LedPresetConfiguration CreateDefaultConfiguration(int ledCount = 10)
     {
+        ledCount = Math.Clamp(ledCount, MinLeds, MaxLeds);
+
         return new LedPresetConfiguration
         {
-            EffectType = LedEffectType.Rpm,
-            LedCount = Math.Clamp(ledCount, 1, 16),
-            RpmSegments = RpmLedSegment.CreateDefault(Math.Clamp(ledCount, 1, 16)),
+            LedCount = ledCount,
+            Effects = [CreateDefaultRpmEffect(ledCount)],
         };
     }
 
+    private static LedEffectSettings CreateDefaultRpmEffect(int ledCount) => new()
+    {
+        Type = LedEffectType.Rpm,
+        IsEnabled = true,
+        RpmSegments = RpmLedSegment.CreateDefault(ledCount),
+    };
+
     private static void NormalizeConfiguration(LedPresetConfiguration configuration)
     {
-        if (configuration.RpmSegments.Count == 0)
+        configuration.LedCount = Math.Clamp(configuration.LedCount, MinLeds, MaxLeds);
+        configuration.Effects.RemoveAll(static effect =>
+            effect is not { } settings || !Enum.IsDefined(settings.Type));
+
+        foreach (var effect in configuration.Effects)
         {
-            configuration.RpmSegments = RpmLedSegment.CreateDefault(configuration.LedCount);
+            if (effect.Type == LedEffectType.Rpm && effect.RpmSegments.Count == 0)
+            {
+                effect.RpmSegments = RpmLedSegment.CreateDefault(configuration.LedCount);
+            }
         }
     }
 
@@ -136,8 +155,41 @@ public sealed class LedPresetService : ILedPresetService
 
     private static LedPreset FromDto(LedPresetDto dto)
     {
-        var configuration = dto.Configuration ?? new LedPresetConfigurationDto();
-        var ledCount = configuration.LedCount is > 0 ? configuration.LedCount.Value : 10;
+        var dtoConfiguration = dto.Configuration;
+        if (dtoConfiguration is null)
+        {
+            return new LedPreset
+            {
+                Id = dto.Id,
+                Name = dto.Name,
+                Configuration = CreateDefaultConfiguration(),
+            };
+        }
+
+        var ledCount = dtoConfiguration.LedCount is > 0
+            ? Math.Clamp(dtoConfiguration.LedCount.Value, MinLeds, MaxLeds)
+            : 10;
+
+        var effects = (dtoConfiguration.Effects ?? [])
+            .Where(static effect => effect is not null)
+            .Select(static effect => new LedEffectSettings
+            {
+                Type = effect.Type,
+                IsEnabled = effect.IsEnabled,
+                RpmSegments = ParseSegments(effect.RpmSegments),
+            })
+            .ToList();
+
+        // Migrate presets saved before a preset could hold multiple effects.
+        if (dtoConfiguration.Effects is null)
+        {
+            effects.Add(new LedEffectSettings
+            {
+                Type = dtoConfiguration.EffectType ?? LedEffectType.Rpm,
+                IsEnabled = true,
+                RpmSegments = ParseSegments(dtoConfiguration.RpmSegments),
+            });
+        }
 
         return new LedPreset
         {
@@ -145,17 +197,19 @@ public sealed class LedPresetService : ILedPresetService
             Name = dto.Name,
             Configuration = new LedPresetConfiguration
             {
-                EffectType = configuration.EffectType,
                 LedCount = ledCount,
-                RpmSegments = (configuration.RpmSegments ?? [])
-                    .Select(x => new RpmLedSegment(
-                        (x.Leds ?? []).Select(Color.Parse),
-                        x.ThresholdPercent,
-                        x.Flicker))
-                    .ToList(),
+                Effects = effects,
             },
         };
     }
+
+    private static List<RpmLedSegment> ParseSegments(IEnumerable<RpmLedSegmentDto>? segments) =>
+        (segments ?? [])
+            .Select(static segment => new RpmLedSegment(
+                (segment.Leds ?? []).Select(static led => Color.Parse(led)),
+                segment.ThresholdPercent,
+                segment.Flicker))
+            .ToList();
 
     private static LedPresetDto ToDto(LedPreset preset)
     {
@@ -165,14 +219,21 @@ public sealed class LedPresetService : ILedPresetService
             Name = preset.Name,
             Configuration = new LedPresetConfigurationDto
             {
-                EffectType = preset.Configuration.EffectType,
                 LedCount = preset.Configuration.LedCount,
-                RpmSegments = preset.Configuration.RpmSegments
-                    .Select(x => new RpmLedSegmentDto
+                Effects = preset.Configuration.Effects
+                    .Where(static effect => effect is not null)
+                    .Select(static effect => new LedEffectSettingsDto
                     {
-                        ThresholdPercent = x.ThresholdPercent,
-                        Flicker = x.Flicker,
-                        Leds = x.Leds.Select(led => led.ToString()).ToList(),
+                        Type = effect.Type,
+                        IsEnabled = effect.IsEnabled,
+                        RpmSegments = effect.RpmSegments
+                            .Select(static segment => new RpmLedSegmentDto
+                            {
+                                ThresholdPercent = segment.ThresholdPercent,
+                                Flicker = segment.Flicker,
+                                Leds = segment.Leds.Select(static led => led.ToString()).ToList(),
+                            })
+                            .ToList(),
                     })
                     .ToList(),
             },
@@ -219,8 +280,22 @@ public sealed class LedPresetService : ILedPresetService
 
     private class LedPresetConfigurationDto
     {
-        public LedEffectType EffectType { get; init; } = LedEffectType.Rpm;
         public int? LedCount { get; init; }
+        public List<LedEffectSettingsDto>? Effects { get; init; }
+
+        // Legacy fields, read only. Presets written before effects were
+        // introduced stored a single effect directly on the configuration.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public LedEffectType? EffectType { get; init; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<RpmLedSegmentDto>? RpmSegments { get; init; }
+    }
+
+    private class LedEffectSettingsDto
+    {
+        public LedEffectType Type { get; init; }
+        public bool IsEnabled { get; init; } = true;
         public List<RpmLedSegmentDto>? RpmSegments { get; init; }
     }
 

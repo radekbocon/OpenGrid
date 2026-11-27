@@ -7,6 +7,8 @@ public static class EnumConverters
 {
     public static readonly FuncValueConverter<TelemetryInput, string> TelemetryInputToString = new(x => x.GetDisplayName());
 
+    public static readonly FuncValueConverter<LedEffectType, string> LedEffectTypeToString = new(x => x.GetDisplayName());
+
     public static readonly FuncValueConverter<DashboardLaunchTrigger, string> DashboardLaunchTriggerToString =
         new(GetDashboardLaunchTriggerName);
 

@@ -30,8 +30,8 @@ public partial class LedPresetsViewModel : PresetListViewModel<LedPreset>
 
     protected override string GetPresetSummary(LedPreset preset)
     {
-        var frames = preset.Configuration.RpmSegments.Count;
-        return $"{frames} {(frames == 1 ? "frame" : "frames")} · {preset.Configuration.LedCount} LEDs";
+        var effects = preset.Configuration.Effects.Count;
+        return $"{effects} {(effects == 1 ? "effect" : "effects")} · {preset.Configuration.LedCount} LEDs";
     }
 
     protected override object? CreateEditor(LedPreset preset)

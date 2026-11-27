@@ -24,8 +24,10 @@ public interface IRpmLedEffectService : IDisposable
 /// <summary>
 /// Computes generic LED effect state from telemetry. The active preset is
 /// resolved per device from its default preset and game/car overrides, using
-/// the same rules as bass shakers. Device-specific services only transport the
-/// resolved state to hardware.
+/// the same rules as bass shakers. Enabled effects are applied in list order:
+/// later effects override LEDs set by earlier ones, and black LEDs are left
+/// untouched so lower-priority effects can show through. Device-specific
+/// services only transport the resolved state to hardware.
 /// </summary>
 public sealed class RpmLedEffectService : IRpmLedEffectService
 {
@@ -67,13 +69,8 @@ public sealed class RpmLedEffectService : IRpmLedEffectService
             telemetry.Car.Name,
             _presetService.GetById);
 
-        var segments = preset is { Configuration.EffectType: LedEffectType.Rpm }
-            ? RpmLedSegment.Normalize(preset.Configuration.RpmSegments, device.RpmLedCount)
-            : [];
-
-        var activeFrame = SelectActiveFrame(telemetry, segments);
-        var leds = activeFrame?.Leds ?? Enumerable.Repeat(RpmLedSegment.OffLed, device.RpmLedCount).ToList();
-        var lightsOn = ResolveLightsOn(device.Id, activeFrame);
+        var (leds, flickerFrame) = ResolveLeds(preset, telemetry, device.RpmLedCount);
+        var lightsOn = ResolveLightsOn(device.Id, flickerFrame);
 
         return new RpmLedEffectSnapshot(leds, lightsOn);
     }
@@ -88,13 +85,26 @@ public sealed class RpmLedEffectService : IRpmLedEffectService
             null,
             _presetService.GetById);
 
-        if (preset is not { Configuration.EffectType: LedEffectType.Rpm })
+        var leds = Enumerable.Repeat(RpmLedSegment.OffLed, device.RpmLedCount).ToList();
+        var hasEnabledEffect = false;
+
+        foreach (var effect in preset?.Configuration.Effects ?? [])
         {
-            return null;
+            if (effect is not { IsEnabled: true, Type: LedEffectType.Rpm })
+            {
+                continue;
+            }
+
+            hasEnabledEffect = true;
+            var firstFrame = RpmLedSegment.Normalize(effect.RpmSegments, device.RpmLedCount)
+                .FirstOrDefault();
+            if (firstFrame is not null)
+            {
+                OverlayFrame(leds, firstFrame.Leds);
+            }
         }
 
-        return RpmLedSegment.Normalize(preset.Configuration.RpmSegments, device.RpmLedCount)
-            .FirstOrDefault()?.Leds;
+        return hasEnabledEffect ? leds : null;
     }
 
     public void Reset(string deviceId)
@@ -131,6 +141,51 @@ public sealed class RpmLedEffectService : IRpmLedEffectService
 
             _deviceService.SaveDevice(device);
             Reset(device.Id);
+        }
+    }
+
+    private (List<Color> Leds, RpmLedSegment? FlickerFrame) ResolveLeds(
+        LedPreset? preset,
+        TelemetryRecord telemetry,
+        int ledCount)
+    {
+        var leds = Enumerable.Repeat(RpmLedSegment.OffLed, ledCount).ToList();
+        RpmLedSegment? flickerFrame = null;
+
+        foreach (var effect in preset?.Configuration.Effects ?? [])
+        {
+            if (effect is not { IsEnabled: true, Type: LedEffectType.Rpm })
+            {
+                continue;
+            }
+
+            var segments = RpmLedSegment.Normalize(effect.RpmSegments, ledCount);
+            var frame = SelectActiveFrame(telemetry, segments);
+            if (frame is null)
+            {
+                continue;
+            }
+
+            OverlayFrame(leds, frame.Leds);
+            if (flickerFrame is null && frame.Flicker)
+            {
+                flickerFrame = frame;
+            }
+        }
+
+        return (leds, flickerFrame);
+    }
+
+    private static void OverlayFrame(IList<Color> leds, IReadOnlyList<Color> frame)
+    {
+        for (var i = 0; i < leds.Count && i < frame.Count; i++)
+        {
+            // Black is treated as transparent when effects are layered, so an
+            // LED not set by a later effect keeps the earlier effect's colour.
+            if (frame[i] != RpmLedSegment.OffLed)
+            {
+                leds[i] = frame[i];
+            }
         }
     }
 

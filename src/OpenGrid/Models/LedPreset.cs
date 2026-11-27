@@ -1,9 +1,7 @@
-using Avalonia.Media;
-
 namespace OpenGrid.Models;
 
 /// <summary>
-/// Effect currently stored in an LED preset. Additional effect types can be
+/// Effect types that can be added to an LED preset. Additional types can be
 /// added without changing how presets are stored, edited or assigned.
 /// </summary>
 public enum LedEffectType
@@ -14,31 +12,28 @@ public enum LedEffectType
 /// <summary>
 /// Device-agnostic LED effect configuration. LED count is authoring metadata;
 /// frames are normalized to the physical LED count of the target device when
-/// the effect is evaluated.
+/// an effect is evaluated.
 /// </summary>
 public class LedPresetConfiguration
 {
-    public LedEffectType EffectType { get; set; } = LedEffectType.Rpm;
+    private List<LedEffectSettings> _effects = [];
 
     public int LedCount { get; set; } = 10;
 
-    public List<RpmLedSegment> RpmSegments { get; set; } = [];
+    public List<LedEffectSettings> Effects
+    {
+        get => _effects;
+        set => _effects = value ?? [];
+    }
 
     public LedPresetConfiguration Clone()
     {
         return new LedPresetConfiguration
         {
-            EffectType = EffectType,
             LedCount = LedCount,
-            RpmSegments = RpmSegments
-                .Where(static segment => segment is not null)
-                .Select(static segment => new RpmLedSegment
-                {
-                    ThresholdPercent = segment.ThresholdPercent,
-                    Flicker = segment.Flicker,
-                    Leds = segment.Leds.Select(static led => new Color(
-                        led.A, led.R, led.G, led.B)).ToList(),
-                })
+            Effects = Effects
+                .Where(static effect => effect is not null)
+                .Select(static effect => effect.Clone())
                 .ToList(),
         };
     }
