@@ -23,6 +23,16 @@ public static class MozaSerialPortEnumerator
 {
     private const string ByIdDirectory = "/dev/serial/by-id";
 
+    /// <summary>
+    /// Checks whether a persisted port path still points at a device node.
+    /// The by-id symlink itself stays on disk after unplugging, so File.Exists
+    /// (which follows the link) is used instead of checking the link entry.
+    /// </summary>
+    public static bool IsPortPresent(string portName)
+    {
+        return !string.IsNullOrWhiteSpace(portName) && File.Exists(portName);
+    }
+
     public static IReadOnlyList<MozaPortInfo> Enumerate()
     {
         var candidates = new List<PortCandidate>();
