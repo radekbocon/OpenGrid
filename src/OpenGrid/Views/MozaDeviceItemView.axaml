@@ -2,6 +2,7 @@
     x:Class="OpenGrid.Views.MozaDeviceItemView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:OpenGrid.Controls"
     xmlns:viewModels="clr-namespace:OpenGrid.ViewModels"
     x:DataType="viewModels:MozaDeviceItemViewModel">
 
@@ -141,22 +142,10 @@
                 Margin="140,0,0,0"
                 Classes="Caption"
                 Opacity="0.6"
-                Text="Requires the global telemetry LED option in Settings."
+                Text="LED effects are defined by the preset assigned below."
                 TextWrapping="Wrap" />
 
-            <!--  RPM LED frames  -->
-            <TextBlock
-                Margin="140,0,0,0"
-                Classes="Subtitle1"
-                Text="RPM LED frames" />
-
-            <TextBlock
-                Margin="140,0,0,0"
-                Classes="Caption"
-                Opacity="0.6"
-                Text="Each frame defines the exact colour of every LED at a given percentage of the car's redline. The last frame whose threshold has been reached wins. Set an LED to black to turn it off. Flicker blinks the whole frame."
-                TextWrapping="Wrap" />
-
+            <!--  Physical LED count  -->
             <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
                 <TextBlock
                     Grid.Column="0"
@@ -169,102 +158,15 @@
                     MinWidth="100"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
-                    ItemsSource="{Binding FrameLengthOptions}"
-                    SelectedItem="{Binding FrameLength}" />
+                    ItemsSource="{Binding LedCountOptions}"
+                    SelectedItem="{Binding LedCount}" />
             </Grid>
 
-            <Grid
-                Margin="140,0,0,0"
-                ColumnDefinitions="36,*,100,80,90"
-                ColumnSpacing="8">
-                <TextBlock
-                    Grid.Column="0"
-                    Classes="Caption"
-                    Opacity="0.6"
-                    Text="Frame" />
-                <TextBlock
-                    Grid.Column="1"
-                    Classes="Caption"
-                    Opacity="0.6"
-                    Text="LED pattern" />
-                <TextBlock
-                    Grid.Column="2"
-                    Classes="Caption"
-                    Opacity="0.6"
-                    Text="% redline" />
-                <TextBlock
-                    Grid.Column="3"
-                    Classes="Caption"
-                    Opacity="0.6"
-                    Text="Flicker" />
-                <TextBlock
-                    Grid.Column="4"
-                    Classes="Caption"
-                    Opacity="0.6"
-                    Text="Action" />
-            </Grid>
+            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 
-            <ItemsControl Margin="140,0,0,0" ItemsSource="{Binding RpmSegments}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="viewModels:MozaRpmSegmentViewModel">
-                        <Grid
-                            Margin="0,0,0,8"
-                            ColumnDefinitions="36,*,100,80,90"
-                            ColumnSpacing="8">
-                            <TextBlock
-                                Grid.Column="0"
-                                VerticalAlignment="Center"
-                                Classes="Body2"
-                                Text="{Binding Index, StringFormat='{}{0}.'}" />
+            <TextBlock Classes="Headline6" Text="LED Presets" />
 
-                            <ItemsControl Grid.Column="1" ItemsSource="{Binding Leds}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="2" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="viewModels:MozaRpmLedCellViewModel">
-                                        <ColorPicker
-                                            Width="24"
-                                            Height="24"
-                                            MinWidth="24"
-                                            Margin="0"
-                                            HorizontalAlignment="Center"
-                                            CornerRadius="4"
-                                            IsAlphaEnabled="False"
-                                            ToolTip.Tip="Black turns this LED off"
-                                            Color="{Binding Color, Mode=TwoWay}" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <TextBox
-                                Grid.Column="2"
-                                VerticalAlignment="Center"
-                                Text="{Binding ThresholdPercentText, UpdateSourceTrigger=PropertyChanged}" />
-                            <CheckBox
-                                Grid.Column="3"
-                                VerticalAlignment="Center"
-                                IsChecked="{Binding Flicker}" />
-                            <Button
-                                Grid.Column="4"
-                                Padding="8,4"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Center"
-                                Command="{Binding RemoveCommand}"
-                                Content="Remove" />
-                        </Grid>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-            <Button
-                Margin="140,0,0,0"
-                Padding="12,6"
-                HorizontalAlignment="Left"
-                Command="{Binding AddRpmSegmentCommand}"
-                Content="Add frame" />
+            <controls:DevicePresetSettingsView DataContext="{Binding PresetSettings}" />
 
         </StackPanel>
     </ScrollViewer>

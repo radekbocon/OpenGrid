@@ -1,13 +1,15 @@
 namespace OpenGrid.Models;
 
 /// <summary>
-/// A device that can display RPM LED effects driven by telemetry.
+/// A device that can display LED effects driven by telemetry.
 /// </summary>
 public interface IRpmLedTelemetryDevice : IDevice
 {
     bool DriveLedsWithTelemetry { get; set; }
     int RpmLedCount { get; set; }
-    List<RpmLedSegment> RpmSegments { get; set; }
+
+    string? DefaultLedPresetId { get; set; }
+    List<LedPresetOverride> LedOverrides { get; set; }
+
     bool IsRpmLedActive();
-    List<RpmLedSegment> GetNormalizedRpmSegments();
 }

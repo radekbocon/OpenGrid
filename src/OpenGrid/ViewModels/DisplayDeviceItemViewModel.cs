@@ -1,10 +1,9 @@
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DialogHostAvalonia;
 using Material.Icons;
-using OpenGrid.Controls;
+using OpenGrid.Converters;
 using OpenGrid.Models;
+using OpenGrid.Services;
 using OpenGrid.Services.Dashboard;
 using OpenGrid.Services.Devices;
 
@@ -12,145 +11,123 @@ namespace OpenGrid.ViewModels;
 
 public partial class DisplayDeviceItemViewModel : DeviceItemViewModel
 {
-    private static readonly DashboardInfo NoneDashboard = new() { Id = "", Name = "None", Description = "", DirectoryPath = "" };
-
     private readonly IDashboardService _dashboardService;
     private readonly DashboardLauncher _dashboardLauncher;
 
     public override MaterialIconKind IconKind => MaterialIconKind.Monitor;
 
-    public ObservableCollection<DashboardInfo> AvailableDashboards { get; } = [];
-
-    public ObservableCollection<DashboardInfo> DashboardOptions { get; } = [];
-    public ObservableCollection<GameDashboardOverrideItemViewModel> GameOverrides { get; } = [];
-
-    public static DashboardLaunchTrigger[] AvailableTriggers { get; } =
-        Enum.GetValues<DashboardLaunchTrigger>();
+    /// <summary>
+    /// Same default + game/car override editor used by bass shakers and LEDs.
+    /// </summary>
+    public DevicePresetSettingsViewModel PresetSettings { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSelectedDashboard))]
-    public partial DashboardInfo? SelectedDashboard { get; set; }
-
-    [ObservableProperty]
-    public partial DashboardInfo? SelectedDashboardOption { get; set; }
-
-    [ObservableProperty]
-    public partial DashboardLaunchTrigger SelectedTrigger { get; set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsDashboardOpen))]
     [NotifyPropertyChangedFor(nameof(DashboardButtonLabel))]
     [NotifyCanExecuteChangedFor(nameof(ToggleDashboardCommand))]
     public partial bool IsDashboardOpen { get; set; }
 
-    public bool HasSelectedDashboard => SelectedDashboard is not null;
-
     public string DashboardButtonLabel => IsDashboardOpen ? "Close Dashboard" : "Launch Dashboard";
 
-    partial void OnSelectedDashboardChanged(DashboardInfo? value)
-    {
-        if (Device is not DisplayDevice displayDevice)
-            return;
+    private bool CanToggleDashboard => PresetSettings.SelectedPresetId is not null;
 
-        displayDevice.DashboardId = value?.Id;
-        DeviceService.SaveDevice(displayDevice);
-        OnPropertyChanged(nameof(HasSelectedDashboard));
-    }
-
-    partial void OnSelectedDashboardOptionChanged(DashboardInfo? value)
-    {
-        SelectedDashboard = value?.Id == NoneDashboard.Id ? null : value;
-    }
-
-    partial void OnSelectedTriggerChanged(DashboardLaunchTrigger value)
-    {
-        if (Device is not DisplayDevice displayDevice)
-            return;
-
-        displayDevice.DashboardTrigger = value;
-        DeviceService.SaveDevice(displayDevice);
-    }
-
-    [RelayCommand]
-    private async Task AddGameOverrideAsync()
-    {
-        if (Device is not DisplayDevice displayDevice)
-            return;
-
-        var dialog = new AddGameDashboardOverrideDialog(
-            SteamGame.GetAllSupported(),
-            DashboardOptions.Where(x => x.Id != ""),
-            displayDevice.GameDashboardOverrides.Select(x => x.GameAppId));
-        await DialogHost.Show(dialog);
-        if (dialog.Result is not { } result)
-            return;
-
-        var game = SteamGame.GetByAppId(result.GameAppId)!;
-        var item = new GameDashboardOverrideItemViewModel(game, DashboardOptions, SaveGameOverrides, RemoveGameOverride, result);
-        GameOverrides.Add(item);
-        displayDevice.GameDashboardOverrides.Add(result);
-        DeviceService.SaveDevice(displayDevice);
-    }
-
-    private void RemoveGameOverride(GameDashboardOverrideItemViewModel item)
-    {
-        if (Device is DisplayDevice displayDevice)
-        {
-            displayDevice.GameDashboardOverrides.Remove(item.Model);
-            DeviceService.SaveDevice(displayDevice);
-        }
-        GameOverrides.Remove(item);
-    }
-
-    private void SaveGameOverrides()
-    {
-        if (Device is DisplayDevice displayDevice)
-            DeviceService.SaveDevice(displayDevice);
-    }
-
-    public DisplayDeviceItemViewModel(IDeviceService deviceService, IDashboardService dashboardService, DashboardLauncher dashboardLauncher, Action<DeviceItemViewModel> onRemove)
+    public DisplayDeviceItemViewModel(
+        IDeviceService deviceService,
+        IDashboardService dashboardService,
+        DashboardLauncher dashboardLauncher,
+        ICarConfigService carConfigService,
+        Action<DeviceItemViewModel> onRemove)
         : base(deviceService, onRemove)
     {
         _dashboardService = dashboardService;
         _dashboardLauncher = dashboardLauncher;
+
+        PresetSettings = new DevicePresetSettingsViewModel(
+            carConfigService,
+            static id => new DashboardPresetOverride { PresetId = id },
+            OnPresetSettingsChanged,
+            AddOverride,
+            RemoveOverride,
+            itemLabel: "Dashboard",
+            itemsLocationHint: null,
+            emptyOverridesHint: "No game or car overrides configured. The default dashboard will be used.",
+            onSecondarySettingChanged: OnTriggerChanged);
     }
 
     protected override void InitDevice(IDevice device)
     {
-        AvailableDashboards.Clear();
-        DashboardOptions.Clear();
-        DashboardOptions.Add(NoneDashboard);
-        foreach (var dashboard in _dashboardService.Dashboards)
-        {
-            AvailableDashboards.Add(dashboard);
-            DashboardOptions.Add(dashboard);
-        }
-
         if (device is DisplayDevice displayDevice)
         {
-            GameOverrides.Clear();
-            foreach (var gameOverride in displayDevice.GameDashboardOverrides)
-            {
-                var game = SteamGame.GetByAppId(gameOverride.GameAppId);
-                if (game is not null)
-                    GameOverrides.Add(new GameDashboardOverrideItemViewModel(game, DashboardOptions, SaveGameOverrides, RemoveGameOverride, gameOverride));
-            }
-            SelectedDashboard = !string.IsNullOrEmpty(displayDevice.DashboardId)
-                ? _dashboardService.GetById(displayDevice.DashboardId)
-                : null;
-            SelectedDashboardOption = SelectedDashboard ?? NoneDashboard;
-            SelectedTrigger = displayDevice.DashboardTrigger;
+            PresetSettings.Initialize(
+                _dashboardService.Dashboards.Select(x => new PresetOption(x.Id, x.Name)),
+                displayDevice.DashboardId,
+                displayDevice.DashboardOverrides);
+
+            PresetSettings.ConfigureSecondarySetting(
+                "Auto-Open Trigger",
+                GetTriggerOptions(),
+                displayDevice.DashboardTrigger.ToString());
+
             IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice);
         }
         else
         {
-            SelectedDashboardOption = NoneDashboard;
+            PresetSettings.Initialize([], null, []);
         }
 
+        ToggleDashboardCommand.NotifyCanExecuteChanged();
+
+        // InitDevice can run again when the device list is refreshed.
+        _dashboardLauncher.DashboardStateChanged -= OnDashboardStateChanged;
         _dashboardLauncher.DashboardStateChanged += OnDashboardStateChanged;
     }
 
-    [RelayCommand(CanExecute = nameof(HasSelectedDashboard))]
+    private static IEnumerable<PresetOption> GetTriggerOptions()
+    {
+        return Enum.GetValues<DashboardLaunchTrigger>().Select(x =>
+            new PresetOption(x.ToString(), EnumConverters.GetDashboardLaunchTriggerName(x)));
+    }
+
+    private void OnTriggerChanged(string? value)
+    {
+        if (Device is not DisplayDevice displayDevice)
+            return;
+
+        displayDevice.DashboardTrigger = Enum.TryParse<DashboardLaunchTrigger>(value, out var trigger)
+            ? trigger
+            : DashboardLaunchTrigger.None;
+        DeviceService.SaveDevice(displayDevice);
+    }
+
+    private void AddOverride(PresetOverride presetOverride)
+    {
+        if (presetOverride is DashboardPresetOverride dashboardOverride &&
+            Device is DisplayDevice displayDevice)
+        {
+            displayDevice.DashboardOverrides.Add(dashboardOverride);
+        }
+    }
+
+    private void RemoveOverride(PresetOverride presetOverride)
+    {
+        if (presetOverride is DashboardPresetOverride dashboardOverride &&
+            Device is DisplayDevice displayDevice)
+        {
+            displayDevice.DashboardOverrides.Remove(dashboardOverride);
+        }
+    }
+
+    private void OnPresetSettingsChanged()
+    {
+        if (Device is not DisplayDevice displayDevice)
+            return;
+
+        displayDevice.DashboardId = PresetSettings.SelectedPresetId;
+        DeviceService.SaveDevice(displayDevice);
+        _dashboardLauncher.RefreshDeviceDashboard(displayDevice);
+        ToggleDashboardCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanToggleDashboard))]
     private void ToggleDashboard()
     {
         if (Device is not DisplayDevice displayDevice)
@@ -166,39 +143,10 @@ public partial class DisplayDeviceItemViewModel : DeviceItemViewModel
 
     private void OnDashboardStateChanged(object? sender, string deviceId)
     {
-        if (Device is not DisplayDevice displayDevice)
-            return;
-
-        if (displayDevice.Id != deviceId)
+        if (Device is not DisplayDevice displayDevice || displayDevice.Id != deviceId)
             return;
 
         IsDashboardOpen = _dashboardLauncher.IsDeviceDashboardOpen(displayDevice);
         OnPropertyChanged(nameof(DashboardButtonLabel));
-    }
-}
-
-public sealed class GameDashboardOverrideItemViewModel
-{
-    private readonly Action _save;
-    private readonly Action<GameDashboardOverrideItemViewModel> _remove;
-    public GameDashboardOverride Model { get; }
-    public SteamGame Game { get; }
-    public IReadOnlyList<DashboardInfo> DashboardOptions { get; }
-    public DashboardInfo? SelectedDashboard
-    {
-        get => DashboardOptions.FirstOrDefault(x => x.Id == Model.DashboardId);
-        set { Model.DashboardId = value?.Id ?? ""; _save(); }
-    }
-    public IRelayCommand RemoveCommand { get; }
-
-    public GameDashboardOverrideItemViewModel(SteamGame game, IReadOnlyList<DashboardInfo> dashboardOptions,
-        Action save, Action<GameDashboardOverrideItemViewModel> remove, GameDashboardOverride? model = null)
-    {
-        Game = game;
-        DashboardOptions = dashboardOptions;
-        Model = model ?? new GameDashboardOverride { GameAppId = game.AppId };
-        _save = save;
-        _remove = remove;
-        RemoveCommand = new RelayCommand(() => _remove(this));
     }
 }

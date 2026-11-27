@@ -1,53 +1,25 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using OpenGrid.Models;
 using OpenGrid.Services.Sound;
 
 namespace OpenGrid.ViewModels;
 
-public partial class BassShakerPresetItemViewModel : ViewModelBase
+public sealed class BassShakerPresetItemViewModel : PresetItemViewModel<BassShakerPreset>
 {
-    private readonly IBassShakerPresetService _presetService;
-
-    public BassShakerPreset Preset { get; }
-
-    public string Id => Preset.Id;
-
-    public string Name
+    public BassShakerPresetItemViewModel(
+        BassShakerPreset preset,
+        IBassShakerPresetService presetService,
+        Action<PresetItemViewModel<BassShakerPreset>> duplicate,
+        Func<PresetItemViewModel<BassShakerPreset>, Task> remove)
+        : base(
+            preset,
+            presetService.Save,
+            static x => x.Name,
+            static (x, name) => x.Name = name,
+            static x => x.Configuration.Inputs.Count == 1
+                ? "1 effect"
+                : $"{x.Configuration.Inputs.Count} effects",
+            duplicate,
+            remove)
     {
-        get => Preset.Name;
-        set
-        {
-            if (Preset.Name == value)
-            {
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                // Revert the editor to the current name instead of allowing an empty preset name.
-                OnPropertyChanged();
-                return;
-            }
-
-            Preset.Name = value.Trim();
-            _presetService.Save(Preset);
-            OnPropertyChanged();
-            RefreshSummary();
-        }
-    }
-
-    public string Summary => Preset.Configuration.Inputs.Count == 1
-        ? "1 effect"
-        : $"{Preset.Configuration.Inputs.Count} effects";
-
-    public BassShakerPresetItemViewModel(BassShakerPreset preset, IBassShakerPresetService presetService)
-    {
-        Preset = preset;
-        _presetService = presetService;
-    }
-
-    public void RefreshSummary()
-    {
-        OnPropertyChanged(nameof(Summary));
     }
 }

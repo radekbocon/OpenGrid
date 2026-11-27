@@ -80,39 +80,24 @@ public sealed class RpmLedSegment
     }
 
     /// <summary>
-    /// Default frames matching the requested style: green, then yellow, then
-    /// blue, then an all-blue blinking redline frame.
+    /// Default three-segment shift light: green, then amber, then red, followed
+    /// by an all-red blinking redline frame. The outer segments are the same
+    /// size and the amber segment takes the remaining LEDs, so 10 LEDs split
+    /// 3 / 4 / 3.
     /// </summary>
     public static List<RpmLedSegment> CreateDefault(int total)
     {
-        int greenCount;
-        int yellowCount;
-        int blueCount;
+        total = Math.Max(1, total);
 
-        if (total < 3)
-        {
-            greenCount = 1;
-            yellowCount = total >= 2 ? 1 : 0;
-            blueCount = total >= 3 ? 1 : 0;
-        }
-        else
-        {
-            greenCount = Math.Max(1, total / 3);
-            yellowCount = Math.Max(1, (total - greenCount) / 2);
-            blueCount = total - greenCount - yellowCount;
-            if (blueCount < 1)
-            {
-                blueCount = 1;
-                yellowCount = Math.Max(1, total - greenCount - blueCount);
-            }
-        }
+        var outerCount = (total + 1) / 3;
+        var amberCount = Math.Max(0, total - outerCount * 2);
 
         return
         [
-            new RpmLedSegment(Frame(total, (greenCount, Colors.Green)), 80),
-            new RpmLedSegment(Frame(total, (greenCount, Colors.Green), (yellowCount, Colors.Yellow)), 90),
-            new RpmLedSegment(Frame(total, (greenCount, Colors.Green), (yellowCount, Colors.Yellow), (blueCount, Colors.Red)), 95),
-            new RpmLedSegment(Enumerable.Repeat(Colors.Red, total), 100, true),
+            new RpmLedSegment(Frame(total, (outerCount, LedColorPalette.Green)), 80),
+            new RpmLedSegment(Frame(total, (outerCount, LedColorPalette.Green), (amberCount, LedColorPalette.Amber)), 90),
+            new RpmLedSegment(Frame(total, (outerCount, LedColorPalette.Green), (amberCount, LedColorPalette.Amber), (outerCount, LedColorPalette.Red)), 95),
+            new RpmLedSegment(Enumerable.Repeat(LedColorPalette.Red, total), 100, true),
         ];
     }
 

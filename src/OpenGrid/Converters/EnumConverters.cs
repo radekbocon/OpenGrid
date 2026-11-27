@@ -7,16 +7,20 @@ public static class EnumConverters
 {
     public static readonly FuncValueConverter<TelemetryInput, string> TelemetryInputToString = new(x => x.GetDisplayName());
 
-    public static readonly FuncValueConverter<DashboardLaunchTrigger, string> DashboardLaunchTriggerToString = new (
-        x =>
+    public static readonly FuncValueConverter<LedEffectType, string> LedEffectTypeToString = new(x => x.GetDisplayName());
+
+    public static readonly FuncValueConverter<DashboardLaunchTrigger, string> DashboardLaunchTriggerToString =
+        new(GetDashboardLaunchTriggerName);
+
+    public static string GetDashboardLaunchTriggerName(DashboardLaunchTrigger trigger)
+    {
+        return trigger switch
         {
-            return x switch
-            {
-                DashboardLaunchTrigger.None => "None",
-                DashboardLaunchTrigger.OnAppStart => "Application Start",
-                DashboardLaunchTrigger.OnGameStart => "Game Start",
-                DashboardLaunchTrigger.OnTelemetryConnected => "Game Connected",
-                _ => throw new ArgumentOutOfRangeException(nameof(x), x, string.Empty),
-            };
-        });
+            DashboardLaunchTrigger.None => "None",
+            DashboardLaunchTrigger.OnAppStart => "Application Start",
+            DashboardLaunchTrigger.OnGameStart => "Game Start",
+            DashboardLaunchTrigger.OnTelemetryConnected => "Game Connected",
+            _ => throw new ArgumentOutOfRangeException(nameof(trigger), trigger, string.Empty),
+        };
+    }
 }

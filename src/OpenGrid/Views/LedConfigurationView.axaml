@@ -1,0 +1,109 @@
+<UserControl
+    x:Class="OpenGrid.Views.LedConfigurationView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:converters="clr-namespace:OpenGrid.Converters"
+    xmlns:models="using:OpenGrid.Models"
+    xmlns:vm="using:OpenGrid.ViewModels"
+    x:DataType="vm:LedConfigurationViewModel">
+
+    <StackPanel Spacing="16">
+        <!--  Authoring LED count, shared by every effect  -->
+        <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+            <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Classes="Subtitle1"
+                Opacity="0.6"
+                Text="LEDs per frame" />
+            <ComboBox
+                Grid.Column="1"
+                MinWidth="100"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                ItemsSource="{Binding LedCountOptions}"
+                SelectedItem="{Binding LedCount}" />
+        </Grid>
+
+        <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
+
+        <!--  Configured effects  -->
+        <StackPanel Spacing="8">
+            <ItemsControl ItemsSource="{Binding Effects}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LedEffectViewModel">
+                        <Expander Margin="2,8" Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}">
+                            <Expander.Header>
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Subtitle1"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding EffectName}" />
+                                    <ToggleSwitch
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        IsChecked="{Binding IsEnabled}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        Width="24"
+                                        Height="24"
+                                        Padding="0"
+                                        VerticalAlignment="Center"
+                                        Classes="Flat"
+                                        Command="{Binding RemoveCommand}"
+                                        ToolTip.Tip="Remove Effect">
+                                        <avalonia:MaterialIcon IconSize="16" Kind="Trash" />
+                                    </Button>
+                                </Grid>
+                            </Expander.Header>
+
+                            <ContentControl Margin="16,8,16,16" Content="{Binding}" />
+                        </Expander>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock
+                Classes="Body2"
+                IsVisible="{Binding !HasEffects}"
+                Opacity="0.5"
+                Text="No LED effects configured yet." />
+        </StackPanel>
+
+        <!--  Add effect  -->
+        <Grid ColumnDefinitions="140,*" ColumnSpacing="12">
+            <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Classes="Subtitle1"
+                Opacity="0.6"
+                Text="Add Effect" />
+            <StackPanel
+                Grid.Column="1"
+                Orientation="Horizontal"
+                Spacing="8">
+                <ComboBox
+                    MinWidth="180"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding AvailableEffectTypes}"
+                    SelectedItem="{Binding SelectedEffectType}"
+                    Theme="{StaticResource MaterialFilledComboBox}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:LedEffectType">
+                            <TextBlock Text="{Binding ., Converter={x:Static converters:EnumConverters.LedEffectTypeToString}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button
+                    VerticalAlignment="Center"
+                    Command="{Binding AddEffectCommand}"
+                    Content="Add"
+                    Theme="{StaticResource MaterialOutlineButton}" />
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</UserControl>

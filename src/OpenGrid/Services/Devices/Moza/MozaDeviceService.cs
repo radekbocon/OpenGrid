@@ -32,6 +32,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
     private readonly SemaphoreSlim _sync = new(1, 1);
 
     private TelemetryRecord? _lastTelemetry;
+    private SteamGame? _currentGame;
     private DateTime _lastSendTimestamp;
     private bool _disposed;
 
@@ -144,11 +145,17 @@ public sealed class MozaDeviceService : IMozaDeviceService
                 return;
             }
 
-            connection = new MozaConnection(device, OnConnectionStatusChanged);
+            connection = new MozaConnection(device, OnConnectionStatusChanged, GetInitialFrame);
             _connections[device.Id] = connection;
             connection.Open();
             SendLedsToConnection(connection);
         });
+    }
+
+    private IReadOnlyList<Color> GetInitialFrame(MozaSerialDevice device)
+    {
+        return _rpmLedEffectService.GetInitialLeds(device)
+               ?? Enumerable.Repeat(RpmLedSegment.OffLed, device.RpmLedCount).ToList();
     }
 
     private void RemoveConnection(string deviceId)
@@ -178,6 +185,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
         try
         {
             _lastTelemetry = e.Telemetry;
+            _currentGame = e.Game;
 
             var now = DateTime.Now;
             var minInterval = TimeSpan.FromMilliseconds(MinSendIntervalMs);
@@ -209,6 +217,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
         // going dark. Leaving the port alone lets the wheel keep/return to the
         // idle colours configured in Pit House or on the wheel itself.
         _lastTelemetry = null;
+        _currentGame = null;
     }
 
     private void SendLeds()
@@ -232,7 +241,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
     private void SendLedsToConnection(MozaConnection connection)
     {
-        var snapshot = _rpmLedEffectService.Evaluate(connection.Device, _lastTelemetry);
+        var snapshot = _rpmLedEffectService.Evaluate(connection.Device, _lastTelemetry, _currentGame);
         if (snapshot is null)
         {
             return;
@@ -273,6 +282,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
     {
         private readonly SerialPort _port;
         private readonly Action<string> _statusChanged;
+        private readonly Func<MozaSerialDevice, IReadOnlyList<Color>> _getInitialFrame;
         private readonly Lock _writeLock = new();
         private DeviceConnectionStatus _status = DeviceConnectionStatus.Disconnected;
         private byte[]? _lastLedFrame;
@@ -281,10 +291,14 @@ public sealed class MozaDeviceService : IMozaDeviceService
         private byte? _previousTelemetryMode;
         private string? _lastColorSignature;
 
-        public MozaConnection(MozaSerialDevice device, Action<string> statusChanged)
+        public MozaConnection(
+            MozaSerialDevice device,
+            Action<string> statusChanged,
+            Func<MozaSerialDevice, IReadOnlyList<Color>> getInitialFrame)
         {
             Device = device;
             _statusChanged = statusChanged;
+            _getInitialFrame = getInitialFrame;
             _port = new SerialPort(device.PortName, MozaProtocol.BaudRate)
             {
                 ReadTimeout = 1000,
@@ -491,13 +505,7 @@ public sealed class MozaDeviceService : IMozaDeviceService
                     Log.Debug("Requested telemetry LED mode on {Port}", Device.PortName);
                 }
 
-                var initialFrame = RpmLedSegment
-                    .Normalize(Device.RpmSegments, Device.RpmLedCount)
-                    .FirstOrDefault();
-
-                ApplyRpmColors(
-                    initialFrame?.Leds ?? Enumerable.Repeat(RpmLedSegment.OffLed, Device.RpmLedCount),
-                    Device.RpmLedCount);
+                ApplyRpmColors(_getInitialFrame(Device), Device.RpmLedCount);
             }
             catch (Exception ex)
             {

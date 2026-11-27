@@ -8,7 +8,7 @@ public class DisplayDeviceSerializer : IDeviceSerializer
     public IDevice? FromJson(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
-        
+
         var dto = JsonSerializer.Deserialize<DisplayDeviceDto>(json);
 
         return dto switch
@@ -23,7 +23,15 @@ public class DisplayDeviceSerializer : IDeviceSerializer
                 IsEnabled = dto.IsEnabled,
                 DashboardId = dto.DashboardId,
                 DashboardTrigger = dto.DashboardTrigger,
-                GameDashboardOverrides = dto.GameDashboardOverrides ?? [],
+                // Older builds stored these under GameDashboardOverrides.
+                DashboardOverrides = (dto.DashboardOverrides ?? dto.GameDashboardOverrides ?? [])
+                    .Select(x => new DashboardPresetOverride
+                    {
+                        GameAppId = x.GameAppId,
+                        Car = x.Car,
+                        PresetId = x.DashboardId ?? string.Empty,
+                    })
+                    .ToList(),
             }
         };
     }
@@ -43,12 +51,19 @@ public class DisplayDeviceSerializer : IDeviceSerializer
             IsEnabled = device.IsEnabled,
             DashboardId = displayDevice?.DashboardId,
             DashboardTrigger = displayDevice?.DashboardTrigger ?? DashboardLaunchTrigger.None,
-            GameDashboardOverrides = displayDevice?.GameDashboardOverrides ?? [],
+            DashboardOverrides = displayDevice?.DashboardOverrides
+                .Select(x => new DashboardOverrideDto
+                {
+                    GameAppId = x.GameAppId,
+                    Car = x.Car,
+                    DashboardId = x.PresetId,
+                })
+                .ToList() ?? [],
         };
 
         return JsonSerializer.Serialize(dto);
     }
-    
+
     private class DisplayDeviceDto
     {
         public required string Id { get; init; }
@@ -58,6 +73,14 @@ public class DisplayDeviceSerializer : IDeviceSerializer
         public required bool IsEnabled { get; init; }
         public string? DashboardId { get; init; }
         public DashboardLaunchTrigger DashboardTrigger { get; init; }
-        public List<GameDashboardOverride>? GameDashboardOverrides { get; init; }
+        public List<DashboardOverrideDto>? DashboardOverrides { get; init; }
+        public List<DashboardOverrideDto>? GameDashboardOverrides { get; init; }
+    }
+
+    private class DashboardOverrideDto
+    {
+        public int? GameAppId { get; init; }
+        public CarProfile? Car { get; init; }
+        public string? DashboardId { get; init; }
     }
 }

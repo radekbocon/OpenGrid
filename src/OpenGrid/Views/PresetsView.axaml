@@ -1,0 +1,29 @@
+<controls:PageView
+    x:Class="OpenGrid.Views.PresetsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:OpenGrid.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:OpenGrid.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="900"
+    x:DataType="vm:PresetsViewModel"
+    mc:Ignorable="d">
+
+    <DockPanel>
+        <controls:PageHeader
+            Title="Presets"
+            DockPanel.Dock="Top"
+            IsBackButtonVisible="False" />
+
+        <TabControl Padding="0,8,0,0">
+            <TabItem Header="Bass Shakers">
+                <ContentControl Content="{Binding BassShakers}" />
+            </TabItem>
+            <TabItem Header="LEDs">
+                <ContentControl Content="{Binding LedPresets}" />
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</controls:PageView>

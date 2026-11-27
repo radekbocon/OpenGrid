@@ -1,5 +1,3 @@
-using OpenGrid.Models.Telemetry;
-
 namespace OpenGrid.Models;
 
 public enum TelemetryInput
@@ -83,19 +81,8 @@ public class BassShakerPreset
     }
 }
 
-public class BassShakerPresetOverride
+public class BassShakerPresetOverride : PresetOverride
 {
-    /// <summary>
-    /// Steam application id of the game this override applies to. Null matches any game.
-    /// </summary>
-    public int? GameAppId { get; set; }
-
-    /// <summary>
-    /// Telemetry car key this override applies to. Null matches any car.
-    /// </summary>
-    public CarProfile? Car { get; set; }
-
-    public string PresetId { get; set; } = string.Empty;
 }
 
 public class BassShakerInputSettings

@@ -25,21 +25,24 @@ public class MozaSerialDevice : ISerialDevice, IRpmLedTelemetryDevice
     public MozaDeviceCategory Category { get; init; }
 
     /// <summary>
-    /// Drive the wheel RPM LEDs from game telemetry (requires the global
-    /// setting to be enabled as well).
+    /// Opt in to driving this device's LEDs from game telemetry.
     /// </summary>
     public bool DriveLedsWithTelemetry { get; set; } = true;
 
     /// <summary>
-    /// Number of physical LEDs in one RPM frame.
+    /// Number of physical LEDs in one frame.
     /// </summary>
     public int RpmLedCount { get; set; } = 10;
 
     /// <summary>
-    /// Complete LED frames, ordered by threshold. Each frame spans all
-    /// <see cref="RpmLedCount"/> LEDs.
+    /// Preset used when no game or car specific LED override matches.
     /// </summary>
-    public List<RpmLedSegment> RpmSegments { get; set; } = [];
+    public string? DefaultLedPresetId { get; set; }
+
+    /// <summary>
+    /// Game and/or car specific LED presets. The most specific match wins.
+    /// </summary>
+    public List<LedPresetOverride> LedOverrides { get; set; } = [];
 
     /// <summary>
     /// Whether this device should actively drive RPM LEDs from telemetry.
@@ -56,11 +59,6 @@ public class MozaSerialDevice : ISerialDevice, IRpmLedTelemetryDevice
             or MozaDeviceCategory.Wheel
             or MozaDeviceCategory.Hub
             or MozaDeviceCategory.Unknown;
-    }
-
-    public List<RpmLedSegment> GetNormalizedRpmSegments()
-    {
-        return RpmLedSegment.Normalize(RpmSegments, RpmLedCount);
     }
 }
 

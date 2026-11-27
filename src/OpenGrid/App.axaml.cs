@@ -9,6 +9,7 @@ using OpenGrid.Views;
 using Microsoft.Extensions.DependencyInjection;
 using OpenGrid.Services;
 using OpenGrid.Services.Dashboard;
+using OpenGrid.Services.Devices;
 using OpenGrid.Services.Devices.Moza;
 using OpenGrid.Services.SessionPersist;
 using OpenGrid.Services.Sound;
@@ -165,6 +166,16 @@ public class App : Application
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Error disposing bass shaker service");
+        }
+
+        try
+        {
+            var rpmLedEffectService = Program.ServiceProvider.GetService<IRpmLedEffectService>();
+            rpmLedEffectService?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Error disposing LED effect service");
         }
 
         try

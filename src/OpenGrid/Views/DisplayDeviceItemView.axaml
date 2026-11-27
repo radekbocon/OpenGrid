@@ -2,8 +2,7 @@
     x:Class="OpenGrid.Views.DisplayDeviceItemView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="clr-namespace:OpenGrid.Converters"
-    xmlns:models="clr-namespace:OpenGrid.Models"
+    xmlns:controls="clr-namespace:OpenGrid.Controls"
     xmlns:viewModels="clr-namespace:OpenGrid.ViewModels"
     x:DataType="viewModels:DisplayDeviceItemViewModel">
 
@@ -110,98 +109,8 @@
                     IsChecked="{Binding IsEnabled}" />
             </Grid>
 
-            <!--  Default Dashboard  -->
-            <Grid
-                ColumnDefinitions="140,*"
-                ColumnSpacing="12"
-                RowDefinitions="Auto">
-                <TextBlock
-                    Grid.Column="0"
-                    VerticalAlignment="Center"
-                    Classes="Subtitle1"
-                    Opacity="0.6"
-                    Text="Default Dashboard" />
-                <ComboBox
-                    x:Name="DashboardComboBox"
-                    Grid.Column="1"
-                    MinWidth="200"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
-                    ItemsSource="{Binding DashboardOptions}"
-                    SelectedItem="{Binding SelectedDashboardOption}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="models:DashboardInfo">
-                            <TextBlock Text="{Binding Name}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </Grid>
-
-            <!--  Launch Trigger  -->
-            <Grid
-                ColumnDefinitions="140,*"
-                ColumnSpacing="12"
-                RowDefinitions="Auto">
-                <TextBlock
-                    Grid.Column="0"
-                    VerticalAlignment="Center"
-                    Classes="Subtitle1"
-                    Opacity="0.6"
-                    Text="Auto-Open Trigger" />
-                <ComboBox
-                    Grid.Column="1"
-                    MinWidth="200"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
-                    ItemsSource="{Binding AvailableTriggers}"
-                    SelectedItem="{Binding SelectedTrigger}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="models:DashboardLaunchTrigger">
-                            <TextBlock Text="{Binding ., Converter={x:Static converters:EnumConverters.DashboardLaunchTriggerToString}}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </Grid>
-
-            <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
-
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Classes="Headline6" Text="Game Overrides" />
-                <Button
-                    Grid.Column="1"
-                    Command="{Binding AddGameOverrideCommand}"
-                    Content="Add" />
-            </Grid>
-            <TextBlock
-                Opacity="0.6"
-                Text="Dashboards selected here replace the default dashboard when the game starts."
-                TextWrapping="Wrap" />
-            <ItemsControl ItemsSource="{Binding GameOverrides}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="viewModels:GameDashboardOverrideItemViewModel">
-                        <Grid
-                            Margin="0,4"
-                            ColumnDefinitions="*,*,Auto"
-                            ColumnSpacing="8">
-                            <TextBlock VerticalAlignment="Center" Text="{Binding Game.Name}" />
-                            <ComboBox
-                                Grid.Column="1"
-                                ItemsSource="{Binding DashboardOptions}"
-                                SelectedItem="{Binding SelectedDashboard}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate x:DataType="models:DashboardInfo">
-                                        <TextBlock Text="{Binding Name}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                            <Button
-                                Grid.Column="2"
-                                Command="{Binding RemoveCommand}"
-                                Content="Remove" />
-                        </Grid>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <!--  Default dashboard and game/car overrides  -->
+            <controls:DevicePresetSettingsView DataContext="{Binding PresetSettings}" />
 
             <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 

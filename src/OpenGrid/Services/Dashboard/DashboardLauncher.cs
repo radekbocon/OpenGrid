@@ -22,6 +22,9 @@ public sealed class DashboardLauncher
     // temporary game overrides can be undone when the game that triggered them stops.
     private readonly Dictionary<string, OpenDashboardWindow> _openWindows = new(StringComparer.Ordinal);
 
+    private SteamGame? _currentGame;
+    private string? _currentCarName;
+
     public event EventHandler<string>? DashboardStateChanged;
 
     public DashboardLauncher(
@@ -39,6 +42,7 @@ public sealed class DashboardLauncher
 
         _steamGameManager.GameStarted += OnGameStarted;
         _steamGameManager.GameStopped += OnGameStopped;
+        _telemetryService.TelemetryReceived += OnTelemetryReceived;
         _telemetryService.TelemetryStatusChanged += OnTelemetryStatusChanged;
     }
 
@@ -50,13 +54,17 @@ public sealed class DashboardLauncher
         var devices = _deviceService.GetPersistedDevices();
         foreach (var device in devices)
         {
-            if (device is not DisplayDevice { IsEnabled: true, DashboardId: not null } displayDevice)
+            if (device is not DisplayDevice { IsEnabled: true } displayDevice)
                 continue;
 
             if (displayDevice.DashboardTrigger != trigger)
                 continue;
 
-            OpenDashboardForDevice(displayDevice, trigger);
+            var dashboard = ResolveDashboard(displayDevice, null, out _);
+            if (dashboard is null)
+                continue;
+
+            OpenDashboardForDevice(displayDevice, trigger, dashboard.Id);
         }
     }
 
@@ -65,12 +73,27 @@ public sealed class DashboardLauncher
         return _openWindows.ContainsKey(GetScreenKey(displayDevice));
     }
 
+    /// <summary>Re-resolves an open window after its default/overrides changed.</summary>
+    public void RefreshDeviceDashboard(DisplayDevice displayDevice)
+    {
+        ApplyResolvedDashboard(displayDevice);
+    }
+
     public void OpenDeviceDashboard(DisplayDevice displayDevice)
     {
-        if (displayDevice.DashboardId is null)
+        var dashboard = ResolveDashboard(displayDevice, null, out var matchingOverride);
+        if (dashboard is null)
             return;
 
-        OpenDashboardForDevice(displayDevice, DashboardLaunchTrigger.None);
+        var trigger = matchingOverride is not null
+            ? GetOverrideTrigger(matchingOverride)
+            : DashboardLaunchTrigger.None;
+
+        OpenDashboardForDevice(
+            displayDevice,
+            trigger,
+            dashboard.Id,
+            matchingOverride?.GameAppId);
     }
 
     public void CloseDeviceDashboard(DisplayDevice displayDevice)
@@ -102,6 +125,7 @@ public sealed class DashboardLauncher
 
     private void OnGameStarted(object? sender, SteamGameProcess e)
     {
+        _currentGame = e.SteamGame;
         HandleGameStart(e.SteamGame.AppId);
     }
 
@@ -113,26 +137,21 @@ public sealed class DashboardLauncher
             if (device is not DisplayDevice { IsEnabled: true } displayDevice)
                 continue;
 
-            var dashboardOverride = displayDevice.GameDashboardOverrides
-                .FirstOrDefault(x => x.GameAppId == appId && !string.IsNullOrWhiteSpace(x.DashboardId));
+            var dashboard = ResolveDashboard(displayDevice, appId, out var matchingOverride);
+            if (dashboard is null)
+                continue;
 
-            if (dashboardOverride is not null)
-            {
-                OpenDashboardForDevice(
-                    displayDevice,
-                    DashboardLaunchTrigger.OnGameStart,
-                    dashboardOverride.DashboardId,
-                    appId,
-                    replaceExisting: true);
-            }
-            else if (displayDevice.DashboardId is not null)
-            {
-                OpenDashboardForDevice(
-                    displayDevice,
-                    displayDevice.DashboardTrigger,
-                    displayDevice.DashboardId,
-                    appId);
-            }
+            var isOverride = matchingOverride is not null;
+            var trigger = isOverride
+                ? GetOverrideTrigger(matchingOverride!)
+                : displayDevice.DashboardTrigger;
+
+            OpenDashboardForDevice(
+                displayDevice,
+                trigger,
+                dashboard.Id,
+                isOverride ? matchingOverride!.GameAppId : appId,
+                replaceExisting: isOverride);
         }
     }
 
@@ -163,6 +182,23 @@ public sealed class DashboardLauncher
         }
     }
 
+    private void OnTelemetryReceived(object? sender, TelemetryEventArgs e)
+    {
+        var gameChanged = _currentGame?.AppId != e.Game.AppId;
+        var carChanged = !string.Equals(
+            _currentCarName,
+            e.Telemetry.Car.Name,
+            StringComparison.OrdinalIgnoreCase);
+
+        if (!gameChanged && !carChanged)
+            return;
+
+        _currentGame = e.Game;
+        _currentCarName = e.Telemetry.Car.Name;
+
+        ReapplyDashboardOverrides();
+    }
+
     private void OnTelemetryStatusChanged(object? sender, TelemetryConnectionStatus e)
     {
         if (e == TelemetryConnectionStatus.Connected)
@@ -171,8 +207,91 @@ public sealed class DashboardLauncher
         }
         else if (e == TelemetryConnectionStatus.Disconnected)
         {
+            _currentGame = null;
+            _currentCarName = null;
             CloseForTrigger(DashboardLaunchTrigger.OnTelemetryConnected);
         }
+    }
+
+    /// <summary>
+    /// Applies the same game/car specificity rules as bass shaker and LED presets.
+    /// </summary>
+    private DashboardInfo? ResolveDashboard(
+        DisplayDevice displayDevice,
+        int? gameAppId,
+        out DashboardPresetOverride? matchingOverride)
+    {
+        gameAppId ??= _currentGame?.AppId;
+
+        matchingOverride = displayDevice.DashboardOverrides
+            .Where(x => x.Matches(gameAppId, _currentCarName))
+            .OrderByDescending(x => x.GetSpecificity())
+            .FirstOrDefault(x => GetDashboardById(x.PresetId) is not null);
+
+        return matchingOverride is not null
+            ? GetDashboardById(matchingOverride.PresetId)
+            : GetDashboardById(displayDevice.DashboardId);
+    }
+
+    private static DashboardLaunchTrigger GetOverrideTrigger(DashboardPresetOverride matchingOverride)
+    {
+        return matchingOverride.GameAppId is not null
+            ? DashboardLaunchTrigger.OnGameStart
+            : DashboardLaunchTrigger.OnTelemetryConnected;
+    }
+
+    /// <summary>
+    /// Switches open dashboards when the current game or car starts matching a
+    /// different override, just like presets are reconfigured on telemetry changes.
+    /// </summary>
+    private void ReapplyDashboardOverrides()
+    {
+        foreach (var device in _deviceService.GetPersistedDevices())
+        {
+            if (device is DisplayDevice { IsEnabled: true } displayDevice)
+            {
+                ApplyResolvedDashboard(displayDevice);
+            }
+        }
+    }
+
+    private void ApplyResolvedDashboard(DisplayDevice displayDevice)
+    {
+        if (!_openWindows.TryGetValue(GetScreenKey(displayDevice), out var entry))
+            return;
+
+        var dashboard = ResolveDashboard(displayDevice, null, out var matchingOverride);
+        if (dashboard is null)
+        {
+            CloseWindow(entry);
+            return;
+        }
+
+        if (string.Equals(
+                entry.Window.CurrentDashboard?.DashboardId,
+                dashboard.Id,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var trigger = matchingOverride is not null
+            ? GetOverrideTrigger(matchingOverride)
+            : DashboardLaunchTrigger.None;
+
+        OpenDashboardForDevice(
+            displayDevice,
+            trigger,
+            dashboard.Id,
+            matchingOverride?.GameAppId,
+            replaceExisting: true);
+    }
+
+    private DashboardInfo? GetDashboardById(string? dashboardId)
+    {
+        return string.IsNullOrWhiteSpace(dashboardId)
+            ? null
+            : _dashboardService.GetById(dashboardId);
     }
 
     private void OpenDashboardForDevice(
