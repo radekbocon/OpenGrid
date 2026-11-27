@@ -39,8 +39,11 @@ public partial class LedPresetsViewModel : PresetListViewModel<LedPreset>
         return new LedConfigurationViewModel(preset.Configuration, OnEditorChanged);
     }
 
-    protected override PresetItemViewModel<LedPreset> CreateItem(LedPreset preset)
+    protected override PresetItemViewModel<LedPreset> CreateItem(
+        LedPreset preset,
+        Action<PresetItemViewModel<LedPreset>> duplicate,
+        Func<PresetItemViewModel<LedPreset>, Task> remove)
     {
-        return new LedPresetItemViewModel(preset, _presetService);
+        return new LedPresetItemViewModel(preset, _presetService, duplicate, remove);
     }
 }

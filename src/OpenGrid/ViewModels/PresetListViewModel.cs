@@ -18,10 +18,9 @@ public abstract partial class PresetListViewModel<TPreset> : ViewModelBase where
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPresetSelected))]
-    private PresetItemViewModel<TPreset>? _selectedPreset;
-
+    public partial PresetItemViewModel<TPreset>? SelectedPreset { get; set; }
     [ObservableProperty]
-    private object? _editor;
+    public partial object? Editor { get; set; }
 
     public bool IsPresetSelected => SelectedPreset is not null;
 
@@ -33,7 +32,11 @@ public abstract partial class PresetListViewModel<TPreset> : ViewModelBase where
     protected abstract void SetPresetName(TPreset preset, string name);
     protected abstract string GetPresetSummary(TPreset preset);
     protected abstract object? CreateEditor(TPreset preset);
-    protected abstract PresetItemViewModel<TPreset> CreateItem(TPreset preset);
+
+    protected abstract PresetItemViewModel<TPreset> CreateItem(
+        TPreset preset,
+        Action<PresetItemViewModel<TPreset>> duplicate,
+        Func<PresetItemViewModel<TPreset>, Task> remove);
 
     /// <summary>Loads presets once when the page view model is created.</summary>
     public void InitializePresets()
@@ -51,7 +54,7 @@ public abstract partial class PresetListViewModel<TPreset> : ViewModelBase where
         Presets.Clear();
         foreach (var preset in GetPresets().OrderBy(GetPresetName, StringComparer.OrdinalIgnoreCase))
         {
-            Presets.Add(CreateItem(preset));
+            Presets.Add(CreateItem(preset, DuplicatePreset, RemovePresetAsync));
         }
 
         OnPropertyChanged(nameof(HasPresets));
@@ -64,28 +67,16 @@ public abstract partial class PresetListViewModel<TPreset> : ViewModelBase where
         AddAndSelect(CreatePreset(GetUniqueName("New Preset"), null));
     }
 
-    [RelayCommand]
-    private void DuplicatePreset()
+    private void DuplicatePreset(PresetItemViewModel<TPreset> selected)
     {
-        if (SelectedPreset is not { } selected)
-        {
-            return;
-        }
-
         AddAndSelect(CreatePreset(
             GetUniqueName($"{GetPresetName(selected.Preset)} Copy"),
             selected.Preset));
     }
 
-    [RelayCommand]
-    private async Task RemovePresetAsync()
+    private async Task RemovePresetAsync(PresetItemViewModel<TPreset> item)
     {
-        if (SelectedPreset is not { } selected)
-        {
-            return;
-        }
-
-        var confirmDialog = new ConfirmDialog($"Delete preset '{GetPresetName(selected.Preset)}'?");
+        var confirmDialog = new ConfirmDialog($"Delete preset '{GetPresetName(item.Preset)}'?");
         await DialogHost.Show(confirmDialog);
 
         if (!confirmDialog.Result)
@@ -93,9 +84,9 @@ public abstract partial class PresetListViewModel<TPreset> : ViewModelBase where
             return;
         }
 
-        var index = Presets.IndexOf(selected);
-        RemovePreset(selected.Preset);
-        Presets.Remove(selected);
+        var index = Presets.IndexOf(item);
+        RemovePreset(item.Preset);
+        Presets.Remove(item);
 
         OnPropertyChanged(nameof(HasPresets));
         SelectedPreset = Presets.Count == 0
@@ -116,7 +107,7 @@ public abstract partial class PresetListViewModel<TPreset> : ViewModelBase where
 
     private void AddAndSelect(TPreset preset)
     {
-        var item = CreateItem(preset);
+        var item = CreateItem(preset, DuplicatePreset, RemovePresetAsync);
         Presets.Add(item);
         OnPropertyChanged(nameof(HasPresets));
         SelectedPreset = item;

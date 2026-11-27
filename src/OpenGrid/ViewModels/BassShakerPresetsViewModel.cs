@@ -40,8 +40,11 @@ public partial class BassShakerPresetsViewModel : PresetListViewModel<BassShaker
         return new BassShakerConfigurationViewModel(preset.Configuration, OnEditorChanged);
     }
 
-    protected override PresetItemViewModel<BassShakerPreset> CreateItem(BassShakerPreset preset)
+    protected override PresetItemViewModel<BassShakerPreset> CreateItem(
+        BassShakerPreset preset,
+        Action<PresetItemViewModel<BassShakerPreset>> duplicate,
+        Func<PresetItemViewModel<BassShakerPreset>, Task> remove)
     {
-        return new BassShakerPresetItemViewModel(preset, _presetService);
+        return new BassShakerPresetItemViewModel(preset, _presetService, duplicate, remove);
     }
 }

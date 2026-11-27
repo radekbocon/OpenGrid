@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace OpenGrid.ViewModels;
 
@@ -10,6 +11,8 @@ public partial class PresetItemViewModel<TPreset> : ViewModelBase where TPreset 
 {
     private readonly Action<TPreset> _save;
     private readonly Func<TPreset, string> _getSummary;
+    private readonly Action<PresetItemViewModel<TPreset>> _duplicate;
+    private readonly Func<PresetItemViewModel<TPreset>, Task> _remove;
 
     public TPreset Preset { get; }
 
@@ -38,18 +41,28 @@ public partial class PresetItemViewModel<TPreset> : ViewModelBase where TPreset 
 
     public string Summary => _getSummary(Preset);
 
+    [RelayCommand]
+    private void Duplicate() => _duplicate(this);
+
+    [RelayCommand]
+    private Task RemoveAsync() => _remove(this);
+
     public PresetItemViewModel(
         TPreset preset,
         Action<TPreset> save,
         Func<TPreset, string> getName,
         Action<TPreset, string> setName,
-        Func<TPreset, string> getSummary)
+        Func<TPreset, string> getSummary,
+        Action<PresetItemViewModel<TPreset>> duplicate,
+        Func<PresetItemViewModel<TPreset>, Task> remove)
     {
         Preset = preset;
         _save = save;
         GetName = getName;
         SetName = setName;
         _getSummary = getSummary;
+        _duplicate = duplicate;
+        _remove = remove;
     }
 
     private Func<TPreset, string> GetName { get; }

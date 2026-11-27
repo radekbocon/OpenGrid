@@ -5,7 +5,11 @@ namespace OpenGrid.ViewModels;
 
 public sealed class LedPresetItemViewModel : PresetItemViewModel<LedPreset>
 {
-    public LedPresetItemViewModel(LedPreset preset, ILedPresetService presetService)
+    public LedPresetItemViewModel(
+        LedPreset preset,
+        ILedPresetService presetService,
+        Action<PresetItemViewModel<LedPreset>> duplicate,
+        Func<PresetItemViewModel<LedPreset>, Task> remove)
         : base(
             preset,
             presetService.Save,
@@ -15,7 +19,9 @@ public sealed class LedPresetItemViewModel : PresetItemViewModel<LedPreset>
             {
                 var frames = x.Configuration.RpmSegments.Count;
                 return $"{frames} {(frames == 1 ? "frame" : "frames")} · {x.Configuration.LedCount} LEDs";
-            })
+            },
+            duplicate,
+            remove)
     {
     }
 }

@@ -5,7 +5,11 @@ namespace OpenGrid.ViewModels;
 
 public sealed class BassShakerPresetItemViewModel : PresetItemViewModel<BassShakerPreset>
 {
-    public BassShakerPresetItemViewModel(BassShakerPreset preset, IBassShakerPresetService presetService)
+    public BassShakerPresetItemViewModel(
+        BassShakerPreset preset,
+        IBassShakerPresetService presetService,
+        Action<PresetItemViewModel<BassShakerPreset>> duplicate,
+        Func<PresetItemViewModel<BassShakerPreset>, Task> remove)
         : base(
             preset,
             presetService.Save,
@@ -13,7 +17,9 @@ public sealed class BassShakerPresetItemViewModel : PresetItemViewModel<BassShak
             static (x, name) => x.Name = name,
             static x => x.Configuration.Inputs.Count == 1
                 ? "1 effect"
-                : $"{x.Configuration.Inputs.Count} effects")
+                : $"{x.Configuration.Inputs.Count} effects",
+            duplicate,
+            remove)
     {
     }
 }

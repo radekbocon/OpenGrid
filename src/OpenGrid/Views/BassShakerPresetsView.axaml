@@ -12,7 +12,7 @@
     x:DataType="vm:BassShakerPresetsViewModel"
     mc:Ignorable="d">
 
-    <Panel>
+    <Panel Margin="4">
 
         <!--  Empty state  -->
         <StackPanel
@@ -50,60 +50,85 @@
 
             <!--  Left: preset list  -->
             <materialControls:Card Grid.Column="0" Padding="0">
-                <Grid RowDefinitions="*,Auto">
-                    <ListBox
-                        ItemsSource="{Binding Presets}"
-                        SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
-                        SelectionMode="Single">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="vm:BassShakerPresetItemViewModel">
-                                <Grid
-                                    Margin="8"
-                                    ColumnDefinitions="Auto,*,Auto"
-                                    ColumnSpacing="8">
-                                    <avalonia:MaterialIcon
-                                        Grid.Column="0"
-                                        VerticalAlignment="Center"
-                                        IconSize="24"
-                                        Kind="SurroundSound" />
-                                    <StackPanel
-                                        Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        Spacing="2">
-                                        <TextBlock
-                                            Classes="Subtitle1"
-                                            Text="{Binding Name}"
-                                            TextTrimming="CharacterEllipsis" />
-                                        <TextBlock
-                                            Classes="Caption"
-                                            Opacity="0.5"
-                                            Text="{Binding Summary}" />
-                                    </StackPanel>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                    <StackPanel
-                        Grid.Row="1"
-                        Margin="8"
-                        Orientation="Horizontal"
-                        Spacing="8">
+                <ScrollViewer>
+                    <Grid RowDefinitions="Auto, Auto" RowSpacing="4">
+                        <ListBox
+                            ItemsSource="{Binding Presets}"
+                            SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
+                            SelectionMode="Single">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:BassShakerPresetItemViewModel">
+                                    <Grid
+                                        Margin="8"
+                                        ColumnDefinitions="Auto,*,Auto"
+                                        ColumnSpacing="8">
+                                        <avalonia:MaterialIcon
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            IconSize="24"
+                                            Kind="SurroundSound" />
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Spacing="2">
+                                            <TextBlock
+                                                Classes="Subtitle1"
+                                                Text="{Binding Name}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock
+                                                Classes="Caption"
+                                                Opacity="0.5"
+                                                Text="{Binding Summary}" />
+                                        </StackPanel>
+                                        <Button
+                                            Grid.Column="2"
+                                            Width="24"
+                                            Height="24"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Classes="Flat"
+                                            Content="{avalonia:MaterialIconExt Kind=DotsVertical,
+                                                                               IconSize=16}">
+                                            <Button.Flyout>
+                                                <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                                    <MenuItem
+                                                        Padding="4"
+                                                        Command="{Binding DuplicateCommand}"
+                                                        Header="Duplicate">
+                                                        <MenuItem.Icon>
+                                                            <avalonia:MaterialIcon Kind="ContentDuplicate" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem
+                                                        Padding="4"
+                                                        Command="{Binding RemoveCommand}"
+                                                        Header="Delete">
+                                                        <MenuItem.Icon>
+                                                            <avalonia:MaterialIcon Kind="Trash" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                </MenuFlyout>
+                                            </Button.Flyout>
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                         <Button
-                            Command="{Binding AddPresetCommand}"
-                            Content="New"
-                            Theme="{StaticResource MaterialOutlineButton}" />
-                        <Button
-                            Command="{Binding DuplicatePresetCommand}"
-                            Content="Duplicate"
-                            IsEnabled="{Binding IsPresetSelected}"
-                            Theme="{StaticResource MaterialOutlineButton}" />
-                        <Button
-                            Command="{Binding RemovePresetCommand}"
-                            Content="Delete"
-                            IsEnabled="{Binding IsPresetSelected}"
-                            Theme="{StaticResource MaterialOutlineButton}" />
-                    </StackPanel>
-                </Grid>
+                            Grid.Row="1"
+                            Padding="0,16"
+                            Classes="Flat"
+                            Command="{Binding AddPresetCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <avalonia:MaterialIcon
+                                    VerticalAlignment="Center"
+                                    IconSize="24"
+                                    Kind="Plus" />
+                                <TextBlock VerticalAlignment="Center" Text="Create Preset" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </ScrollViewer>
             </materialControls:Card>
 
             <!--  Right: preset editor  -->
