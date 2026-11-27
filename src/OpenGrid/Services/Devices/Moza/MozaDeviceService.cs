@@ -308,6 +308,8 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
         public MozaSerialDevice Device { get; private set; }
 
+        private bool IsDevicePresent() => MozaSerialPortEnumerator.IsPortPresent(Device.PortName);
+
         public void UpdateDevice(MozaSerialDevice device)
         {
             if (ReferenceEquals(Device, device))
@@ -327,6 +329,12 @@ public sealed class MozaDeviceService : IMozaDeviceService
         {
             lock (_writeLock)
             {
+                if (!IsDevicePresent())
+                {
+                    ClosePort();
+                    return;
+                }
+
                 OpenPort();
             }
         }
@@ -335,37 +343,46 @@ public sealed class MozaDeviceService : IMozaDeviceService
         {
             lock (_writeLock)
             {
-                ApplyRpmColors(snapshot.Leds, totalLedCount);
-
-                var activeMask = snapshot.LightsOn ? BuildMask(snapshot.Leds) : 0u;
-
-                // At zero RPM, send the all-off frame only once when the bar
-                // drains. Continuous zero frames keep the wheel in the live LED
-                // pipeline with nothing lit, hiding the configured LED colours.
-                var repeatedIdleFrame = activeMask == 0 && _lastActiveMask == 0;
-                _lastActiveMask = activeMask;
-
-                if (repeatedIdleFrame)
+                // Do not try to open or write to a stale by-id path when the
+                // device has been unplugged. ClosePort keeps the status in sync
+                // and clears the LED state so a replugged wheel is initialized.
+                if (!IsDevicePresent())
                 {
+                    ClosePort();
                     return;
-                }
-
-                var mask = activeMask > ushort.MaxValue ? ushort.MaxValue : (ushort)activeMask;
-                var rpmFrame = MozaProtocol.BuildWheelRpmLedFrameLegacy(mask);
-
-                // Do not feed group 0x01 (button telemetry). The wheel switches its
-                // RGB buttons to the live buffer when it sees that frame, but this
-                // service only loads colours into the RPM group (0x00). With no
-                // group-1 colour data the buttons render black. OpenGrid owns the
-                // RPM strip only; leave button LEDs to the wheel / Pit House.
-
-                if (!rpmFrame.AsSpan().SequenceEqual(_lastLedFrame))
-                {
-                    _lastLedFrame = rpmFrame;
                 }
 
                 try
                 {
+                    ApplyRpmColors(snapshot.Leds, totalLedCount);
+
+                    var activeMask = snapshot.LightsOn ? BuildMask(snapshot.Leds) : 0u;
+
+                    // At zero RPM, send the all-off frame only once when the bar
+                    // drains. Continuous zero frames keep the wheel in the live LED
+                    // pipeline with nothing lit, hiding the configured LED colours.
+                    var repeatedIdleFrame = activeMask == 0 && _lastActiveMask == 0;
+                    _lastActiveMask = activeMask;
+
+                    if (repeatedIdleFrame)
+                    {
+                        return;
+                    }
+
+                    var mask = activeMask > ushort.MaxValue ? ushort.MaxValue : (ushort)activeMask;
+                    var rpmFrame = MozaProtocol.BuildWheelRpmLedFrameLegacy(mask);
+
+                    // Do not feed group 0x01 (button telemetry). The wheel switches its
+                    // RGB buttons to the live buffer when it sees that frame, but this
+                    // service only loads colours into the RPM group (0x00). With no
+                    // group-1 colour data the buttons render black. OpenGrid owns the
+                    // RPM strip only; leave button LEDs to the wheel / Pit House.
+
+                    if (!rpmFrame.AsSpan().SequenceEqual(_lastLedFrame))
+                    {
+                        _lastLedFrame = rpmFrame;
+                    }
+
                     if (!_port.IsOpen)
                     {
                         OpenPort();
@@ -390,13 +407,6 @@ public sealed class MozaDeviceService : IMozaDeviceService
             lock (_writeLock)
             {
                 RestoreWheelTelemetryMode();
-
-                _lastLedFrame = null;
-                _lastActiveMask = 0;
-                _ledsInitialized = false;
-                _previousTelemetryMode = null;
-                _lastColorSignature = null;
-
                 ClosePort();
             }
         }
@@ -640,6 +650,13 @@ public sealed class MozaDeviceService : IMozaDeviceService
                 throw new InvalidOperationException("MOZA serial port is not open");
             }
 
+            // The port can disappear between the WriteFrame presence check and
+            // a later chunk/initialize write. Never write to a vanished device.
+            if (!IsDevicePresent())
+            {
+                throw new InvalidOperationException("MOZA serial device is not connected");
+            }
+
             _port.Write(frame, 0, frame.Length);
         }
 
@@ -647,7 +664,8 @@ public sealed class MozaDeviceService : IMozaDeviceService
         {
             if (_previousTelemetryMode is not { } previousMode ||
                 previousMode == MozaProtocol.WheelTelemetryModeActive ||
-                !_port.IsOpen)
+                !_port.IsOpen ||
+                !IsDevicePresent())
             {
                 return;
             }
@@ -669,6 +687,12 @@ public sealed class MozaDeviceService : IMozaDeviceService
 
         private void OpenPort()
         {
+            if (!IsDevicePresent())
+            {
+                ClosePort();
+                return;
+            }
+
             try
             {
                 if (_port.IsOpen)
@@ -702,6 +726,14 @@ public sealed class MozaDeviceService : IMozaDeviceService
             {
                 Log.Debug(ex, "Failed to close MOZA serial port {Port}", Device.PortName);
             }
+
+            // A disconnected port must be initialized from scratch on reconnect:
+            // the wheel's live colour buffer is volatile.
+            _lastLedFrame = null;
+            _lastActiveMask = 0;
+            _ledsInitialized = false;
+            _previousTelemetryMode = null;
+            _lastColorSignature = null;
 
             SetStatus(DeviceConnectionStatus.Disconnected);
         }
