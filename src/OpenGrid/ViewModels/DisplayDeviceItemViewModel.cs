@@ -45,6 +45,8 @@ public partial class DisplayDeviceItemViewModel : DeviceItemViewModel
             carConfigService,
             static id => new DashboardPresetOverride { PresetId = id },
             OnPresetSettingsChanged,
+            AddOverride,
+            RemoveOverride,
             itemLabel: "Dashboard",
             itemsLocationHint: null,
             emptyOverridesHint: "No game or car overrides configured. The default dashboard will be used.",
@@ -94,6 +96,24 @@ public partial class DisplayDeviceItemViewModel : DeviceItemViewModel
             ? trigger
             : DashboardLaunchTrigger.None;
         DeviceService.SaveDevice(displayDevice);
+    }
+
+    private void AddOverride(PresetOverride presetOverride)
+    {
+        if (presetOverride is DashboardPresetOverride dashboardOverride &&
+            Device is DisplayDevice displayDevice)
+        {
+            displayDevice.DashboardOverrides.Add(dashboardOverride);
+        }
+    }
+
+    private void RemoveOverride(PresetOverride presetOverride)
+    {
+        if (presetOverride is DashboardPresetOverride dashboardOverride &&
+            Device is DisplayDevice displayDevice)
+        {
+            displayDevice.DashboardOverrides.Remove(dashboardOverride);
+        }
     }
 
     private void OnPresetSettingsChanged()

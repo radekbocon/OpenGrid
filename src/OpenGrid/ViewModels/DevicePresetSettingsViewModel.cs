@@ -18,6 +18,8 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
     private readonly ICarConfigService _carConfigService;
     private readonly Func<string, PresetOverride> _createOverride;
     private readonly Action _onChanged;
+    private readonly Action<PresetOverride> _addOverride;
+    private readonly Action<PresetOverride> _removeOverride;
     private readonly Action<string?>? _onSecondarySettingChanged;
     private bool _isRefreshing;
 
@@ -50,6 +52,8 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
         ICarConfigService carConfigService,
         Func<string, PresetOverride> createOverride,
         Action onChanged,
+        Action<PresetOverride> addOverride,
+        Action<PresetOverride> removeOverride,
         string itemLabel = "Preset",
         string? itemsLocationHint = "Presets are created and edited on the Presets page.",
         string emptyOverridesHint = "No game or car overrides configured. The default preset will be used.",
@@ -58,6 +62,8 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
         _carConfigService = carConfigService;
         _createOverride = createOverride;
         _onChanged = onChanged;
+        _addOverride = addOverride;
+        _removeOverride = removeOverride;
         _onSecondarySettingChanged = onSecondarySettingChanged;
         ItemLabel = itemLabel;
         ItemsLocationHint = itemsLocationHint;
@@ -167,6 +173,19 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
             return;
         }
 
+        // Targeting the same game and car twice would only produce ambiguous
+        // overrides, so update the existing entry instead of adding a duplicate.
+        var existing = Overrides.FirstOrDefault(x =>
+            x.Model.GameAppId == result.GameAppId &&
+            string.Equals(x.Model.Car?.Name, result.Car?.Name, StringComparison.OrdinalIgnoreCase));
+
+        if (existing is not null)
+        {
+            existing.SelectedPreset = PresetOptions.FirstOrDefault(x => x.Id == result.PresetId);
+            return;
+        }
+
+        _addOverride(result);
         Overrides.Add(new PresetOverrideItemViewModel(
             result,
             GetGameName(result.GameAppId),
@@ -187,6 +206,7 @@ public sealed partial class DevicePresetSettingsViewModel : ViewModelBase
             return;
         }
 
+        _removeOverride(item.Model);
         OnPropertyChanged(nameof(HasOverrides));
         _onChanged();
     }

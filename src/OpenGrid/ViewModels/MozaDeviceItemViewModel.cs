@@ -52,7 +52,9 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         PresetSettings = new DevicePresetSettingsViewModel(
             carConfigService,
             static id => new LedPresetOverride { PresetId = id },
-            OnPresetSettingsChanged);
+            OnPresetSettingsChanged,
+            AddOverride,
+            RemoveOverride);
     }
 
     protected override void InitDevice(IDevice device)
@@ -104,6 +106,24 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
     protected override void OnDeviceSettingsChanged()
     {
         SaveAndConfigure();
+    }
+
+    private void AddOverride(PresetOverride presetOverride)
+    {
+        if (presetOverride is LedPresetOverride ledOverride &&
+            Device is MozaSerialDevice serialDevice)
+        {
+            serialDevice.LedOverrides.Add(ledOverride);
+        }
+    }
+
+    private void RemoveOverride(PresetOverride presetOverride)
+    {
+        if (presetOverride is LedPresetOverride ledOverride &&
+            Device is MozaSerialDevice serialDevice)
+        {
+            serialDevice.LedOverrides.Remove(ledOverride);
+        }
     }
 
     private void OnPresetSettingsChanged()

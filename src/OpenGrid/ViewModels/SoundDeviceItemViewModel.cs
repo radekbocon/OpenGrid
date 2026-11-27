@@ -29,7 +29,9 @@ public partial class SoundDeviceItemViewModel : DeviceItemViewModel
         PresetSettings = new DevicePresetSettingsViewModel(
             carConfigService,
             static id => new BassShakerPresetOverride { PresetId = id },
-            OnPresetSettingsChanged);
+            OnPresetSettingsChanged,
+            AddOverride,
+            RemoveOverride);
     }
 
     protected override void InitDevice(IDevice device)
@@ -51,6 +53,24 @@ public partial class SoundDeviceItemViewModel : DeviceItemViewModel
     protected override void OnDeviceSettingsChanged()
     {
         ConfigureBassShaker();
+    }
+
+    private void AddOverride(PresetOverride presetOverride)
+    {
+        if (presetOverride is BassShakerPresetOverride bassShakerOverride &&
+            Device is SoundDevice soundDevice)
+        {
+            soundDevice.BassShakerOverrides.Add(bassShakerOverride);
+        }
+    }
+
+    private void RemoveOverride(PresetOverride presetOverride)
+    {
+        if (presetOverride is BassShakerPresetOverride bassShakerOverride &&
+            Device is SoundDevice soundDevice)
+        {
+            soundDevice.BassShakerOverrides.Remove(bassShakerOverride);
+        }
     }
 
     private void OnPresetSettingsChanged()
