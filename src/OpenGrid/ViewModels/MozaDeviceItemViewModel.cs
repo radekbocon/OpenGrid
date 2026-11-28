@@ -36,6 +36,12 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
     [ObservableProperty]
     private int _ledCount = 10;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLedCountMismatch))]
+    private string? _ledCountWarning;
+
+    public bool HasLedCountMismatch => LedCountWarning is not null;
+
     public MozaDeviceItemViewModel(
         IDeviceService deviceService,
         IMozaDeviceService mozaDeviceService,
@@ -71,6 +77,7 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
                 _presetService.GetAll().Select(x => new PresetOption(x)),
                 serialDevice.DefaultLedPresetId,
                 serialDevice.LedOverrides);
+            RefreshLedCountWarning();
 
             _mozaDeviceService.ConfigureDeviceAsync(serialDevice).FireAndForgetSafe();
         }
@@ -101,6 +108,7 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         }
 
         SaveAndConfigure();
+        RefreshLedCountWarning();
     }
 
     protected override void OnDeviceSettingsChanged()
@@ -114,6 +122,7 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
             Device is MozaSerialDevice serialDevice)
         {
             serialDevice.LedOverrides.Add(ledOverride);
+            RefreshLedCountWarning();
         }
     }
 
@@ -123,6 +132,7 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
             Device is MozaSerialDevice serialDevice)
         {
             serialDevice.LedOverrides.Remove(ledOverride);
+            RefreshLedCountWarning();
         }
     }
 
@@ -136,6 +146,33 @@ public partial class MozaDeviceItemViewModel : DeviceItemViewModel
         serialDevice.DefaultLedPresetId = PresetSettings.SelectedPresetId;
         _rpmLedEffectService.Reset(serialDevice.Id);
         SaveAndConfigure();
+        RefreshLedCountWarning();
+    }
+
+    private void RefreshLedCountWarning()
+    {
+        if (Device is not IRpmLedTelemetryDevice ledDevice)
+        {
+            LedCountWarning = null;
+            return;
+        }
+
+        var presetIds = new[] { ledDevice.DefaultLedPresetId }
+            .Concat(ledDevice.LedOverrides.Select(static x => x.PresetId))
+            .OfType<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        var mismatches = presetIds
+            .Select(_presetService.GetById)
+            .OfType<LedPreset>()
+            .Where(preset => preset.Configuration.LedCount != LedCount)
+            .Select(preset => $"'{preset.Name}' ({preset.Configuration.LedCount} LEDs)")
+            .ToList();
+
+        LedCountWarning = mismatches.Count == 0
+            ? null
+            : $"Assigned presets use a different LED count: {string.Join(", ", mismatches)}. " +
+              $"Frames will be resized to {LedCount} LEDs.";
     }
 
     private void SaveAndConfigure()
