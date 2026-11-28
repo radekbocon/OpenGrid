@@ -2,6 +2,7 @@
     x:Class="OpenGrid.Views.MozaDeviceItemView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:controls="clr-namespace:OpenGrid.Controls"
     xmlns:viewModels="clr-namespace:OpenGrid.ViewModels"
     x:DataType="viewModels:MozaDeviceItemViewModel">
@@ -161,6 +162,25 @@
                     ItemsSource="{Binding LedCountOptions}"
                     SelectedItem="{Binding LedCount}" />
             </Grid>
+
+            <Border
+                Padding="12"
+                Background="{DynamicResource MaterialTextFieldBoxBackgroundBrush}"
+                BorderBrush="{DynamicResource MaterialValidationErrorBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                IsVisible="{Binding HasLedCountMismatch}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <avalonia:MaterialIcon
+                        Foreground="{DynamicResource MaterialValidationErrorBrush}"
+                        Kind="AlertCircle" />
+                    <TextBlock
+                        Classes="Body2"
+                        Foreground="{DynamicResource MaterialValidationErrorBrush}"
+                        Text="{Binding LedCountWarning}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
 
             <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
 

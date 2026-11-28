@@ -9,7 +9,6 @@ namespace OpenGrid.Services.Devices;
 public sealed class LedPresetService : ILedPresetService
 {
     private const int MinLeds = 1;
-    private const int MaxLeds = 16;
 
     private static readonly string PresetsDirectory = Path.Combine(
         Program.AppDataDirectory,
@@ -86,25 +85,15 @@ public sealed class LedPresetService : ILedPresetService
 
     public static LedPresetConfiguration CreateDefaultConfiguration(int ledCount = 10)
     {
-        ledCount = Math.Clamp(ledCount, MinLeds, MaxLeds);
-
         return new LedPresetConfiguration
         {
-            LedCount = ledCount,
-            Effects = [CreateDefaultRpmEffect(ledCount)],
+            LedCount = Math.Max(MinLeds, ledCount),
         };
     }
 
-    private static LedEffectSettings CreateDefaultRpmEffect(int ledCount) => new()
-    {
-        Type = LedEffectType.Rpm,
-        IsEnabled = true,
-        RpmSegments = RpmLedSegment.CreateDefault(ledCount),
-    };
-
     private static void NormalizeConfiguration(LedPresetConfiguration configuration)
     {
-        configuration.LedCount = Math.Clamp(configuration.LedCount, MinLeds, MaxLeds);
+        configuration.LedCount = Math.Max(MinLeds, configuration.LedCount);
         configuration.Effects.RemoveAll(static effect =>
             effect is not { } settings || !Enum.IsDefined(settings.Type));
 
@@ -167,7 +156,7 @@ public sealed class LedPresetService : ILedPresetService
         }
 
         var ledCount = dtoConfiguration.LedCount is > 0
-            ? Math.Clamp(dtoConfiguration.LedCount.Value, MinLeds, MaxLeds)
+            ? dtoConfiguration.LedCount.Value
             : 10;
 
         var effects = (dtoConfiguration.Effects ?? [])

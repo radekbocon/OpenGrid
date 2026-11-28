@@ -17,13 +17,13 @@
                 Classes="Subtitle1"
                 Opacity="0.6"
                 Text="LEDs per frame" />
-            <ComboBox
+            <TextBox
                 Grid.Column="1"
                 MinWidth="100"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                ItemsSource="{Binding LedCountOptions}"
-                SelectedItem="{Binding LedCount}" />
+                Text="{Binding LedCountText, UpdateSourceTrigger=PropertyChanged}"
+                Theme="{StaticResource MaterialFilledTextBox}" />
         </Grid>
 
         <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
